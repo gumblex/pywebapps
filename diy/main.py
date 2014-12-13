@@ -63,7 +63,7 @@ def clozeword():
 			res.append('<tr><td>%s</td><td>%s</td><td>%s</td></tr>' % row)
 		res.append('</tbody></table></p><p>')
 		if pr != 's':
-			res.append('<a href="%s">&gt;&gt;查询包含以 %s 开头的单词的词组...</a></p>' % (url_for('clozeword', fl=fl, sp=sp, pr='p'), fl))
+			res.append('<a href="%s">&gt;&gt;查询包含以 %s 开头的单词的词组...</a></p>' % (flask.url_for('clozeword', fl=fl, sp=sp, pr='p'), fl))
 	else:
 		res.append('<p><h2>查询结果：</h2><table border="1"><tbody><tr class="hd"><td>词组</td><td>解释</td></tr>')
 		exe = cur_cloze.execute("SELECT (word, mean) FROM wordlist WHERE (speech='' AND (word LIKE ? OR word LIKE ?))", (fl+"%", "% "+fl+"%"))
@@ -74,7 +74,7 @@ def clozeword():
 		else:
 			for row in exe:
 				res.append('<tr><td>%s</td><td>%s</td></tr>' % row)
-		res.append('</tbody></table></p><p><a href="%s">&lt;&lt;返回单词列表...</a></p>' % url_for('clozeword', fl=fl, sp=sp))
+		res.append('</tbody></table></p><p><a href="%s">&lt;&lt;返回单词列表...</a></p>' % flask.url_for('clozeword', fl=fl, sp=sp))
 	return flask.render_template('clozeword.html', fl=fl, result=flask.Markup('\n'.join(res)))
 
 if __name__ == "__main__":
