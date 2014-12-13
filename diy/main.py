@@ -8,9 +8,12 @@ import sqlite3
 from werkzeug.contrib.cache import SimpleCache
 from config import *
 
+from jiebademo import jiebademo
+
 app = flask.Flask(__name__)
 app.config['SERVER_NAME'] = 'gumble.tk'
 app.url_map.default_subdomain = 'app'
+app.register_blueprint(jiebademo, url_prefix='/jiebademo')
 
 # For debug use
 

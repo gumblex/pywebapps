@@ -1,4 +1,4 @@
 Flask
 MarkupSafe
 jieba3k
-python-Levenshtein
+https://github.com/gumblex/jieba/archive/wenyan.zip#egg=wenyan-0.34

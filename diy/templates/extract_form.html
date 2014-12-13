@@ -1,0 +1,50 @@
+<html>
+<head>
+	<title>Jieba Demo Site</title>
+</head>
+<body>
+<style type="text/css">
+	#Top{
+		text-align: center;
+		background-color: #000000;
+		color: #ffffff;
+		height: 30px;
+	}
+
+	#Wrapper{
+		text-align: center;
+	}
+
+	#Content{
+		width: 960px;
+		margin: 0 auto 0 auto;
+	}
+
+	#Bottom{
+		text-align: center;
+	}
+</style>
+
+<div id="Top">
+	<h2>Demo of Jieba</h2>
+</div>
+<div id="Wrapper">
+	<div id="Content">
+		<form action="/extract" method="post">
+		<div>
+			<textarea rows="15" cols="100" name="text">{{ content }}</textarea>
+		</div>
+		<div>
+			<textarea rows="3" cols="100" name="tags">{{ tags }}</textarea>
+		</div>
+		<span>
+			关键词个数(Top K): <input type="text" name="topk" value="{{ topk }}">
+		</span>
+		
+		<input type="submit" value="开始提取"/>
+		<input type="button" value="重置" onclick="javascript:window.location.href='/extract'"/>
+	</div>
+</form>
+</div>
+</body>
+</html>

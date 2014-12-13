@@ -1,0 +1,53 @@
+<html>
+<head>
+	<title>Jieba Demo Site</title>
+</head>
+<body>
+<style type="text/css">
+	#Top{
+		text-align: center;
+		background-color: #000000;
+		color: #ffffff;
+		height: 30px;
+	}
+
+	#Wrapper{
+		text-align: center;
+	}
+
+	#Content{
+		width: 960px;
+		margin: 0 auto 0 auto;
+	}
+
+	#Bottom{
+		text-align: center;
+	}
+</style>
+
+<div id="Top">
+	<h2>Demo of Jieba</h2>
+</div>
+<div id="Wrapper">
+	<div id="Content">
+		<form action="/" method="post">
+		<div>
+			<textarea rows="15" cols="100" name="text">{{ content }}</textarea>
+		</div>
+		<span>
+			<input type="radio" name="opt" value="1" {% selected(1) %}/>精确分词
+		</span>
+		<span>
+			<input type="radio" name="opt" value="2" {% selected(2) %}/>搜索引擎分词
+		</span>
+		<span>
+			<input type="radio" name="opt" value="3" {% selected(3) %}/>显示词性
+		</span>
+		<input type="submit" value="开始分词"/>
+		<input type="button" value="重置" onclick="javascript:window.location.href='/'"/>
+		<a href="/extract">关键词提取Demo</a>
+	</div>
+</form>
+</div>
+</body>
+</html>
