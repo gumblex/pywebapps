@@ -56,9 +56,9 @@ def clozeword():
 	if pr != 'p':
 		res.append('<p><h2>查询结果：</h2><table border="1"><tbody><tr class="hd"><td>单词</td><td>词性</td><td>解释</td></tr>')
 		if sp == 'un':
-			exe = cur_cloze.execute("SELECT * FROM wordlist WHERE speech<>'' AND word LIKE ?", sqlchr)
+			exe = cur_cloze.execute("SELECT * FROM wordlist WHERE (speech<>'' AND word LIKE ?)", (sqlchr,))
 		else:
-			exe = cur_cloze.execute("SELECT * FROM wordlist WHERE speech=? AND word LIKE ?", (sp + '.', sqlchr))
+			exe = cur_cloze.execute("SELECT * FROM wordlist WHERE (speech=? AND word LIKE ?)", (sp + '.', sqlchr))
 		for row in exe:
 			res.append('<tr><td>%s</td><td>%s</td><td>%s</td></tr>' % row)
 		res.append('</tbody></table></p><p>')
@@ -66,7 +66,7 @@ def clozeword():
 			res.append('<a href="%s">&gt;&gt;查询包含以 %s 开头的单词的词组...</a></p>' % (url_for('clozeword', fl=fl, sp=sp, pr='p'), fl))
 	else:
 		res.append('<p><h2>查询结果：</h2><table border="1"><tbody><tr class="hd"><td>词组</td><td>解释</td></tr>')
-		exe = cur_cloze.execute("SELECT * FROM wordlist WHERE speech='' AND (word LIKE ? OR word LIKE ?", (fl+"%", "% "+fl+"%"))
+		exe = cur_cloze.execute("SELECT (word, mean) FROM wordlist WHERE (speech='' AND (word LIKE ? OR word LIKE ?))", (fl+"%", "% "+fl+"%"))
 		if fl == 'a':
 			for row in exe:
 				if RE_NOTA.search(row['word']) is None:
