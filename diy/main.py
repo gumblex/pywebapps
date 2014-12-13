@@ -7,7 +7,7 @@ import sqlite3
 from werkzeug.contrib.cache import SimpleCache
 from config import *
 
-app = flask.Flask(__name__, static_url_path='static')
+app = flask.Flask(__name__)
 app.config['SERVER_NAME'] = 'gumble.tk'
 app.url_map.default_subdomain = 'app'
 
@@ -22,11 +22,11 @@ app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 
 @app.route("/")
 def index():
-	return send_static_file('index.html')
+	return send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
 
 @app.route('/favicon.ico')
 def favicon():
-	return send_from_directory(os.path.join(app.root_path, 'static'),'favicon.ico', mimetype='image/vnd.microsoft.icon')
+	return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 RE_NOTA = re.compile(r'^a\s.+|.+\S\sa\s.+')
