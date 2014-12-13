@@ -3,7 +3,6 @@
 import os
 import flask
 import jieba
-jieba.set_dictionary("jieba/dict.txt.big")
 jieba.initialize()
 from jieba import posseg
 import jieba.analyse
