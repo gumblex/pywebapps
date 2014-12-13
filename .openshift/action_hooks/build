@@ -1,0 +1,4 @@
+#!/bin/bash
+source ${OPENSHIFT_DEPENDENCIES_DIR}python/bin/activate
+pip install --use-mirrors -r ${OPENSHIFT_REPO_DIR}requirements.txt
+python ${OPENSHIFT_REPO_DIR}diy/csscompressor.py ${OPENSHIFT_REPO_DIR}diy/static/*_.css > ${OPENSHIFT_REPO_DIR}diy/static/style.css

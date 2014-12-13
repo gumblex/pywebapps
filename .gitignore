@@ -1,0 +1,7 @@
+.project
+*.pyc
+*.pyo
+*~
+*.egg-info
+dist
+wsgi/static/style.css

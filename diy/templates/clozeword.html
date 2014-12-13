@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Language" content="zh-cn">
+<link rel="shortcut icon" href="/static/favicon.png">
+<title>首字母填空助手</title>
+<meta content="Gumble" name="author">
+<link rel="stylesheet" href="/static/style.css">
+<style>
+body{line-height:1.1em}h1{font-size:1.5em}h2{font-size:1.25em}#fl{border-width:0px 0px 1px;border-color:#333}#form{border-top:1px #38C solid;border-collapse:collapse;}tr.hd{background-color:#ACF}a,a:visited{text-decoration:none;color:#03E}footer{font-size:0.75em}
+</style>
+</head>
+<body>
+<header>
+<h1>首字母填空助手</h1>
+</header>
+<p>这个实用工具通过检索（初中）词汇及词组表来帮助完成难度较大的首字母填空题。
+<br>数词由于数目繁多等原因，不提供查找，请根据上下文自行解决。</p>
+<form action="clozeword" method="get"><p id="form">
+请输入查询字符（首字母等）：
+<input id="fl" type="text" name="fl" size="5" maxlength="5" pattern="-?[A-z]{1,4}" autofocus="autofocus" required="required" value="{{ fl }}">
+<br>根据上下文推测的词性：
+<select name="sp" id="sp">
+<option value="un">不知道</option>
+<option value="n">n. 名词</option>
+<option value="v">v. 动词</option>
+<option value="adj">adj. 形容词</option>
+<option value="adv">adv. 副词</option>
+<option value="prep">prep. 介词</option>
+<option value="pron">pron. 代词</option>
+<option value="conj">conj. 连词</option>
+<option value="aux.v">aux.v. 助动词</option>
+<option value="int">int. 感叹词</option>
+<option value="aux">aux. 情态动词</option>
+<!--<option value="num">num. 数词</option>--></select>
+<br><input id="pr" type="checkbox" name="pr" value="p">查询包含以选定首字母开头单词的词组
+<br><input type="submit" value="查询">
+</p></form>
+{{ result }}
+<footer>
+<strong>注意：</strong>请尽量在实在做不出时使用，避免产生依赖性，请勿滥用。<br>
+资料来源：<a href="jmwords.htm">2012年上海市初中毕业统一学业考试考试手册</a>（修正）<br>
+</footer>
+</body></html>

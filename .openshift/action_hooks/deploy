@@ -1,0 +1,24 @@
+#!/bin/bash
+# This deploy hook gets executed after dependencies are resolved and the
+# build hook has been run but before the application has been started back
+# up again.  This script gets executed directly, so it could be python, php,
+# ruby, etc.
+source ${OPENSHIFT_DEPENDENCIES_DIR}python/bin/activate
+#date >> ${OPENSHIFT_LOG_DIR}/jbserver.log
+#nohup python ${OPENSHIFT_REPO_DIR}wsgi/jiebaserver.py >> ${OPENSHIFT_LOG_DIR}jbserver.log 2>&1 &
+#echo Waiting for server...
+#sleep 8
+#n=0
+#until [ $n -ge 3 ]
+#do
+  #python ${OPENSHIFT_REPO_DIR}wsgi/jiebaproxy.py ping
+  #rc=$?
+  #[ $rc -eq 0 ] && break
+  #n=$[$n+1]
+  #echo "Retry and wait... $n"
+  #sleep 5
+#done
+#if [ $rc -ne 0 ] ; then
+  #exit $rc
+#fi
+#python ${OPENSHIFT_REPO_DIR}wsgi/fedup.py
