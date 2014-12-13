@@ -1,4 +1,4 @@
 Flask
 MarkupSafe
-git+https://github.com/gumblex/jieba.git@jieba3k#egg=jieba3k-0.35
+jieba3k
 python-Levenshtein

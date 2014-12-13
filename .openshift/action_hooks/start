@@ -4,4 +4,4 @@
 # $OPENSHIFT_DIY_IP:8080
 source ${OPENSHIFT_DEPENDENCIES_DIR}python/bin/activate
 rm ${OPENSHIFT_TMP_DIR}uwsgi.pid
-${OPENSHIFT_DATA_DIR}bin/uwsgi -s $OPENSHIFT_DIY_IP:$OPENSHIFT_DIY_PORT --socket-protocol http --pp ${OPENSHIFT_REPO_DIR}diy -w application:application -d ${OPENSHIFT_DIY_LOG_DIR}python.log --pidfile ${OPENSHIFT_TMP_DIR}uwsgi.pid --static-map /static=${OPENSHIFT_REPO_DIR}diy/static --static-map /favicon.ico=${OPENSHIFT_REPO_DIR}diy/static/favicon.ico --static-map /robots.txt=${OPENSHIFT_REPO_DIR}diy/static/robots.txt -M --cheaper-algo spare --cheaper 1 --cheaper-initial 1 --workers 2 --cheaper-step 1 -t 60 --max-worker-lifetime 43200
+${OPENSHIFT_DATA_DIR}bin/uwsgi --ini ${OPENSHIFT_REPO_DIR}uwsgi.ini

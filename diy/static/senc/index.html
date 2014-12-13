@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Language" content="zh-cn">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>简易文本加密</title>
+<link rel="stylesheet" href="pure-min.css">
+<link rel="stylesheet" href="style.css">
+<script src="core-min.js"></script>
+<script src="aes.js"></script>
+<script src="enc-c4096.js"></script>
+<script src="zxcvbn-async.js"></script>
+<script>
+var C4096Formatter = {
+	stringify: function (cipherParams) {
+		var ciphertext = cipherParams.ciphertext;
+		var salt = cipherParams.salt;
+		if (salt) {
+			var wordArray = salt.concat(ciphertext);
+		} else {
+			var wordArray = ciphertext;
+		}
+		return wordArray.toString(CryptoJS.enc.C4096);
+	},
+	parse: function (C4096Str) {
+		var ciphertext = CryptoJS.enc.C4096.parse(C4096Str);
+		var ciphertextWords = ciphertext.words;
+		var salt = CryptoJS.lib.WordArray.create(ciphertextWords.slice(0, 2));
+		ciphertextWords.splice(0, 2);
+		ciphertext.sigBytes -= 8;
+		return CryptoJS.lib.CipherParams.create({ciphertext: ciphertext, salt: salt});
+	}
+};
+function enc(s, p){
+	var en = CryptoJS.AES.encrypt(s, p, {format: C4096Formatter});
+	return en.toString().match(/.{1,40}/g).join('\n');
+}
+// '.{1,80}' + (cut ? '|.{' +width+ '}|.+$' : '|\\S+?(\\s|$)'
+function dec(s, p){
+	var de = CryptoJS.AES.decrypt(s, p, {format: C4096Formatter})
+	try {
+		return de.toString(CryptoJS.enc.Utf8);
+	} catch (e) {
+		return '';
+	}
+}
+function strength(){
+	var pwd = document.getElementById('pwd');
+	pwd.className = 's' + zxcvbn(pwd.value).score;
+	return true;
+}
+function validatec4096(s){
+	if (s.length < 16) {
+		return false;
+	}
+	for (var i = 0; i < s.length; i += 1) {
+		charcode = s.charCodeAt(i) - CryptoJS.enc.C4096.coffset;
+		if (charcode < 0 || charcode > 4160){
+			return false;
+		}
+	}
+	return true;
+}
+function autoGrow (oField) {
+	var maxHeight = window.innerHeight - 400;
+	if (oField.scrollHeight > oField.clientHeight) {
+		oField.style.height = Math.min(oField.scrollHeight,maxHeight) + "px";
+	}
+}
+function tryencrypt(){
+	var textarea = document.getElementById('text');
+	var txt = textarea.value;
+	var pwd = document.getElementById('pwd').value;
+	if (!txt || !pwd) {
+		return;
+	}
+	document.getElementById('error').innerHTML = '';
+	if (validatec4096(txt.replace(/\s/g, ""))) {
+		decrypted = dec(txt.replace(/\s/g, ""), pwd)
+		if (decrypted) {
+			textarea.value = decrypted;
+		} else {
+			document.getElementById('error').innerHTML = '密码错误！';
+		}
+	} else {
+		if (txt.length > 500) {
+
+			textarea.value = enc(txt, pwd);
+			document.getElementById('error').innerHTML = '';
+		} else textarea.value = enc(txt, pwd);
+	}
+}
+</script>
+<style>
+#error {
+	color: #FF4000;
+	padding-left: 1em;
+}
+.s0 {background-color: #FFF3F3 !important;}
+.s1 {background-color: #FFF9F3 !important;}
+.s2 {background-color: #FFFFF3 !important;}
+.s3 {background-color: #F3FFF3 !important;}
+.s4 {background-color: #F0F8FF !important;}
+.sdemo {
+	padding: 0 1em;
+	color: #888888;
+}
+#faq {
+	margin:2em 0;
+	border-top: #38C solid 1px;
+}
+#faq h2 {
+	margin: 0;
+	font-size: 1.25em;
+	display: inline;
+	padding-right: 2em;
+}
+footer {
+	font-size: .875em;
+	text-align: right;
+	margin: 2em 0;
+	padding-top: .5em;
+}
+</style>
+</head>
+<body>
+<h1>简易文本加密</h1>
+<section id="app">
+	<form class="pure-form" action="" method="POST" onsubmit="tryencrypt();return false;">
+	<p>
+	<textarea name="text" id="text" placeholder="请输入原文或密文：" onchange="autoGrow(this);"></textarea>
+	</p>
+	<div class="pure-g">
+	<div class="pure-u-2-3">
+	<input name="pwd" id="pwd" type="password" placeholder="密码" style="width: 80%;" onkeyup="return strength();">
+	<span id="error"></span>
+    </div>
+    <div class="pure-u-1-3">
+    <button type="submit" class="pure-button pure-button-primary" style='width: 100%;'>加密 / 解密</button>
+	</div>
+	</div>
+	</form>
+</section>
+<section id="faq">
+<p><h2>这是什么？</h2>
+一个将任意文本加密的在线工具，使用 AES-256 算法加密。</p>
+<p><h2>为什么是一坨？</h2>
+为了将加密后的二进制数据完整传输，并减少 Base64 算法的<strong>字数</strong>，使用汉字的子集来表示。</p>
+<p><h2>密码框的颜色什么意思？</h2>
+密码强度：
+<span class="s4 sdemo">优</span><span class="s3 sdemo">良</span><span class="s2 sdemo">中</span><span class="s1 sdemo">下</span><span class="s0 sdemo">差</span>
+当然，这并没有硬性要求。</p>
+<p><h2>你们是不是搞到了我输入的内容？</h2>
+这是离线脚本，直接在浏览器中运行，服务器无法记录。</p>
+</section>
+<footer>
+<a href="http://gumble.tk">Gumble</a>, 2014
+</footer>
+</body>
+</html>

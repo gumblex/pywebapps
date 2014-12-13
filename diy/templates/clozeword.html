@@ -8,7 +8,7 @@
 <meta content="Gumble" name="author">
 <link rel="stylesheet" href="/static/style.css">
 <style>
-body{line-height:1.1em}h1{font-size:1.5em}h2{font-size:1.25em}#fl{border-width:0px 0px 1px;border-color:#333}#form{border-top:1px #38C solid;border-collapse:collapse;}tr.hd{background-color:#ACF}a,a:visited{text-decoration:none;color:#03E}footer{font-size:0.75em}
+body{line-height:1.1em}h1{font-size:1.5em}h2{font-size:1.25em}#fl{border-width:0px 0px 1px;border-color:#333}#form{border-top:1px #38C solid;border-collapse:collapse;color:#000;padding-top:.5em;}tr.hd{background-color:#ACF}a,a:visited{text-decoration:none;color:#03E}footer{font-size:0.75em}
 </style>
 </head>
 <body>
@@ -17,7 +17,7 @@ body{line-height:1.1em}h1{font-size:1.5em}h2{font-size:1.25em}#fl{border-width:0
 </header>
 <p>这个实用工具通过检索（初中）词汇及词组表来帮助完成难度较大的首字母填空题。
 <br>数词由于数目繁多等原因，不提供查找，请根据上下文自行解决。</p>
-<form action="clozeword" method="get"><p id="form">
+<form action="/clozeword/" method="get"><p id="form">
 请输入查询字符（首字母等）：
 <input id="fl" type="text" name="fl" size="5" maxlength="5" pattern="-?[A-z]{1,4}" autofocus="autofocus" required="required" value="{{ fl }}">
 <br>根据上下文推测的词性：

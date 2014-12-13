@@ -13,10 +13,10 @@ print('Database connected.')
 #c.execute("DROP TABLE wordlist")
 #print('Old table deleted.')
 c.execute("""CREATE TABLE wordlist (
-ID INTEGER PRIMARY KEY autoincrement,
 word TEXT,
 speech TEXT,
 mean TEXT)""")
+#ID INTEGER PRIMARY KEY autoincrement,
 print('Table created.')
 print('Inserting data...')
 c.execute("INSERT INTO wordlist (word,speech,mean) VALUES ('ability','n.','能力，才能')")

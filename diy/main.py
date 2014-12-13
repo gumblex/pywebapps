@@ -23,11 +23,11 @@ app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 
 @app.route("/")
 def index():
-	return send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
+	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
 
 @app.route('/favicon.ico')
 def favicon():
-	return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 RE_NOTA = re.compile(r'^a\s.+|.+\S\sa\s.+')
