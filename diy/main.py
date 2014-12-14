@@ -5,9 +5,12 @@ import datetime
 import base64
 import logging
 import sqlite3
+import mosesproxy
 from werkzeug.contrib.cache import SimpleCache
 from config import *
 
+jieba = mosesproxy
+jiebazhc = mosesproxy.jiebazhc()
 
 app = flask.Flask(__name__)
 app.config['SERVER_NAME'] = 'gumble.tk'
@@ -29,10 +32,31 @@ app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 def index():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
 
+@app.route("/", subdomain='glass')
+def glasssd():
+	return flask.redirect('//app.gumble.tk/glass/')
+
+@app.route("/", subdomain='wenyan')
+@app.route("/", subdomain='translate')
+def wenyansd():
+	return flask.redirect('//app.gumble.tk/wenyan/')
+
 @app.route('/favicon.ico')
 def favicon():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
+@app.route("/wenyan/")
+@app.route("/translate/")
+def wenyan():
+	tinput = flask.request.form.get('input', '')
+	if flask.request.form.get('lang') == 'm2c':
+		lang = 'm2c'
+		ischecked = ('', ' checked')
+	else:
+		lang = 'c2m'
+		ischecked = (' checked', '')
+	toutput = mosesproxy.translate(tinput, lang)
+	return flask.render_template('translate.html', lang=lang, ischecked=ischecked, toutput=flask.Markup(toutput))
 
 RE_NOTA = re.compile(r'^a\s.+|.+\S\sa\s.+')
 
@@ -54,7 +78,7 @@ def clozeword():
 	else:
 		sqlchr = fl + '%'
 	if pr != 'p':
-		res.append('<p><h2>查询结果：</h2><table border="1"><tbody><tr class="hd"><td>单词</td><td>词性</td><td>解释</td></tr>')
+		res.append('<p><h2>查询结果：</h2><table border="1"><tbody><tr class="hd"><th>单词</th><th>词性</th><th>解释</th></tr>')
 		if sp == 'un':
 			exe = cur_cloze.execute("SELECT * FROM wordlist WHERE (speech<>'' AND word LIKE ?)", (sqlchr,))
 		else:
@@ -65,7 +89,7 @@ def clozeword():
 		if pr != 's':
 			res.append('<a href="%s">&gt;&gt;查询包含以 %s 开头的单词的词组...</a></p>' % (flask.url_for('clozeword', fl=fl, sp=sp, pr='p'), fl))
 	else:
-		res.append('<p><h2>查询结果：</h2><table border="1"><tbody><tr class="hd"><td>词组</td><td>解释</td></tr>')
+		res.append('<p><h2>查询结果：</h2><table border="1"><tbody><tr class="hd"><th>词组</th><th>解释</th></tr>')
 		exe = cur_cloze.execute("SELECT word,mean FROM wordlist WHERE (speech='' AND (word LIKE ? OR word LIKE ?))", (fl+"%", "% "+fl+"%"))
 		if fl == 'a':
 			for row in exe:

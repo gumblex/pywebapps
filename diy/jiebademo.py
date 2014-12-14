@@ -56,8 +56,8 @@ def extract():
     if flask.request.method == 'GET':
         return flask.render_template("extract_form.html",content=sample_text,tags="",topk=10)
     else:
-        text = flask.request.args.get('text', '')
-        topk = int(flask.request.args.get('topk', '10'))
+        text = flask.request.form.get('text', '')
+        topk = int(flask.request.form.get('topk', '10'))
         tags = jieba.analyse.extract_tags(text,topK=topk)
         return flask.render_template("extract_form.html",content=text,tags=", ".join(tags),topk=topk)
 
@@ -109,19 +109,19 @@ C++和c#是什么关系？11+122=133，是吗？
     if flask.request.method == 'GET':
         return flask.render_template("cut_form.html",content=sample_sentences,selected=functools.partial(match,1))
     else:
-        text = flask.request.args.get('text', '')
-        if flask.request.args.get('opt')=="1":
+        text = flask.request.form.get('text', '')
+        if flask.request.form.get('opt')=="1":
             result = "/ ".join(jieba.cut(text))
-        elif flask.request.args.get('opt')=="2":
+        elif flask.request.form.get('opt')=="2":
             result = "/ ".join(jieba.cut_for_search(text))
-        elif flask.request.args.get('opt')=="3":
+        elif flask.request.form.get('opt')=="3":
             result = []
             for w in posseg.cut(text):
                 result.append(w.word+"/"+w.flag)
             result = " ".join(result)
         else:
             result = ""
-        return flask.render_template("cut_form.html",content=result,selected=functools.partial(match,int(flask.request.args.get('opt', '1'))))
+        return flask.render_template("cut_form.html",content=result,selected=functools.partial(match,int(flask.request.form.get('opt', '1'))))
 
 if __name__ == "__main__":
     # Interactive mode

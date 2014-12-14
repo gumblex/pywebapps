@@ -29,7 +29,8 @@ verbose = False
 pm2c = subprocess.Popen(m2c, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=sys.stderr, cwd=MOSES_CWD)
 pc2m = subprocess.Popen(c2m, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=sys.stderr, cwd=MOSES_CWD)
 
-jieba.initialize()
+jieba.initialize(DICT_SMALL)
+jiebazhc.initialize()
 sys.stderr.write('System ready.\n')
 sys.stderr.flush()
 
@@ -64,6 +65,12 @@ def handle(data):
 		return json.dumps(tuple(jieba.cut_for_search(*oper[1], **oper[2]))).encode('utf-8')
 	elif oper[0] == 'tokenize':
 		return json.dumps(tuple(jieba.tokenize(*oper[1], **oper[2]))).encode('utf-8')
+	elif oper[0] == 'jiebazhc.cut':
+		return json.dumps(tuple(jiebazhc.cut(*oper[1], **oper[2]))).encode('utf-8')
+	elif oper[0] == 'jiebazhc.cut_for_search':
+		return json.dumps(tuple(jiebazhc.cut_for_search(*oper[1], **oper[2]))).encode('utf-8')
+	elif oper[0] == 'jiebazhc.tokenize':
+		return json.dumps(tuple(jiebazhc.tokenize(*oper[1], **oper[2]))).encode('utf-8')
 	elif oper[0] == 'add_word':
 		jieba.add_word(*oper[1], **oper[2])
 	elif oper[0] == 'load_userdict':

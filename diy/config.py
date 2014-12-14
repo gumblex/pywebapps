@@ -3,6 +3,9 @@
 
 import os
 
+# Jieba small dict
+DICT_SMALL = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "smalldict.txt")
+
 # DB to store wordlist
 DB_clozeword = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "cwordlist.db")
 

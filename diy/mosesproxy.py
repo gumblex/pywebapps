@@ -30,6 +30,16 @@ def cut_for_search(*args, **kwargs):
 def tokenize(*args, **kwargs):
 	return json.loads(receive(json.dumps(('tokenize',args,kwargs)).encode('utf-8') + b"\n"))
 
+class jiebazhc:
+	def cut(*args, **kwargs):
+		return json.loads(receive(json.dumps(('jiebazhc.cut',args,kwargs)).encode('utf-8') + b"\n"))
+
+	def cut_for_search(*args, **kwargs):
+		return json.loads(receive(json.dumps(('jiebazhc.cut_for_search',args,kwargs)).encode('utf-8') + b"\n"))
+
+	def tokenize(*args, **kwargs):
+		return json.loads(receive(json.dumps(('jiebazhc.tokenize',args,kwargs)).encode('utf-8') + b"\n"))
+
 def add_word(*args, **kwargs):
 	receive(json.dumps(('add_word',args,kwargs)).encode('utf-8') + b"\n")
 
