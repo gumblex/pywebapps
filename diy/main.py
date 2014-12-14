@@ -43,7 +43,7 @@ def redirect_subdomain():
 		newurl = urlunsplit(urlparts_list)
 		response = flask.make_response('Moved to ' + newurl, 301)
 		response.headers['Location'] = newurl
-		return newurl
+		return response
 
 @app.route("/")
 def index():
