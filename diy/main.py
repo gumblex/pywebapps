@@ -40,7 +40,10 @@ def redirect_subdomain():
 		urlparts_list = list(urlparts)
 		urlparts_list[1] = 'app.gumble.tk'
 		urlparts_list[2] = '/' + appname + urlparts_list[2]
-		return flask.redirect(urlunsplit(urlparts_list))
+		newurl = urlunsplit(urlparts_list)
+		response = flask.make_response('Moved to ' + newurl, 301)
+		response.headers['Location'] = newurl
+		return newurl
 
 @app.route("/")
 def index():
