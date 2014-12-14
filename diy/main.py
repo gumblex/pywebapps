@@ -7,6 +7,7 @@ import logging
 import sqlite3
 import mosesproxy
 from werkzeug.contrib.cache import SimpleCache
+from urllib.parse import urlsplit, urlunsplit
 from config import *
 
 jieba = mosesproxy
@@ -30,6 +31,16 @@ def url_for_other_page(query, page):
 	return flask.url_for(flask.request.endpoint, q=base64.urlsafe_b64encode(query.encode('utf-8').rstrip(b'=')), p=page)
 
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
+
+@app.before_request
+def redirect_subdomain():
+	urlparts = urlsplit(flask.request.url)
+	if urlparts.netloc != 'app.gumble.tk':
+		appname = urlparts.netloc.split('.')[0]
+		urlparts_list = list(urlparts)
+		urlparts_list[1] = 'app.gumble.tk'
+		urlparts_list[2] = '/' + appname + urlparts_list[2]
+		return flask.redirect(urlunsplit(urlparts_list))
 
 @app.route("/")
 def index():
