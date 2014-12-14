@@ -37,12 +37,12 @@ def index():
 
 @app.route("/", subdomain='glass')
 def glasssd():
-	return flask.redirect('//app.gumble.tk/glass/')
+	return flask.redirect('app.gumble.tk/glass/')
 
 @app.route("/", subdomain='wenyan')
 @app.route("/", subdomain='translate')
 def wenyansd():
-	return flask.redirect('//app.gumble.tk/wenyan/')
+	return flask.redirect('app.gumble.tk/wenyan/')
 
 @app.route('/favicon.ico')
 def favicon():
