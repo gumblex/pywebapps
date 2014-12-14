@@ -16,12 +16,15 @@ app = flask.Flask(__name__)
 app.config['SERVER_NAME'] = 'gumble.tk'
 app.url_map.default_subdomain = 'app'
 
-from jiebademo import jiebademo
-app.register_blueprint(jiebademo, url_prefix='/jiebademo')
-
 # For debug use
 
 logging.basicConfig(filename=os.path.join(os.environ['OPENSHIFT_LOG_DIR'], "flask.log"), format='*** %(asctime)s %(levelname)s [in %(filename)s %(funcName)s]\n%(message)s', level=logging.WARNING)
+
+try:
+	from jiebademo import jiebademo
+	app.register_blueprint(jiebademo, url_prefix='/jiebademo')
+except Exception:
+	logging.exception("Import jiebademo failed.")
 
 def url_for_other_page(query, page):
 	return flask.url_for(flask.request.endpoint, q=base64.urlsafe_b64encode(query.encode('utf-8').rstrip(b'=')), p=page)

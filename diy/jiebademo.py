@@ -69,16 +69,3 @@ C++和c#是什么关系？11+122=133，是吗？
         else:
             result = ""
         return flask.render_template("cut_form.html",content=result,selected=functools.partial(match,int(flask.request.form.get('opt', '1'))))
-
-if __name__ == "__main__":
-    # Interactive mode
-    #debug(True)
-    #run()
-    from wsgiref.simple_server import make_server
-    httpd = make_server('localhost', 8080, default_app())
-    # Wait for a single request, serve it and quit.
-    httpd.serve_forever()
-else:
-    # Mod WSGI launch
-    os.chdir(os.path.dirname(__file__))
-    application = default_app()
