@@ -16,8 +16,8 @@ app = flask.Flask(__name__)
 app.config['SERVER_NAME'] = 'gumble.tk'
 app.url_map.default_subdomain = 'app'
 
-#from jiebademo import jiebademo
-#app.register_blueprint(jiebademo, url_prefix='/jiebademo')
+from jiebademo import jiebademo
+app.register_blueprint(jiebademo, url_prefix='/jiebademo')
 
 # For debug use
 
