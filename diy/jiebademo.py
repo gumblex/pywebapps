@@ -7,7 +7,7 @@ import functools
 
 jiebazhc = jieba.jiebazhc()
 
-jiebademo = Blueprint('jiebademo', __name__)
+jiebademo = flask.Blueprint('jiebademo', __name__)
 
 match = lambda a,b: "checked" if a==b else ''
 
