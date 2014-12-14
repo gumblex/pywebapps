@@ -46,15 +46,6 @@ def redirect_subdomain():
 def index():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
 
-@app.route("/", subdomain='glass')
-def glasssd():
-	return flask.redirect('app.gumble.tk/glass/')
-
-@app.route("/", subdomain='wenyan')
-@app.route("/", subdomain='translate')
-def wenyansd():
-	return flask.redirect('app.gumble.tk/wenyan/')
-
 @app.route('/favicon.ico')
 def favicon():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
