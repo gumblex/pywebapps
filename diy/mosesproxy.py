@@ -21,6 +21,24 @@ def receive(data):
 def translate(text, mode):
 	return json.loads(receive(json.dumps((mode,text)).encode('utf-8') + b"\n"))
 
+def cut(*args, **kwargs):
+	return json.loads(receive(json.dumps(('cut',args,kwargs)).encode('utf-8') + b"\n"))
+
+def cut_for_search(*args, **kwargs):
+	return json.loads(receive(json.dumps(('cut_for_search',args,kwargs)).encode('utf-8') + b"\n"))
+
+def tokenize(*args, **kwargs):
+	return json.loads(receive(json.dumps(('tokenize',args,kwargs)).encode('utf-8') + b"\n"))
+
+def add_word(*args, **kwargs):
+	receive(json.dumps(('add_word',args,kwargs)).encode('utf-8') + b"\n")
+
+def load_userdict(*args):
+	receive(json.dumps(('load_userdict',args)).encode('utf-8') + b"\n")
+
+def set_dictionary(*args):
+	receive(json.dumps(('set_dictionary',args)).encode('utf-8') + b"\n")
+
 def stopserver():
 	receive(json.dumps(('stopserver',)).encode('utf-8') + b"\n")
 

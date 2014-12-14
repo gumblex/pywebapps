@@ -14,8 +14,8 @@ import jiebazhc
 from config import *
 
 os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
-c2m = [MOSESBIN, '-f', MOSES_INI_c2m]
-m2c = [MOSESBIN, '-f', MOSES_INI_m2c]
+c2m = [MOSESBIN, '-v', '0', '-f', MOSES_INI_c2m]
+m2c = [MOSESBIN, '-v', '0', '-f', MOSES_INI_m2c]
 punct = frozenset(''':!),.:;?]}¢'"、。〉》」』】〕〗〞︰︱︳﹐､﹒﹔﹕﹖﹗﹚﹜﹞！），．：；？｜｝︴︶︸︺︼︾﹀﹂﹄﹏､～￠々‖•·ˇˉ―--′’”([{£¥'"‵〈《「『【〔〖（［｛￡￥〝︵︷︹︻︽︿﹁﹃﹙﹛﹝（｛“‘''')
 longpunct = frozenset('-—_…')
 whitespace = frozenset(' \t\n\r\x0b\x0c\u3000')
@@ -26,8 +26,8 @@ detokenize = lambda s: spacing(RE_WS_IN_FW.sub(r'\1', s)).strip()
 
 quiet = False
 verbose = False
-pm2c = subprocess.Popen(m2c, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=os.getcwd())
-pc2m = subprocess.Popen(c2m, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=os.getcwd())
+pm2c = subprocess.Popen(m2c, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=sys.stderr, cwd=MOSES_CWD)
+pc2m = subprocess.Popen(c2m, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=sys.stderr, cwd=MOSES_CWD)
 
 jieba.initialize()
 sys.stderr.write('System ready.\n')
@@ -58,6 +58,18 @@ def handle(data):
 		return json.dumps(translate(oper[1], 'c2m')).encode('utf-8')
 	elif oper[0] == 'm2c':
 		return json.dumps(translate(oper[1], 'm2c')).encode('utf-8')
+	elif oper[0] == 'cut':
+		return json.dumps(tuple(jieba.cut(*oper[1], **oper[2]))).encode('utf-8')
+	elif oper[0] == 'cut_for_search':
+		return json.dumps(tuple(jieba.cut_for_search(*oper[1], **oper[2]))).encode('utf-8')
+	elif oper[0] == 'tokenize':
+		return json.dumps(tuple(jieba.tokenize(*oper[1], **oper[2]))).encode('utf-8')
+	elif oper[0] == 'add_word':
+		jieba.add_word(*oper[1], **oper[2])
+	elif oper[0] == 'load_userdict':
+		jieba.load_userdict(*oper[1])
+	elif oper[0] == 'set_dictionary':
+		jieba.set_dictionary(*oper[1])
 	elif oper[0] == 'stopserver':
 		return b'stop'
 	elif oper[0] == 'ping':

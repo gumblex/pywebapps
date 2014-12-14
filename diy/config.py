@@ -7,6 +7,7 @@ import os
 DB_clozeword = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "cwordlist.db")
 
 MOSESBIN = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "moses")
+MOSES_CWD = os.environ['OPENSHIFT_DATA_DIR']
 MOSES_INI_c2m = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "zhc2zhm", "moses.ini")
 MOSES_INI_m2c = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "zhm2zhc", "moses.ini")
 
