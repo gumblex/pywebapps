@@ -2,7 +2,8 @@ import os
 import re
 import flask
 import datetime
-import base64
+import gzip
+import functools
 import logging
 import sqlite3
 import mosesproxy
@@ -18,7 +19,6 @@ app.config['SERVER_NAME'] = 'gumble.tk'
 app.url_map.default_subdomain = 'app'
 
 # For debug use
-
 logging.basicConfig(filename=os.path.join(os.environ['OPENSHIFT_LOG_DIR'], "flask.log"), format='*** %(asctime)s %(levelname)s [in %(filename)s %(funcName)s]\n%(message)s', level=logging.WARNING)
 
 try:
@@ -27,10 +27,33 @@ try:
 except Exception:
 	logging.exception("Import jiebademo failed.")
 
-def url_for_other_page(query, page):
-	return flask.url_for(flask.request.endpoint, q=base64.urlsafe_b64encode(query.encode('utf-8').rstrip(b'=')), p=page)
+def gzipped(f):
+	@functools.wraps(f)
+	def view_func(*args, **kwargs):
+		@flask.after_this_request
+		def zipper(response):
+			accept_encoding = request.headers.get('Accept-Encoding', '')
 
-app.jinja_env.globals['url_for_other_page'] = url_for_other_page
+			if 'gzip' not in accept_encoding.lower():
+				return response
+
+			response.direct_passthrough = False
+
+			if (response.status_code < 200 or
+				response.status_code >= 300 or
+				'Content-Encoding' in response.headers):
+				return response
+			response.data = gzip.compress(response.data)
+			response.headers['Content-Encoding'] = 'gzip'
+			response.headers['Vary'] = 'Accept-Encoding'
+			response.headers['Content-Length'] = len(response.data)
+
+			return response
+
+		return f(*args, **kwargs)
+
+	return view_func
+
 
 #@app.before_request
 def redirect_subdomain():
@@ -47,6 +70,8 @@ def redirect_subdomain():
 		return response
 
 @app.route("/")
+@functools.lru_cache
+@gzipped
 def index():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
 
@@ -55,15 +80,20 @@ def favicon():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @app.route("/", subdomain='glass')
+@functools.lru_cache
+@gzipped
 def index_glass():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static/glass'), 'index.html')
 
 @app.route("/<path:filename>", subdomain='glass')
+@functools.lru_cache
+@gzipped
 def file_glass(filename):
 	return flask.send_from_directory(os.path.join(app.root_path, 'static/glass'), filename)
 
 @app.route("/wenyan/")
 @app.route("/translate/")
+@gzipped
 def wenyan():
 	tinput = flask.request.form.get('input', '')
 	if flask.request.form.get('lang') == 'm2c':
@@ -72,7 +102,7 @@ def wenyan():
 	else:
 		lang = 'c2m'
 		ischecked = (' checked', '')
-	toutput = mosesproxy.translate(tinput, lang)
+	toutput = mosesproxy.translate(tinput, lang) if tinput else ''
 	return flask.render_template('translate.html', lang=lang, ischecked=ischecked, toutput=flask.Markup(toutput))
 
 RE_NOTA = re.compile(r'^a\s.+|.+\S\sa\s.+')
