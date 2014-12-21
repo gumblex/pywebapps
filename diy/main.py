@@ -145,7 +145,7 @@ def clozeword():
 		exe = clozeword_lookup("SELECT word,mean FROM wordlist WHERE (speech='' AND (word LIKE ? OR word LIKE ?))", (fl+"%", "% "+fl+"%"))
 		if fl == 'a':
 			for row in exe:
-				if RE_NOTA.search(row['word']) is None:
+				if RE_NOTA.search(row[0]) is None:
 					res.append('<tr><td>%s</td><td>%s</td></tr>' % row)
 		else:
 			for row in exe:
