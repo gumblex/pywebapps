@@ -32,7 +32,7 @@ def gzipped(f):
 	def view_func(*args, **kwargs):
 		@flask.after_this_request
 		def zipper(response):
-			accept_encoding = request.headers.get('Accept-Encoding', '')
+			accept_encoding = flask.request.headers.get('Accept-Encoding', '')
 
 			if 'gzip' not in accept_encoding.lower():
 				return response
@@ -107,15 +107,20 @@ def wenyan():
 
 RE_NOTA = re.compile(r'^a\s.+|.+\S\sa\s.+')
 
+@functools.lru_cache(maxsize=16)
+def clozeword_lookup(sql):
+	db_cloze = sqlite3.connect(DB_clozeword)
+	cur_cloze = db_cloze.cursor()
+	return tuple(cur_cloze.execute(sql))
+
 #@app.route("/", subdomain='clozeword')
 @app.route("/clozeword/")
+@gzipped
 def clozeword():
 	fl = flask.request.args.get('fl', '').lower()
 	if not fl:
 		return flask.render_template('clozeword.html', fl="", result="")
 	res = []
-	db_cloze = sqlite3.connect(DB_clozeword)
-	cur_cloze = db_cloze.cursor()
 	pr = flask.request.args.get('pr', '')
 	sp = flask.request.args.get('sp', '').rstrip('.')
 	if pr == 's':
@@ -127,9 +132,9 @@ def clozeword():
 	if pr != 'p':
 		res.append('<p><h2>查询结果：</h2><table border="1"><tbody><tr class="hd"><th>单词</th><th>词性</th><th>解释</th></tr>')
 		if sp == 'un':
-			exe = cur_cloze.execute("SELECT * FROM wordlist WHERE (speech<>'' AND word LIKE ?)", (sqlchr,))
+			exe = clozeword_lookup("SELECT * FROM wordlist WHERE (speech<>'' AND word LIKE ?)", (sqlchr,))
 		else:
-			exe = cur_cloze.execute("SELECT * FROM wordlist WHERE (speech=? AND word LIKE ?)", (sp + '.', sqlchr))
+			exe = clozeword_lookup("SELECT * FROM wordlist WHERE (speech=? AND word LIKE ?)", (sp + '.', sqlchr))
 		for row in exe:
 			res.append('<tr><td>%s</td><td>%s</td><td>%s</td></tr>' % row)
 		res.append('</tbody></table></p><p>')
@@ -137,7 +142,7 @@ def clozeword():
 			res.append('<a href="%s">&gt;&gt;查询包含以 %s 开头的单词的词组...</a></p>' % (flask.url_for('clozeword', fl=fl, sp=sp, pr='p'), fl))
 	else:
 		res.append('<p><h2>查询结果：</h2><table border="1"><tbody><tr class="hd"><th>词组</th><th>解释</th></tr>')
-		exe = cur_cloze.execute("SELECT word,mean FROM wordlist WHERE (speech='' AND (word LIKE ? OR word LIKE ?))", (fl+"%", "% "+fl+"%"))
+		exe = clozeword_lookup("SELECT word,mean FROM wordlist WHERE (speech='' AND (word LIKE ? OR word LIKE ?))", (fl+"%", "% "+fl+"%"))
 		if fl == 'a':
 			for row in exe:
 				if RE_NOTA.search(row['word']) is None:
