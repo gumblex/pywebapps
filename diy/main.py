@@ -27,12 +27,23 @@ try:
 except Exception:
 	logging.exception("Import jiebademo failed.")
 
+site_glass = flask.Blueprint('site_glass', __name__)
+site_wenyan = flask.Blueprint('site_wenyan', __name__)
+
+@site_glass.route("/")
+def glass_index():
+	urlparts_list = list(urlsplit(flask.request.url))
+	urlparts_list[1] = 'app.gumble.tk'
+	urlparts_list[2] = '/glass' + urlparts_list[2]
+	return flask.redirect(urlunsplit(urlparts_list), code=302)
+
 def url_for_other_page(query, page):
 	return flask.url_for(flask.request.endpoint, q=base64.urlsafe_b64encode(query.encode('utf-8').rstrip(b'=')), p=page)
 
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
+app.register_blueprint(site_glass, subdomain='glass')
 
-@app.before_request
+#@app.before_request
 def redirect_subdomain():
 	urlparts = urlsplit(flask.request.url)
 	if urlparts.netloc != 'app.gumble.tk':
@@ -57,6 +68,10 @@ def favicon():
 #@app.route("/", subdomain='glass')
 #def index_glass():
 	#return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
+
+@app.route("/<filename>", subdomain='glass')
+def index_glass():
+	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
 
 @app.route("/wenyan/")
 @app.route("/translate/")
