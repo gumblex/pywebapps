@@ -70,7 +70,7 @@ def redirect_subdomain():
 		return response
 
 @app.route("/")
-@functools.lru_cache
+@functools.lru_cache(maxsize=1)
 @gzipped
 def index():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
@@ -80,13 +80,13 @@ def favicon():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @app.route("/", subdomain='glass')
-@functools.lru_cache
+@functools.lru_cache(maxsize=1)
 @gzipped
 def index_glass():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static/glass'), 'index.html')
 
 @app.route("/<path:filename>", subdomain='glass')
-@functools.lru_cache
+@functools.lru_cache(maxsize=25)
 @gzipped
 def file_glass(filename):
 	return flask.send_from_directory(os.path.join(app.root_path, 'static/glass'), filename)

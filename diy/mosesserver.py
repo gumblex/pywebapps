@@ -52,7 +52,7 @@ def translate(text, mode):
 		outputtext.append('</p>\n')
 	return ''.join(outputtext)
 
-@lru_cache()
+@lru_cache(maxsize=128)
 def handle(data):
 	oper = json.loads(data)
 	if oper[0] == 'c2m':
