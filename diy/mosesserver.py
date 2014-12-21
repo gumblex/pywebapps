@@ -96,7 +96,7 @@ def serve(filename):
 	if os.path.exists(filename):
 		try:
 			receive(filename, b'["ping"]\n')
-			return
+			return False
 		except:
 			# not removed socket
 			print("Found abandoned socket")

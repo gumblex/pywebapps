@@ -41,9 +41,9 @@ def redirect_subdomain():
 		urlparts_list[1] = 'app.gumble.tk'
 		urlparts_list[2] = '/' + appname + urlparts_list[2]
 		newurl = urlunsplit(urlparts_list)
-		response = flask.make_response('Moved to ' + newurl, 301)
-		response.autocorrect_location_header = False
+		response = app.response_class('Moved to %s\n' % newurl, 301)
 		response.headers['Location'] = newurl
+		response.autocorrect_location_header = False
 		return response
 
 @app.route("/")
@@ -53,6 +53,10 @@ def index():
 @app.route('/favicon.ico')
 def favicon():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
+#@app.route("/", subdomain='glass')
+#def index_glass():
+	#return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
 
 @app.route("/wenyan/")
 @app.route("/translate/")

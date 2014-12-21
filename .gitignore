@@ -4,4 +4,4 @@
 *~
 *.egg-info
 dist
-wsgi/static/style.css
+diy/static/style.css

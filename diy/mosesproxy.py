@@ -6,6 +6,7 @@ import socket
 from config import *
 
 filename = MS_SOCK
+autorestart = False
 
 def receive(data):
 	global filename
