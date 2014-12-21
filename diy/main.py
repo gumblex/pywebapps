@@ -108,10 +108,10 @@ def wenyan():
 RE_NOTA = re.compile(r'^a\s.+|.+\S\sa\s.+')
 
 @functools.lru_cache(maxsize=16)
-def clozeword_lookup(sql):
+def clozeword_lookup(sql, replace):
 	db_cloze = sqlite3.connect(DB_clozeword)
 	cur_cloze = db_cloze.cursor()
-	return tuple(cur_cloze.execute(sql))
+	return tuple(cur_cloze.execute(sql, replace))
 
 #@app.route("/", subdomain='clozeword')
 @app.route("/clozeword/")
