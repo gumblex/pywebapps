@@ -27,21 +27,10 @@ try:
 except Exception:
 	logging.exception("Import jiebademo failed.")
 
-site_glass = flask.Blueprint('site_glass', __name__)
-site_wenyan = flask.Blueprint('site_wenyan', __name__)
-
-@site_glass.route("/")
-def glass_index():
-	urlparts_list = list(urlsplit(flask.request.url))
-	urlparts_list[1] = 'app.gumble.tk'
-	urlparts_list[2] = '/glass' + urlparts_list[2]
-	return flask.redirect(urlunsplit(urlparts_list), code=302)
-
 def url_for_other_page(query, page):
 	return flask.url_for(flask.request.endpoint, q=base64.urlsafe_b64encode(query.encode('utf-8').rstrip(b'=')), p=page)
 
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
-app.register_blueprint(site_glass, subdomain='glass')
 
 #@app.before_request
 def redirect_subdomain():
@@ -65,13 +54,13 @@ def index():
 def favicon():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
-#@app.route("/", subdomain='glass')
-#def index_glass():
-	#return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
-
-@app.route("/<filename>", subdomain='glass')
+@app.route("/", subdomain='glass')
 def index_glass():
-	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
+	return flask.send_from_directory(os.path.join(app.root_path, 'static/glass'), 'index.html')
+
+@app.route("/<path:filename>", subdomain='glass')
+def file_glass(filename):
+	return flask.send_from_directory(os.path.join(app.root_path, 'static/glass'), filename)
 
 @app.route("/wenyan/")
 @app.route("/translate/")
