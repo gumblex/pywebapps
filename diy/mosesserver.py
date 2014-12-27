@@ -42,10 +42,14 @@ def translate(text, mode):
 		for s in sentences:
 			if mode == "c2m":
 				proc = pc2m
+				cmd = c2m
 				tok = ' '.join(filter(lambda x: x not in whitespace, jiebazhc.cut(s,cut_all=False)))
 			else:
 				proc = pm2c
+				cmd = m2c
 				tok = ' '.join(filter(lambda x: x not in whitespace, jieba.cut(s,cut_all=False)))
+			if not proc.poll():
+				proc = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=sys.stderr, cwd=MOSES_CWD)
 			proc.stdin.write(('%s\n' % tok).encode('utf8'))
 			proc.stdin.flush()
 			outputtext.append(detokenize(proc.stdout.readline().decode('utf8')))

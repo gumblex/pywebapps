@@ -3,5 +3,22 @@
 # script. The application will work only if it binds to
 # $OPENSHIFT_DIY_IP:8080
 source ${OPENSHIFT_DEPENDENCIES_DIR}python/bin/activate
+date >> ${OPENSHIFT_LOG_DIR}/mosesserver.log
+nohup python ${OPENSHIFT_REPO_DIR}diy/mosesserver.py >> ${OPENSHIFT_LOG_DIR}/mosesserver.log 2>&1 &
+echo Waiting for server...
+sleep 8
+n=0
+until [ $n -ge 3 ]
+do
+  python ${OPENSHIFT_REPO_DIR}diy/mosesproxy.py ping
+  rc=$?
+  [ $rc -eq 0 ] && break
+  n=$[$n+1]
+  echo "Retry and wait... $n"
+  sleep 5
+done
+if [ $rc -ne 0 ] ; then
+  exit $rc
+fi
 rm ${OPENSHIFT_TMP_DIR}uwsgi.pid
 ${OPENSHIFT_DATA_DIR}bin/uwsgi --ini ${OPENSHIFT_REPO_DIR}uwsgi.ini

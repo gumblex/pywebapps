@@ -22,6 +22,7 @@ Support MediaWiki's convertion format:
 
 """
 # Only Python3 can pass the doctest here due to unicode problems.
+__version__ = '1.1.1'
 
 import os
 import sys
@@ -42,6 +43,7 @@ Locales = {
 }
 
 DICTIONARY = "zhcdict.json"
+CHARDIFF = "chardiff.txt"
 
 zhcdicts = None
 dict_zhcn = None
@@ -64,6 +66,8 @@ def loaddict(filename=DICTIONARY):
     abs_path = os.path.join(_curpath, filename)
     with open(abs_path, 'r') as f:
         zhcdicts = json.load(f)
+    zhcdicts['SIMPONLY'] = frozenset(zhcdicts['SIMPONLY'])
+    zhcdicts['TRADONLY'] = frozenset(zhcdicts['TRADONLY'])
 
 def getdict(locale):
     """
@@ -118,6 +122,25 @@ def getpfset(convdict):
             pfset.append(word[:ch+1])
     return frozenset(pfset)
 
+def issimp(s):
+    """
+    Detect text is whether Simplified Chinese or Traditional Chinese.
+    Returns True for Simplified; False for Traditional; None for unknown.
+    It returns once first simplified- or traditional-only character is
+    encountered, so it's for quick and rough identification.
+    Use `is` (True/False/None) to check the result.
+
+    `s` must be unicode (Python 2) or str (Python 3), or you'll get None.
+    """
+    if zhcdicts is None:
+        loaddict(DICTIONARY)
+    for ch in s:
+        if ch in zhcdicts['SIMPONLY']:
+            return True
+        elif ch in zhcdicts['TRADONLY']:
+            return False
+    return None
+
 def fallback(locale, mapping):
     for l in Locales[locale]:
         if l in mapping:
@@ -149,6 +172,7 @@ def convtable2dict(convtable, locale, update=None):
 def tokenize(s, locale, update=None):
     """
     Tokenize `s` according to corresponding locale dictionary.
+    Don't use this for serious text processing.
     """
     zhdict = getdict(locale)
     pfset = pfsdict[locale]
@@ -369,16 +393,23 @@ def main():
     """
     Simple stdin/stdout interface.
     """
-    if len(sys.argv) != 2 or sys.argv[1] not in Locales:
-        print("usage: %s {zh-cn|zh-tw|zh-hk|zh-sg|zh-hans|zh-hant|zh} < input > output" % __file__)
+    if len(sys.argv) == 2 and sys.argv[1] in Locales:
+        locale = sys.argv[1]
+        convertfunc = convert
+    elif len(sys.argv) == 3 and sys.argv[1] == '-w' and sys.argv[2] in Locales:
+        locale = sys.argv[2]
+        convertfunc = convert_for_mw
+    else:
+        print("usage: %s [-w] {zh-cn|zh-tw|zh-hk|zh-sg|zh-hans|zh-hant|zh} < input > output" % __file__)
         sys.exit(1)
+
     loaddict()
     ln = sys.stdin.readline()
     while ln:
         l = ln.rstrip('\r\n')
         if sys.version_info[0] < 3:
             l = unicode(l, 'utf-8')
-        res = convert(l, sys.argv[1])
+        res = convertfunc(l, locale)
         if sys.version_info[0] < 3:
             print(res.encode('utf-8'))
         else:
