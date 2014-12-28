@@ -91,8 +91,11 @@ def index_glass():
 def file_glass(filename):
 	return flask.send_from_directory(os.path.join(app.root_path, 'static/glass'), filename)
 
-@app.route("/wenyan/")
 @app.route("/translate/")
+def translate_alias():
+	return flask.redirect(flask.url_for('wenyan'))
+
+@app.route("/wenyan/", methods=('GET', 'POST'))
 @gzipped
 def wenyan():
 	tinput = flask.request.form.get('input', '')
