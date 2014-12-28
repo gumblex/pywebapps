@@ -3,4 +3,4 @@ source $OPENSHIFT_CARTRIDGE_SDK_BASH
 
 # The logic to stop your application should be put in this script.
 ${OPENSHIFT_DATA_DIR}bin/uwsgi --stop ${OPENSHIFT_TMP_DIR}uwsgi.pid
-#python ${OPENSHIFT_REPO_DIR}diy/jiebaproxy.py stop
+python ${OPENSHIFT_REPO_DIR}diy/mosesproxy.py stop
