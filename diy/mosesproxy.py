@@ -3,17 +3,32 @@
 import sys
 import json
 import socket
+from subprocess import Popen
 from config import *
 
+_curpath = os.path.normpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+startserver_path = os.path.join(_curpath, 'startserver')
+
 filename = MS_SOCK
-autorestart = False
+autorestart = True
 
 def receive(data):
 	global filename
 	sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-	sock.connect(filename)
+	try:
+		sock.connect(filename)
+	except (FileNotFoundError, ConnectionRefusedError) as ex:
+		if autorestart:
+			Popen(('/bin/bash', startserver_path)).wait()
+			sock.connect(filename)
+		else:
+			raise ex
 	sock.sendall(data)
 	received = sock.recv(1024)
+	if not received and autorestart:
+		Popen(('/bin/bash', startserver_path)).wait()
+		sock.sendall(data)
+		received = sock.recv(1024)
 	while received[-1] != 10:
 		received += sock.recv(1024)
 	sock.close()

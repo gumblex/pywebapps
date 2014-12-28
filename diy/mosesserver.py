@@ -6,6 +6,8 @@ import subprocess
 import configparser
 import socket
 from functools import lru_cache
+import signal
+
 from zhconv import convert as zhconv
 from pangu import spacing
 import zhutil
@@ -14,6 +16,9 @@ import jiebazhc
 from config import *
 
 os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
+
+SIGNUM2NAME = dict((k, v) for v, k in signal.__dict__.items() if v.startswith('SIG') and not v.startswith('SIG_'))
+
 c2m = [MOSESBIN, '-v', '0', '-f', MOSES_INI_c2m]
 m2c = [MOSESBIN, '-v', '0', '-f', MOSES_INI_m2c]
 punct = frozenset(''':!),.:;?]}¢'"、。〉》」』】〕〗〞︰︱︳﹐､﹒﹔﹕﹖﹗﹚﹜﹞！），．：；？｜｝︴︶︸︺︼︾﹀﹂﹄﹏､～￠々‖•·ˇˉ―--′’”([{£¥'"‵〈《「『【〔〖（［｛￡￥〝︵︷︹︻︽︿﹁﹃﹙﹛﹝（｛“‘''')
@@ -45,7 +50,7 @@ def translatesentence(s, mode):
 	if mode == "c2m":
 		returncode = pc2m.poll()
 		if returncode is not None:
-			sys.stderr.write('Moses c2m (%s) is dead: %s\n' % (pc2m.pid, returncode))
+			sys.stderr.write('Moses c2m (%s) is dead: %s\n' % (pc2m.pid, SIGNUM2NAME.get(-returncode, str(returncode))))
 			pc2m.wait()
 			pc2m = runmoses('c2m')
 			sys.stderr.write('Restarted Moses c2m: %s\n' % pc2m.pid)
@@ -54,7 +59,7 @@ def translatesentence(s, mode):
 	else:
 		returncode = pm2c.poll()
 		if returncode is not None:
-			sys.stderr.write('Moses m2c (%s) is dead: %s\n' % (pm2c.pid, returncode))
+			sys.stderr.write('Moses m2c (%s) is dead: %s\n' % (pm2c.pid, SIGNUM2NAME.get(-returncode, str(returncode))))
 			pm2c.wait()
 			pm2c = runmoses('m2c')
 			sys.stderr.write('Restarted Moses m2c: %s\n' % pm2c.pid)

@@ -1,0 +1,19 @@
+#!/bin/bash
+source ${OPENSHIFT_DEPENDENCIES_DIR}python/bin/activate
+date >> ${OPENSHIFT_LOG_DIR}/mosesserver.log
+nohup python3 ${OPENSHIFT_REPO_DIR}diy/mosesserver.py >> ${OPENSHIFT_LOG_DIR}/mosesserver.log 2>&1 &
+echo Waiting for server... >&2
+sleep 8
+n=0
+until [ $n -ge 3 ]
+do
+  python3 ${OPENSHIFT_REPO_DIR}diy/mosesproxy.py ping
+  rc=$?
+  [ $rc -eq 0 ] && break
+  n=$[$n+1]
+  echo "Retry and wait... $n" >&2
+  sleep 5
+done
+if [ $rc -ne 0 ] ; then
+  exit $rc
+fi
