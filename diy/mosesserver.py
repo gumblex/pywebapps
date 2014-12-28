@@ -26,13 +26,43 @@ detokenize = lambda s: spacing(RE_WS_IN_FW.sub(r'\1', s)).strip()
 
 quiet = False
 verbose = False
-pm2c = subprocess.Popen(m2c, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=sys.stderr, cwd=MOSES_CWD)
-pc2m = subprocess.Popen(c2m, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=sys.stderr, cwd=MOSES_CWD)
+
+runmoses = lambda mode: subprocess.Popen(m2c, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=sys.stderr, cwd=MOSES_CWD) if mode=='m2c' else subprocess.Popen(c2m, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=sys.stderr, cwd=MOSES_CWD)
+
+pc2m = runmoses('c2m')
+pm2c = runmoses('m2c')
 
 jieba.initialize(DICT_SMALL)
 jiebazhc.initialize()
+sys.stderr.write('Started Moses c2m: %s\n' % pc2m.pid)
+sys.stderr.write('Started Moses m2c: %s\n' % pm2c.pid)
 sys.stderr.write('System ready.\n')
 sys.stderr.flush()
+
+@lru_cache(maxsize=64)
+def translatesentence(s, mode):
+	global pc2m, pm2c
+	if mode == "c2m":
+		returncode = pc2m.poll()
+		if returncode is not None:
+			sys.stderr.write('Moses c2m (%s) is dead: %s\n' % (pc2m.pid, returncode))
+			pc2m.wait()
+			pc2m = runmoses('c2m')
+			sys.stderr.write('Restarted Moses c2m: %s\n' % pc2m.pid)
+		proc = pc2m
+		tok = ' '.join(filter(lambda x: x not in whitespace, jiebazhc.cut(s,cut_all=False)))
+	else:
+		returncode = pm2c.poll()
+		if returncode is not None:
+			sys.stderr.write('Moses m2c (%s) is dead: %s\n' % (pm2c.pid, returncode))
+			pm2c.wait()
+			pm2c = runmoses('m2c')
+			sys.stderr.write('Restarted Moses m2c: %s\n' % pm2c.pid)
+		proc = pm2c
+		tok = ' '.join(filter(lambda x: x not in whitespace, jieba.cut(s,cut_all=False)))
+	proc.stdin.write(('%s\n' % tok).encode('utf8'))
+	proc.stdin.flush()
+	return detokenize(proc.stdout.readline().decode('utf8'))
 
 def translate(text, mode):
 	outputtext = []
@@ -40,23 +70,10 @@ def translate(text, mode):
 		outputtext.append('<p>')
 		sentences = zhutil.splitsentence(zhconv(l.strip(), 'zh-hans'))
 		for s in sentences:
-			if mode == "c2m":
-				proc = pc2m
-				cmd = c2m
-				tok = ' '.join(filter(lambda x: x not in whitespace, jiebazhc.cut(s,cut_all=False)))
-			else:
-				proc = pm2c
-				cmd = m2c
-				tok = ' '.join(filter(lambda x: x not in whitespace, jieba.cut(s,cut_all=False)))
-			if not proc.poll():
-				proc = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=sys.stderr, cwd=MOSES_CWD)
-			proc.stdin.write(('%s\n' % tok).encode('utf8'))
-			proc.stdin.flush()
-			outputtext.append(detokenize(proc.stdout.readline().decode('utf8')))
+			outputtext.append(translatesentence(s, mode))
 		outputtext.append('</p>\n')
 	return ''.join(outputtext)
 
-@lru_cache(maxsize=128)
 def handle(data):
 	oper = json.loads(data)
 	if oper[0] == 'c2m':
@@ -126,6 +143,8 @@ def serve(filename):
 					conn.sendall(result + b'\n')
 				conn.close()
 	finally:
+		pc2m.terminate()
+		pm2c.terminate()
 		if os.path.exists(filename):
 			os.unlink(filename)
 		print("Server stopped.")
