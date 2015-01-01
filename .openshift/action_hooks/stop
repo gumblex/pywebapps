@@ -1,6 +1,6 @@
 #!/bin/bash
 source $OPENSHIFT_CARTRIDGE_SDK_BASH
-
+source ${OPENSHIFT_DEPENDENCIES_DIR}python/bin/activate
 # The logic to stop your application should be put in this script.
 ${OPENSHIFT_DATA_DIR}bin/uwsgi --stop ${OPENSHIFT_TMP_DIR}uwsgi.pid
 python3 ${OPENSHIFT_REPO_DIR}diy/mosesproxy.py stop
