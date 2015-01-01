@@ -106,7 +106,7 @@ def wenyan():
 		lang = 'c2m'
 		ischecked = (' checked', '')
 	toutput = mosesproxy.translate(tinput, lang) if tinput else ''
-	return flask.render_template('translate.html', lang=lang, ischecked=ischecked, toutput=flask.Markup(toutput))
+	return flask.render_template('translate.html', tinput=tinput, lang=lang, ischecked=ischecked, toutput=flask.Markup(toutput))
 
 RE_NOTA = re.compile(r'^a\s.+|.+\S\sa\s.+')
 
