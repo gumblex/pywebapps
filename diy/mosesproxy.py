@@ -17,13 +17,14 @@ def receive(data):
 	sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 	try:
 		sock.connect(filename)
-	except (FileNotFoundError, ConnectionRefusedError) as ex:
+		sock.sendall(data)
+	except (FileNotFoundError, ConnectionRefusedError, BrokenPipeError) as ex:
 		if autorestart:
 			Popen(('/bin/bash', startserver_path)).wait()
 			sock.connect(filename)
+			sock.sendall(data)
 		else:
 			raise ex
-	sock.sendall(data)
 	received = sock.recv(1024)
 	if not received and autorestart:
 		Popen(('/bin/bash', startserver_path)).wait()
