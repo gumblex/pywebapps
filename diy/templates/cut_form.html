@@ -8,24 +8,17 @@
 <link rel="stylesheet" href="style.css">
 <style type="text/css">
 #Top{
-	text-align: center;
-	background-color: #000000;
-	color: #ffffff;
-	height: 30px;
+text-align: center;
+background-color: #000000;
+color: #ffffff;
+height: 30px;
 }
-
-#Wrapper{
-	text-align: center;
-}
-
+#Wrapper{text-align: center;}
 #Content{
-	width: 960px;
-	margin: 0 auto 0 auto;
+max-width: 960px;
+margin: 0 auto 0 auto;
 }
-
-#Bottom{
-	text-align: center;
-}
+#Bottom{text-align: center;}
 </style>
 </head>
 <body>
@@ -34,7 +27,7 @@
 </div>
 <div id="Wrapper">
 	<div id="Content">
-		<form action="/" method="post">
+		<form action="/jiebademo/" method="post">
 		<div>
 			<textarea rows="15" cols="100" name="text">{{ content }}</textarea>
 		</div>
@@ -48,8 +41,7 @@
 			<input type="radio" name="opt" value="3" {{ selected(3) }}/>文言文分词
 		</span>
 		<input type="submit" value="开始分词"/>
-		<input type="button" value="重置" onclick="javascript:window.location.href='/'"/>
-		<a href="/extract">关键词提取Demo</a>
+		<input type="button" value="重置" onclick="javascript:window.location.href='/jiebademo/'"/>
 	</div>
 </form>
 </div>
