@@ -8,6 +8,8 @@ DICT_SMALL = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "smalldict.txt")
 
 # DB to store wordlist
 DB_clozeword = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "cwordlist.db")
+DB_zhccache = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "zhccache.db")
+DB_zhccache_maxlen = 1024
 
 MOSESBIN = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "moses")
 MOSES_CWD = os.environ['OPENSHIFT_DATA_DIR']

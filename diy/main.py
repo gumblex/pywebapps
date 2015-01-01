@@ -15,7 +15,7 @@ jieba = mosesproxy
 jiebazhc = mosesproxy.jiebazhc()
 
 app = flask.Flask(__name__)
-app.config['SERVER_NAME'] = 'gumble.tk'
+#app.config['SERVER_NAME'] = 'gumble.tk'
 app.url_map.default_subdomain = 'app'
 
 # For debug use
@@ -158,4 +158,5 @@ def clozeword():
 	return flask.render_template('clozeword.html', fl=fl, result=flask.Markup('\n'.join(res)))
 
 if __name__ == "__main__":
+	app.config['SERVER_NAME'] = None
 	app.run(debug=True)

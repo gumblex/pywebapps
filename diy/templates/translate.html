@@ -12,7 +12,7 @@
 function autoGrow (oField) {
 var maxHeight = window.innerHeight - 400;
 if (oField.scrollHeight > oField.clientHeight) {
-oField.style.height = Math.min(oField.scrollHeight,maxHeight) + "px";
+oField.style.height = Math.min(oField.scrollHeight+10,maxHeight) + "px";
 }}
 </script>
 </head>
@@ -25,7 +25,7 @@ oField.style.height = Math.min(oField.scrollHeight,maxHeight) + "px";
 	<form class="pure-form" action="/wenyan/" method="POST">
 	<h2>原文</h2>
 	<div>
-	<textarea name="input" onchange="autoGrow(this);">{{ tinput }}</textarea>
+	<textarea id="tinput" name="input" onchange="autoGrow(this);">{{ tinput }}</textarea>
 	</div>
 	<div class="pure-g">
 	<div class="pure-u-2-3">
@@ -49,5 +49,8 @@ oField.style.height = Math.min(oField.scrollHeight,maxHeight) + "px";
 	<article class="translation indent">{{ toutput }}</article>
 </div>
 </section>
+<script>
+window.onload = function(){autoGrow(document.getElementById('tinput'))}
+</script>
 </body>
 </html>

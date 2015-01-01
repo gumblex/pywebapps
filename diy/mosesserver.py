@@ -3,7 +3,6 @@ import sys, os
 import re
 import json
 import subprocess
-import configparser
 import socket
 from functools import lru_cache
 import signal
@@ -13,11 +12,14 @@ from pangu import spacing
 import zhutil
 import jieba
 import jiebazhc
+from sqlitecache import SqliteCache
 from config import *
 
 os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 
 SIGNUM2NAME = dict((k, v) for v, k in signal.__dict__.items() if v.startswith('SIG') and not v.startswith('SIG_'))
+
+cache = SqliteCache(DB_zhccache, DB_zhccache_maxlen)
 
 c2m = [MOSESBIN, '-v', '0', '-f', MOSES_INI_c2m]
 m2c = [MOSESBIN, '-v', '0', '-f', MOSES_INI_m2c]
@@ -48,6 +50,9 @@ sys.stderr.flush()
 def translatesentence(s, mode):
 	global pc2m, pm2c
 	if mode == "c2m":
+		rv = cache.get(s)
+		if rv:
+			return rv
 		returncode = pc2m.poll()
 		if returncode is not None:
 			sys.stderr.write('Moses c2m (%s) is dead: %s\n' % (pc2m.pid, SIGNUM2NAME.get(-returncode, str(returncode))))
@@ -67,7 +72,9 @@ def translatesentence(s, mode):
 		tok = ' '.join(filter(lambda x: x not in whitespace, jieba.cut(s,cut_all=False)))
 	proc.stdin.write(('%s\n' % tok).encode('utf8'))
 	proc.stdin.flush()
-	return detokenize(proc.stdout.readline().decode('utf8'))
+	rv = detokenize(proc.stdout.readline().decode('utf8'))
+	cache.add(s, rv)
+	return rv
 
 def translate(text, mode):
 	outputtext = []
@@ -150,6 +157,7 @@ def serve(filename):
 	finally:
 		pc2m.terminate()
 		pm2c.terminate()
+		cache.gc()
 		if os.path.exists(filename):
 			os.unlink(filename)
 		print("Server stopped.")
