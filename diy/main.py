@@ -95,6 +95,7 @@ def file_glass(filename):
 def translate_alias():
 	return flask.redirect(flask.url_for('wenyan'))
 
+@app.route("/", subdomain='wenyan', methods=('GET', 'POST'))
 @app.route("/wenyan/", methods=('GET', 'POST'))
 @gzipped
 def wenyan():

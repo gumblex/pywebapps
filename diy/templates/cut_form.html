@@ -19,6 +19,7 @@ max-width: 960px;
 margin: 0 auto 0 auto;
 }
 #Bottom{text-align: center;}
+textarea{width: 100%;}
 </style>
 </head>
 <body>
@@ -29,7 +30,7 @@ margin: 0 auto 0 auto;
 	<div id="Content">
 		<form action="/jiebademo/" method="post">
 		<div>
-			<textarea rows="15" cols="100" name="text">{{ content }}</textarea>
+			<textarea rows="15" name="text">{{ content }}</textarea>
 		</div>
 		<span>
 			<input type="radio" name="opt" value="1" {{ selected(1) }}/>精确分词
