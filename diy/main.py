@@ -15,7 +15,7 @@ jieba = mosesproxy
 jiebazhc = mosesproxy.jiebazhc()
 
 app = flask.Flask(__name__)
-#app.config['SERVER_NAME'] = 'gumble.tk'
+app.config['SERVER_NAME'] = 'gumble.tk'
 app.url_map.default_subdomain = 'app'
 
 # For debug use
@@ -106,7 +106,12 @@ def wenyan():
 	else:
 		lang = 'c2m'
 		ischecked = (' checked', '')
-	toutput = mosesproxy.translate(tinput, lang) if tinput else ''
+	if not tinput:
+		toutput = ''
+	elif len(tinput) > MAX_CHAR:
+		toutput = '<p class="error">文本过长，请切分后提交。</p>'
+	else:
+		toutput = mosesproxy.translate(tinput, lang)
 	return flask.render_template('translate.html', tinput=tinput, lang=lang, ischecked=ischecked, toutput=flask.Markup(toutput))
 
 RE_NOTA = re.compile(r'^a\s.+|.+\S\sa\s.+')

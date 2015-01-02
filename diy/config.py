@@ -16,6 +16,8 @@ MOSES_CWD = os.environ['OPENSHIFT_DATA_DIR']
 MOSES_INI_c2m = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "zhc2zhm", "moses.ini")
 MOSES_INI_m2c = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "zhm2zhc", "moses.ini")
 
+MAX_CHAR = 2048
+
 # Mosesserver socket
 MS_SOCK = os.path.join(os.environ['OPENSHIFT_TMP_DIR'], "mosesserver.sock")
 

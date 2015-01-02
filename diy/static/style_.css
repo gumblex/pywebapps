@@ -190,6 +190,11 @@ article.news em, .noresult em {
     margin: .25em 0;
 }
 
+p.error {
+    font-size: 1.2em;
+    color: #FF851B;
+}
+
 footer {
     margin-top: 2em;
     border-top: solid 1px #DDD;
