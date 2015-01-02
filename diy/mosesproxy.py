@@ -10,9 +10,8 @@ _curpath = os.path.normpath(os.path.join(os.getcwd(), os.path.dirname(__file__))
 startserver_path = os.path.join(_curpath, 'startserver')
 
 filename = MS_SOCK
-autorestart = True
 
-def receive(data):
+def receive(data, autorestart=True):
 	global filename
 	sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 	try:
@@ -69,9 +68,9 @@ def set_dictionary(*args):
 def stopserver():
 	receive(json.dumps(('stopserver',)).encode('utf-8') + b"\n")
 
-def ping():
+def ping(autorestart=False):
 	try:
-		result = receive(json.dumps(('ping',)).encode('utf-8') + b"\n").strip()
+		result = receive(json.dumps(('ping',)).encode('utf-8') + b"\n", autorestart).strip()
 		return result == 'pong'
 	except:
 		return False
