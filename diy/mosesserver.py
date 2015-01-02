@@ -80,7 +80,7 @@ def translate(text, mode):
 	outputtext = []
 	for l in text.split('\n'):
 		outputtext.append('<p>')
-		sentences = zhutil.splitsentence(zhconv(l.strip(), 'zh-hans'))
+		sentences = zhutil.splitsentence(zhconv(l.strip(), 'zh-cn'))
 		for s in sentences:
 			outputtext.append(translatesentence(s, mode))
 		outputtext.append('</p>\n')
