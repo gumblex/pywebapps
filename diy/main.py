@@ -112,7 +112,7 @@ def wenyan():
 		toutput = '<p class="error">文本过长，请切分后提交。</p>'
 	else:
 		toutput = mosesproxy.translate(tinput, lang)
-	return flask.render_template('translate.html', tinput=tinput, lang=lang, ischecked=ischecked, toutput=flask.Markup(toutput))
+	return flask.render_template('translate.html', action=flask.url_for('wenyan'), tinput=tinput, lang=lang, ischecked=ischecked, toutput=flask.Markup(toutput))
 
 RE_NOTA = re.compile(r'^a\s.+|.+\S\sa\s.+')
 
