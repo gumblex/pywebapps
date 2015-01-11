@@ -15,8 +15,8 @@ jieba = mosesproxy
 jiebazhc = mosesproxy.jiebazhc()
 
 app = flask.Flask(__name__)
-#app.config['SERVER_NAME'] = 'gumble.tk'
-#app.url_map.default_subdomain = 'app'
+app.config['SERVER_NAME'] = 'gumble.tk'
+app.url_map.default_subdomain = 'app'
 #app.url_map.host_matching = True
 
 # For debug use
@@ -165,10 +165,10 @@ def clozeword():
 
 app.add_url_rule('/', 'index', index)
 app.add_url_rule('/favicon.ico', 'favicon', favicon)
-app.add_url_rule("/", 'index_glass', index_glass, host='glass.gumble.tk')
-app.add_url_rule("/<path:filename>", "file_glass", file_glass, host='glass.gumble.tk')
+app.add_url_rule("/", 'index_glass', index_glass, subdomain='glass')
+app.add_url_rule("/<path:filename>", "file_glass", file_glass, subdomain='glass')
 app.add_url_rule("/translate/", 'translate_alias', redirect_to="/wenyan/")
-app.add_url_rule("/", "wenyan", wenyan, methods=('GET', 'POST'), host='wenyan.gumble.tk')
+app.add_url_rule("/", "wenyan", wenyan, methods=('GET', 'POST'), subdomain='wenyan')
 app.add_url_rule("/wenyan/", "wenyan", wenyan, methods=('GET', 'POST'), alias=True)
 app.add_url_rule("/clozeword/", 'clozeword', clozeword)
 
