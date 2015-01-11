@@ -16,8 +16,6 @@ import jiebazhc
 from sqlitecache import SqliteCache
 from config import *
 
-import traceback
-
 os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 
 SIGNUM2NAME = dict((k, v) for v, k in signal.__dict__.items() if v.startswith('SIG') and not v.startswith('SIG_'))
@@ -173,8 +171,6 @@ def serve(filename):
 				else:
 					conn.sendall(result)
 				conn.close()
-	except Exception as ex:
-		traceback.print_exception(sys.exc_info())
 	finally:
 		mm.pc2m.terminate()
 		mm.pm2c.terminate()
