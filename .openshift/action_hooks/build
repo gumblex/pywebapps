@@ -2,5 +2,5 @@
 source ${OPENSHIFT_DEPENDENCIES_DIR}python/bin/activate
 pip3 install --use-mirrors -r ${OPENSHIFT_REPO_DIR}requirements.txt
 for css in ${OPENSHIFT_REPO_DIR}diy/static/*_.css; do
- python3 ${OPENSHIFT_REPO_DIR}diy/csscompressor.py ${css} > ${css::-5}.m.css
+ python3 ${OPENSHIFT_REPO_DIR}diy/csscompressor.py ${css} > ${css::${#css}-5}.m.css
 done
