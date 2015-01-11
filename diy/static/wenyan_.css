@@ -53,6 +53,7 @@ form {
 
 #tinput, #toutput {
     padding: .7em;
+    margin: 0 .2em;
     background-color: #FFFFF8;
     border-radius: 2px;
     width: 90%;
@@ -64,6 +65,11 @@ form {
     font-size: 14px;
     border: 1px solid #DAD3CA;
     box-shadow: 1px 1px 1px #EEE9DD inset;
+}
+
+#tinput:focus {
+    outline: 0;
+    border: 1px solid #C39F73;
 }
 
 #toutput {
@@ -83,6 +89,7 @@ form {
 
 #ctrlsubmit {
     padding: .3em 1em;
+    margin-right: 5%;
     width: 80%;
     background-color: #B7966C;
     color: #fff;
@@ -117,8 +124,9 @@ form {
 }
 
 .ctrlradiolb {
-    margin: 0 .8em;
+    margin: 0 .3em;
     color: #665D52;
+    display: inline-block;
 }
 
 p.error {

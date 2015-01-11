@@ -168,8 +168,8 @@ app.add_url_rule('/favicon.ico', 'favicon', favicon)
 app.add_url_rule("/", 'index_glass', index_glass, host='glass.gumble.tk')
 app.add_url_rule("/<path:filename>", "file_glass", file_glass, host='glass.gumble.tk')
 app.add_url_rule("/translate/", 'translate_alias', redirect_to="/wenyan/")
-app.add_url_rule("/", endpoint="wenyan", host='wenyan.gumble.tk', alias=True)
-app.add_url_rule("/wenyan/", "wenyan", wenyan, methods=('GET', 'POST'))
+app.add_url_rule("/", "wenyan", wenyan, methods=('GET', 'POST'), host='wenyan.gumble.tk')
+app.add_url_rule("/wenyan/", "wenyan", wenyan, methods=('GET', 'POST'), alias=True)
 app.add_url_rule("/clozeword/", 'clozeword', clozeword)
 
 if __name__ == "__main__":
