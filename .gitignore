@@ -4,4 +4,4 @@
 *~
 *.egg-info
 dist
-diy/static/style.css
+diy/static/*.m.css

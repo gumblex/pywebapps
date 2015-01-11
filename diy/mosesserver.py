@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 import sys, os
 import re
-import json
+import umsgpack
 import subprocess
 import socket
-from functools import lru_cache
 import signal
+import time
+from functools import lru_cache
 
 from zhconv import convert as zhconv
 from pangu import spacing
@@ -14,6 +15,8 @@ import jieba
 import jiebazhc
 from sqlitecache import SqliteCache
 from config import *
+
+import traceback
 
 os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 
@@ -26,6 +29,7 @@ m2c = [MOSESBIN, '-v', '0', '-f', MOSES_INI_m2c]
 punct = frozenset(''':!),.:;?]}¢'"、。〉》」』】〕〗〞︰︱︳﹐､﹒﹔﹕﹖﹗﹚﹜﹞！），．：；？｜｝︴︶︸︺︼︾﹀﹂﹄﹏､～￠々‖•·ˇˉ―--′’”([{£¥'"‵〈《「『【〔〖（［｛￡￥〝︵︷︹︻︽︿﹁﹃﹙﹛﹝（｛“‘''')
 longpunct = frozenset('-—_…')
 whitespace = frozenset(' \t\n\r\x0b\x0c\u3000')
+notwhite = lambda x: x not in whitespace
 
 RE_WS_IN_FW = re.compile(r'([\u2018\u2019\u201c\u201d\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef])\s+(?=[\u2018\u2019\u201c\u201d\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef])')
 
@@ -36,74 +40,85 @@ verbose = False
 
 runmoses = lambda mode: subprocess.Popen(m2c, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=sys.stderr, cwd=MOSES_CWD) if mode=='m2c' else subprocess.Popen(c2m, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=sys.stderr, cwd=MOSES_CWD)
 
-pc2m = runmoses('c2m')
-pm2c = runmoses('m2c')
-
 jieba.initialize(DICT_SMALL)
 jiebazhc.initialize()
-sys.stderr.write('Started Moses c2m: %s\n' % pc2m.pid)
-sys.stderr.write('Started Moses m2c: %s\n' % pm2c.pid)
-sys.stderr.write('System ready.\n')
-sys.stderr.flush()
 
-@lru_cache(maxsize=64)
-def translatesentence(s, mode):
-	global pc2m, pm2c
-	if mode == "c2m":
-		rv = cache.get(s)
-		if rv:
-			return rv
-		returncode = pc2m.poll()
-		if returncode is not None:
-			sys.stderr.write('Moses c2m (%s) is dead: %s\n' % (pc2m.pid, SIGNUM2NAME.get(-returncode, str(returncode))))
-			pc2m.wait()
-			pc2m = runmoses('c2m')
-			sys.stderr.write('Restarted Moses c2m: %s\n' % pc2m.pid)
-		proc = pc2m
-		tok = ' '.join(filter(lambda x: x not in whitespace, jiebazhc.cut(s,cut_all=False)))
-	else:
-		returncode = pm2c.poll()
-		if returncode is not None:
-			sys.stderr.write('Moses m2c (%s) is dead: %s\n' % (pm2c.pid, SIGNUM2NAME.get(-returncode, str(returncode))))
-			pm2c.wait()
-			pm2c = runmoses('m2c')
-			sys.stderr.write('Restarted Moses m2c: %s\n' % pm2c.pid)
-		proc = pm2c
-		tok = ' '.join(filter(lambda x: x not in whitespace, jieba.cut(s,cut_all=False)))
-	proc.stdin.write(('%s\n' % tok).encode('utf8'))
-	proc.stdin.flush()
-	rv = detokenize(proc.stdout.readline().decode('utf8'))
-	cache.add(s, rv)
-	return rv
+class MosesManager:
+	def __init__(self):
+		self.pc2m = runmoses('c2m')
+		self.pm2c = runmoses('m2c')
+		sys.stderr.write('Started Moses c2m: %s\n' % self.pc2m.pid)
+		sys.stderr.write('Started Moses m2c: %s\n' % self.pm2c.pid)
+		sys.stderr.write('System ready.\n')
+		sys.stderr.flush()
+		self.lastupdatetime = 0
+		self.timediff = 3600
+		self.sentencenum = 0
 
-def translate(text, mode):
-	outputtext = []
-	for l in text.split('\n'):
-		outputtext.append('<p>')
-		sentences = zhutil.splitsentence(zhconv(l.strip(), 'zh-cn'))
-		for s in sentences:
-			outputtext.append(translatesentence(s, mode))
-		outputtext.append('</p>\n')
-	return ''.join(outputtext)
+	@lru_cache(maxsize=64)
+	def translatesentence(self, s, mode):
+		if time.time() - self.lastupdatetime > self.timediff:
+			sys.stderr.write(time.strftime("# %Y-%m-%d %H:%M:%S\n", time.gmtime()))
+			self.lastupdatetime = time.time()
+		if mode == "c2m":
+			rv = cache.get(s)
+			if rv:
+				return rv
+			returncode = self.pc2m.poll()
+			if returncode is not None:
+				sys.stderr.write('Moses c2m (%s) is dead: %s\n' % (self.pc2m.pid, SIGNUM2NAME.get(-returncode, str(returncode))))
+				self.pc2m.wait()
+				self.pc2m = runmoses('c2m')
+				sys.stderr.write('Restarted Moses c2m: %s\n' % self.pc2m.pid)
+			proc = self.pc2m
+			tok = ' '.join(filter(notwhite, jiebazhc.cut(s,cut_all=False)))
+		else:
+			returncode = self.pm2c.poll()
+			if returncode is not None:
+				sys.stderr.write('Moses m2c (%s) is dead: %s\n' % (self.pm2c.pid, SIGNUM2NAME.get(-returncode, str(returncode))))
+				self.pm2c.wait()
+				self.pm2c = runmoses('m2c')
+				sys.stderr.write('Restarted Moses m2c: %s\n' % self.pm2c.pid)
+			proc = self.pm2c
+			tok = ' '.join(filter(notwhite, jieba.cut(s,cut_all=False)))
+		proc.stdin.write(('%s\n' % tok).encode('utf8'))
+		proc.stdin.flush()
+		rv = detokenize(proc.stdout.readline().decode('utf8'))
+		if mode == "c2m":
+			cache.add(s, rv)
+			if time.time() - self.lastupdatetime > self.timediff:
+				cache.gc()
+		self.lastupdatetime = time.time()
+		return rv
+
+	def translate(self, text, mode):
+		outputtext = []
+		for l in text.split('\n'):
+			outputtext.append('<p>')
+			sentences = zhutil.splitsentence(zhconv(l.strip(), 'zh-cn'))
+			for s in sentences:
+				outputtext.append(self.translatesentence(s, mode))
+			outputtext.append('</p>\n')
+		return ''.join(outputtext)
 
 def handle(data):
-	oper = json.loads(data)
+	oper = umsgpack.loads(data)
 	if oper[0] == 'c2m':
-		return json.dumps(translate(oper[1], 'c2m')).encode('utf-8')
+		return umsgpack.dumps(mm.translate(oper[1], 'c2m'))
 	elif oper[0] == 'm2c':
-		return json.dumps(translate(oper[1], 'm2c')).encode('utf-8')
+		return umsgpack.dumps(mm.translate(oper[1], 'm2c'))
 	elif oper[0] == 'cut':
-		return json.dumps(tuple(jieba.cut(*oper[1], **oper[2]))).encode('utf-8')
+		return umsgpack.dumps(tuple(jieba.cut(*oper[1], **oper[2])))
 	elif oper[0] == 'cut_for_search':
-		return json.dumps(tuple(jieba.cut_for_search(*oper[1], **oper[2]))).encode('utf-8')
+		return umsgpack.dumps(tuple(jieba.cut_for_search(*oper[1], **oper[2])))
 	elif oper[0] == 'tokenize':
-		return json.dumps(tuple(jieba.tokenize(*oper[1], **oper[2]))).encode('utf-8')
+		return umsgpack.dumps(tuple(jieba.tokenize(*oper[1], **oper[2])))
 	elif oper[0] == 'jiebazhc.cut':
-		return json.dumps(tuple(jiebazhc.cut(*oper[1], **oper[2]))).encode('utf-8')
+		return umsgpack.dumps(tuple(jiebazhc.cut(*oper[1], **oper[2])))
 	elif oper[0] == 'jiebazhc.cut_for_search':
-		return json.dumps(tuple(jiebazhc.cut_for_search(*oper[1], **oper[2]))).encode('utf-8')
+		return umsgpack.dumps(tuple(jiebazhc.cut_for_search(*oper[1], **oper[2])))
 	elif oper[0] == 'jiebazhc.tokenize':
-		return json.dumps(tuple(jiebazhc.tokenize(*oper[1], **oper[2]))).encode('utf-8')
+		return umsgpack.dumps(tuple(jiebazhc.tokenize(*oper[1], **oper[2])))
 	elif oper[0] == 'add_word':
 		jieba.add_word(*oper[1], **oper[2])
 	elif oper[0] == 'load_userdict':
@@ -115,22 +130,28 @@ def handle(data):
 	elif oper[0] == 'ping':
 		return b'pong'
 
+def recvall(sock, buf=1024):
+	data = sock.recv(buf)
+	alldata = [data]
+	while len(data) == buf:
+		data = sock.recv(buf)
+		alldata.append(data)
+	return b''.join(alldata)
+
 def receive(filename, data):
 	sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 	sock.connect(filename)
 	sock.sendall(data)
-	received = sock.recv(1024)
-	while received[-1] != 10:
-		received += sock.recv(1024)
+	received = recvall(sock, 1024)
 	sock.close()
-	return received.decode('utf-8')
+	return received
 
 def serve(filename):
 	if os.path.exists(filename):
 		try:
-			receive(filename, b'["ping"]\n')
+			receive(filename, umsgpack.dumps(('ping',)))
 			return False
-		except:
+		except Exception:
 			# not removed socket
 			print("Found abandoned socket")
 			os.unlink(filename)
@@ -141,22 +162,22 @@ def serve(filename):
 			jieba.initialize()
 			while 1:
 				conn, addr = sock.accept()
-				received = conn.recv(1024)
-				while received[-1] != 10:
-					received += conn.recv(1024)
-				result = handle(received.decode('utf-8'))
+				received = recvall(conn, 1024)
+				result = handle(received)
 				if result is None:
-					conn.sendall(b'\n')
+					conn.sendall(b"\xc0")
 				elif result == b'stop':
-					conn.sendall(b'\n')
+					conn.sendall(b"\xc0")
 					conn.close()
 					break
 				else:
-					conn.sendall(result + b'\n')
+					conn.sendall(result)
 				conn.close()
+	except Exception as ex:
+		traceback.print_exception(sys.exc_info())
 	finally:
-		pc2m.terminate()
-		pm2c.terminate()
+		mm.pc2m.terminate()
+		mm.pm2c.terminate()
 		cache.gc()
 		if os.path.exists(filename):
 			os.unlink(filename)
@@ -165,6 +186,7 @@ def serve(filename):
 if __name__ == '__main__':
 	filename = MS_SOCK
 	try:
+		mm = MosesManager()
 		serve(filename)
 	except OSError as ex:
 		if 'Address already in use' in str(ex):

@@ -15,8 +15,9 @@ jieba = mosesproxy
 jiebazhc = mosesproxy.jiebazhc()
 
 app = flask.Flask(__name__)
-app.config['SERVER_NAME'] = 'gumble.tk'
-app.url_map.default_subdomain = 'app'
+#app.config['SERVER_NAME'] = 'gumble.tk'
+#app.url_map.default_subdomain = 'app'
+#app.url_map.host_matching = True
 
 # For debug use
 logging.basicConfig(filename=os.path.join(os.environ['OPENSHIFT_LOG_DIR'], "flask.log"), format='*** %(asctime)s %(levelname)s [in %(filename)s %(funcName)s]\n%(message)s', level=logging.WARNING)
@@ -69,34 +70,34 @@ def redirect_subdomain():
 		response.autocorrect_location_header = False
 		return response
 
-@app.route("/")
-@functools.lru_cache(maxsize=1)
+#@app.route("/")
 @gzipped
+@functools.lru_cache(maxsize=1)
 def index():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
 
-@app.route('/favicon.ico')
+#@app.route('/favicon.ico')
 def favicon():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
-@app.route("/", subdomain='glass')
-@functools.lru_cache(maxsize=1)
+#@app.route("/", subdomain='glass')
 @gzipped
+@functools.lru_cache(maxsize=1)
 def index_glass():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static/glass'), 'index.html')
 
-@app.route("/<path:filename>", subdomain='glass')
-@functools.lru_cache(maxsize=25)
+#@app.route("/<path:filename>", subdomain='glass')
 @gzipped
+@functools.lru_cache(maxsize=25)
 def file_glass(filename):
 	return flask.send_from_directory(os.path.join(app.root_path, 'static/glass'), filename)
 
-@app.route("/translate/")
+#@app.route("/translate/")
 def translate_alias():
 	return flask.redirect(flask.url_for('wenyan'))
 
-@app.route("/", subdomain='wenyan', methods=('GET', 'POST'))
-@app.route("/wenyan/", methods=('GET', 'POST'))
+#@app.route("/", subdomain='wenyan', methods=('GET', 'POST'))
+#@app.route("/wenyan/", methods=('GET', 'POST'))
 @gzipped
 def wenyan():
 	tinput = flask.request.form.get('input', '')
@@ -123,7 +124,7 @@ def clozeword_lookup(sql, replace):
 	return tuple(cur_cloze.execute(sql, replace))
 
 #@app.route("/", subdomain='clozeword')
-@app.route("/clozeword/")
+#@app.route("/clozeword/")
 @gzipped
 def clozeword():
 	fl = flask.request.args.get('fl', '').lower()
@@ -161,6 +162,15 @@ def clozeword():
 				res.append('<tr><td>%s</td><td>%s</td></tr>' % row)
 		res.append('</tbody></table></p><p><a href="%s">&lt;&lt;返回单词列表...</a></p>' % flask.url_for('clozeword', fl=fl, sp=sp))
 	return flask.render_template('clozeword.html', fl=fl, result=flask.Markup('\n'.join(res)))
+
+app.add_url_rule('/', 'index', index)
+app.add_url_rule('/favicon.ico', 'favicon', favicon)
+app.add_url_rule("/", 'index_glass', index_glass, host='glass.gumble.tk')
+app.add_url_rule("/<path:filename>", "file_glass", file_glass, host='glass.gumble.tk')
+app.add_url_rule("/translate/", 'translate_alias', redirect_to="/wenyan/")
+app.add_url_rule("/", endpoint="wenyan", host='wenyan.gumble.tk', alias=True)
+app.add_url_rule("/wenyan/", "wenyan", wenyan, methods=('GET', 'POST'))
+app.add_url_rule("/clozeword/", 'clozeword', clozeword)
 
 if __name__ == "__main__":
 	app.config['SERVER_NAME'] = None

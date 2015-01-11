@@ -7,19 +7,19 @@ hashmd5 = lambda x: hashlib.md5(x.encode('utf-8')).digest()
 class SqliteCache:
 
     _create_sql = (
-            'CREATE TABLE IF NOT EXISTS bucket '
+            'CREATE TABLE IF NOT EXISTS cache '
             '('
             '  key BLOB PRIMARY KEY,'
             '  val TEXT,'
             '  freq INTEGER'
             ')'
             )
-    _len_sql = 'SELECT COUNT(*) FROM bucket'
-    _get_sql = 'SELECT val, freq FROM bucket WHERE key = ?'
-    _getone_sql = 'SELECT key FROM bucket WHERE freq = 1'
-    _del_sql = 'DELETE FROM bucket WHERE key = ?'
-    _set_sql = 'REPLACE INTO bucket (key, val, freq) VALUES (?, ?, ?)'
-    _add_sql = 'INSERT INTO bucket (key, val, freq) VALUES (?, ?, ?)'
+    _len_sql = 'SELECT COUNT(*) FROM cache'
+    _get_sql = 'SELECT val, freq FROM cache WHERE key = ?'
+    _del_sql = 'DELETE FROM cache WHERE key = ?'
+    _gc_sql = 'DELETE FROM cache WHERE key IN (SELECT key FROM cache WHERE freq = ? ORDER BY RANDOM() LIMIT ?)'
+    _set_sql = 'REPLACE INTO cache (key, val, freq) VALUES (?, ?, ?)'
+    _add_sql = 'INSERT INTO cache (key, val, freq) VALUES (?, ?, ?)'
 
     def __init__(self, path, maxlen=1048576):
         self.path = os.path.abspath(path)
@@ -36,6 +36,9 @@ class SqliteCache:
 
     def commit(self):
         self.connection.commit()
+
+    def close(self):
+        self.connection.close()
 
     def get(self, key):
         rv = None
@@ -74,11 +77,15 @@ class SqliteCache:
     def gc(self):
         conn = self.connection.cursor()
         conn.execute(self._len_sql)
-        dblen = conn.fetchone()[0]
-        if dblen > self.maxlen:
-            deletekeys = tuple(islice(conn.execute(self._getone_sql), dblen - self.maxlen))
-            for row in deletekeys:
-                conn.execute(self._del_sql, (row[0],))
+        origdblen = dblen = conn.fetchone()[0]
+        leastfreq = 1
+        while dblen > self.maxlen:
+            conn.execute(self._gc_sql, (leastfreq, dblen - self.maxlen))
+            leastfreq += 1
+            conn.execute(self._len_sql)
+            dblen = conn.fetchone()[0]
+        if origdblen%2:
+            conn.execute('VACUUM')
         self.connection.commit()
 
     def clear(self):

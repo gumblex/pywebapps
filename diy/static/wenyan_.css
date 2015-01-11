@@ -1,0 +1,133 @@
+@charset "utf-8";
+
+body {
+    font-family: Helvetica,Arial,FreeSans,sans-serif;
+    padding: 2em;
+    margin: auto;
+    background-color: #FFFFFB;
+}
+
+#container {
+    max-width: 60em;
+    margin: 0 auto;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: bold;
+    padding-left: .25em;
+}
+
+h1 {
+    color: #000;
+    padding-bottom: .5em;
+    font-size: 2em;
+    margin: .5em 0;
+}
+
+h2 {
+    color: #000;
+    font-size: 1.25em;
+    margin: .5em 0;
+}
+
+form {
+    font-size: 1em;
+    color: #777;
+}
+
+#pagetitle {
+    padding-bottom: .1em;
+    border-bottom: 1px solid #E6DFD6;
+    margin-top: .25em;
+    margin-bottom: .5em;
+    font-size: 2em;
+}
+
+#ver {
+    margin: 0 1em;
+    font-size: .5em;
+    color: #9C9185;
+    top: -.5em;
+    position: relative;
+}
+
+#tinput, #toutput {
+    padding: .7em;
+    background-color: #FFFFF8;
+    border-radius: 2px;
+    width: 90%;
+    line-height: 1.25em;
+}
+
+#tinput {
+    height: 15em;
+    font-size: 14px;
+    border: 1px solid #DAD3CA;
+    box-shadow: 1px 1px 1px #EEE9DD inset;
+}
+
+#toutput {
+    font-size: 14px;
+    border: 1px solid #E6DFD6;
+    min-height: 15em;
+    text-indent: 2em;
+}
+
+#toutput p {
+    margin: .25em 0;
+}
+
+#ctrlgroup {
+    margin-top: .5em;
+}
+
+#ctrlsubmit {
+    padding: .3em 1em;
+    width: 80%;
+    background-color: #B7966C;
+    color: #fff;
+    border: none;
+    font-size: 100%;
+    text-decoration: none;
+    border-radius: 2px;
+    display: inline-block;
+    line-height: normal;
+    white-space: nowrap;
+    vertical-align: baseline;
+    text-align: center;
+    cursor: pointer;
+}
+
+#ctrlsubmit:hover,
+#ctrlsubmit:focus {
+    background-color: #C39F73;
+}
+
+#ctrlsubmit:focus {
+    outline: 0;
+    box-shadow: 0 1px 1px rgba(2,2,1,0.15);
+}
+
+#ctrlsubmit:active {
+    box-shadow: 0 0 0 1px rgba(2,2,1,0.15) inset, 0 0 6px rgba(2,2,1,0.2) inset;
+}
+
+#ctrlradiog {
+    padding: .3em 0;
+}
+
+.ctrlradiolb {
+    margin: 0 .8em;
+    color: #665D52;
+}
+
+p.error {
+    font-size: 1.2em;
+    color: #FF851B;
+}
+
+footer {
+    margin-top: 2em;
+    border-top: solid 1px #DDD;
+    text-align: right;
+}

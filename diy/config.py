@@ -3,13 +3,17 @@
 
 import os
 
+OS_DATA = os.environ['OPENSHIFT_DATA_DIR']
+
 # Jieba small dict
 DICT_SMALL = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "smalldict.txt")
 
 # DB to store wordlist
 DB_clozeword = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "cwordlist.db")
 DB_zhccache = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "zhccache.db")
-DB_zhccache_maxlen = 1024
+DB_zhccache_maxlen = 65536
+DB_userlog = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "userlog.db")
+DB_testsent = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "testsent.db")
 
 MOSESBIN = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "moses")
 MOSES_CWD = os.environ['OPENSHIFT_DATA_DIR']
