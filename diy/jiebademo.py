@@ -5,7 +5,7 @@ import flask
 import mosesproxy as jieba
 import functools
 
-jiebazhc = jieba.jiebazhc()
+jiebazhc = jieba.jiebazhc
 
 jiebademo = flask.Blueprint('jiebademo', __name__)
 

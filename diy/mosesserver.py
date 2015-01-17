@@ -16,14 +16,17 @@ import jiebazhc
 from sqlitecache import SqliteCache
 from config import *
 
+_curpath = os.path.normpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+TIMEOUT_path = os.path.join(_curpath, 'timeout')
+
 os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 
 SIGNUM2NAME = dict((k, v) for v, k in signal.__dict__.items() if v.startswith('SIG') and not v.startswith('SIG_'))
 
 cache = SqliteCache(DB_zhccache, DB_zhccache_maxlen)
 
-c2m = [MOSESBIN, '-v', '0', '-f', MOSES_INI_c2m]
-m2c = [MOSESBIN, '-v', '0', '-f', MOSES_INI_m2c]
+c2m = [TIMEOUT_path, '-m', MOSES_MAXMEM, MOSESBIN, '-v', '0', '-f', MOSES_INI_c2m]
+m2c = [TIMEOUT_path, '-m', MOSES_MAXMEM, MOSESBIN, '-v', '0', '-f', MOSES_INI_m2c]
 punct = frozenset(''':!),.:;?]}¢'"、。〉》」』】〕〗〞︰︱︳﹐､﹒﹔﹕﹖﹗﹚﹜﹞！），．：；？｜｝︴︶︸︺︼︾﹀﹂﹄﹏､～￠々‖•·ˇˉ―--′’”([{£¥'"‵〈《「『【〔〖（［｛￡￥〝︵︷︹︻︽︿﹁﹃﹙﹛﹝（｛“‘''')
 longpunct = frozenset('-—_…')
 whitespace = frozenset(' \t\n\r\x0b\x0c\u3000')
@@ -51,7 +54,6 @@ class MosesManager:
 		sys.stderr.flush()
 		self.lastupdatetime = 0
 		self.timediff = 3600
-		self.sentencenum = 0
 
 	@lru_cache(maxsize=64)
 	def translatesentence(self, s, mode):
@@ -89,7 +91,7 @@ class MosesManager:
 		self.lastupdatetime = time.time()
 		return rv
 
-	def translate(self, text, mode):
+	def translate(self, text, mode, withcount=False):
 		outputtext = []
 		for l in text.split('\n'):
 			outputtext.append('<p>')
@@ -97,14 +99,17 @@ class MosesManager:
 			for s in sentences:
 				outputtext.append(self.translatesentence(s, mode))
 			outputtext.append('</p>\n')
-		return ''.join(outputtext)
+		if withcount:
+			return (''.join(outputtext), len(outputtext)-2)
+		else:
+			return ''.join(outputtext)
 
 def handle(data):
 	oper = umsgpack.loads(data)
 	if oper[0] == 'c2m':
-		return umsgpack.dumps(mm.translate(oper[1], 'c2m'))
+		return umsgpack.dumps(mm.translate(oper[1], 'c2m', oper[2]))
 	elif oper[0] == 'm2c':
-		return umsgpack.dumps(mm.translate(oper[1], 'm2c'))
+		return umsgpack.dumps(mm.translate(oper[1], 'm2c', oper[2]))
 	elif oper[0] == 'cut':
 		return umsgpack.dumps(tuple(jieba.cut(*oper[1], **oper[2])))
 	elif oper[0] == 'cut_for_search':

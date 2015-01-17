@@ -3,8 +3,11 @@
 import os
 import sys
 import sqlite3
+from zlib import crc32 as _crc32
 from sqlitecache import SqliteCache
 from config import *
+
+crc32 = lambda s: _crc32(s.encode('utf-8')) & 0xffffffff
 
 cache = SqliteCache(DB_zhccache, DB_zhccache_maxlen)
 
@@ -14,24 +17,32 @@ if os.path.isfile(DB_testsent):
 else:
 	db = sqlite3.connect(DB_testsent)
 	cur = db.cursor()
-	cur.execute("CREATE TABLE sentences (sent TEXT PRIMARY KEY, type INTEGER)")
+	cur.execute("CREATE TABLE sentences (id INTEGER PRIMARY KEY, sent TEXT, type INTEGER)")
 	db.commit()
 
 cf = open(os.path.join(OS_DATA, "zhc.txt")).read().split('\n')
 mf = open(os.path.join(OS_DATA, "zhm.txt")).read().split('\n')
 
 count = 0
+ccount = 0
+mcount = 0
 
 for c,m in zip(cf, mf):
 	cache.set(c, m)
 	if 15 < len(c) < 25:
-		cur.execute("REPLACE INTO sentences (sent, type) VALUES (?, ?)", (c.strip('“”‘’'), 0))
+		txt = c.strip('“”‘’；')
+		cur.execute("REPLACE INTO sentences (id, sent, type) VALUES (?, ?, ?)", (crc32(txt), txt, 0))
+		ccount += 1
 	if 15 < len(m) < 25:
-		cur.execute("REPLACE INTO sentences (sent, type) VALUES (?, ?)", (m.strip('“”‘’'), 1))
+		txt = m.strip('“”‘’；')
+		cur.execute("REPLACE INTO sentences (id, sent, type) VALUES (?, ?, ?)", (crc32(txt), txt, 1))
+		mcount += 1
 	count += 1
 	if count % 10000 == 0:
 		print(count)
 
+print(count, ccount, mcount)
 cache.gc()
+print('GC done.')
 db.commit()
-db.close()
+print('TestSent done.')

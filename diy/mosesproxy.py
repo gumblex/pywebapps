@@ -40,8 +40,8 @@ def receive(data, autorestart=True):
 	sock.close()
 	return received
 
-def translate(text, mode):
-	return umsgpack.loads(receive(umsgpack.dumps((mode,text))))
+def translate(text, mode, withcount=False):
+	return umsgpack.loads(receive(umsgpack.dumps((mode,text,withcount))))
 
 def cut(*args, **kwargs):
 	return umsgpack.loads(receive(umsgpack.dumps(('cut',args,kwargs))))
@@ -53,13 +53,16 @@ def tokenize(*args, **kwargs):
 	return umsgpack.loads(receive(umsgpack.dumps(('tokenize',args,kwargs))))
 
 class jiebazhc:
-	def cut(self, *args, **kwargs):
+	@staticmethod
+	def cut(*args, **kwargs):
 		return umsgpack.loads(receive(umsgpack.dumps(('jiebazhc.cut',args,kwargs))))
 
-	def cut_for_search(self, *args, **kwargs):
+	@staticmethod
+	def cut_for_search(*args, **kwargs):
 		return umsgpack.loads(receive(umsgpack.dumps(('jiebazhc.cut_for_search',args,kwargs))))
 
-	def tokenize(self, *args, **kwargs):
+	@staticmethod
+	def tokenize(*args, **kwargs):
 		return umsgpack.loads(receive(umsgpack.dumps(('jiebazhc.tokenize',args,kwargs))))
 
 def add_word(*args, **kwargs):

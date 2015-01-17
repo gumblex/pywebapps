@@ -1,6 +1,8 @@
-import os, sqlite3
-from itertools import islice
+import os
+import sqlite3
+import time
 import hashlib
+from itertools import islice
 
 hashmd5 = lambda x: hashlib.md5(x.encode('utf-8')).digest()
 
@@ -36,9 +38,6 @@ class SqliteCache:
 
     def commit(self):
         self.connection.commit()
-
-    def close(self):
-        self.connection.close()
 
     def get(self, key):
         rv = None
@@ -92,3 +91,73 @@ class SqliteCache:
         self.connection.commit()
         self.connection.close()
         self.__init__(self, self.path)
+
+
+class SqliteUserLog:
+
+    _create_sql = (
+            'CREATE TABLE IF NOT EXISTS userlog '
+            '('
+            '  rec INTEGER PRIMARY KEY ASC,'
+            '  ip TEXT,'
+            '  cnt INTEGER,'
+            '  time INTEGER'
+            ')'
+            )
+    _len_sql = 'SELECT COUNT(*) FROM userlog'
+    _check_sql = 'SELECT SUM(cnt) FROM userlog WHERE (ip = ? AND time > ?)'
+    _clear_sql = 'DELETE FROM userlog WHERE rec IN (SELECT rec FROM userlog WHERE ip = ?)'
+    _gc_sql = 'DELETE FROM userlog WHERE rec IN (SELECT rec FROM userlog WHERE time < ?)'
+    _add_sql = 'INSERT INTO userlog (ip, cnt, time) VALUES (?, ?, ?)'
+
+    def __init__(self, path, maxcnt, expire=3600):
+        self.path = os.path.abspath(path)
+        self.maxcnt = maxcnt
+        self.expire = expire
+        if not os.path.isfile(self.path):
+            self.connection = sqlite3.connect(self.path)
+            self.connection.execute(self._create_sql)
+        else:
+            self.connection = sqlite3.connect(self.path)
+
+    def __del__(self):
+        self.connection.commit()
+        self.connection.close()
+
+    def commit(self):
+        self.connection.commit()
+
+    def check(self, ip):
+        conn = self.connection.cursor()
+        conn.execute(self._check_sql, (ip, int(time.time() - self.expire)))
+        reqcount = conn.fetchone()[0]
+        return ((reqcount or 0) <= self.maxcnt)
+
+    def count(self, ip):
+        conn = self.connection.cursor()
+        conn.execute(self._check_sql, (ip, int(time.time() - self.expire)))
+        reqcount = conn.fetchone()[0]
+        return reqcount or 0
+
+    def add(self, ip, count):
+        conn = self.connection.cursor()
+        conn.execute(self._add_sql, (ip, count, int(time.time())))
+
+    def clear(self, ip):
+        conn = self.connection.cursor()
+        conn.execute(self._clear_sql, (ip,))
+
+    def gc(self):
+        conn = self.connection.cursor()
+        conn.execute(self._len_sql)
+        origdblen = conn.fetchone()[0]
+        conn.execute(self._gc_sql, (time.time() - self.expire,))
+        if origdblen%2:
+            conn.execute('VACUUM')
+        self.connection.commit()
+
+    def clear(self):
+        self.connection.commit()
+        self.connection.close()
+        self.__init__(self, self.path)
+
