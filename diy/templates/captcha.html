@@ -1,15 +1,20 @@
 <div id="captcha" class="pure-u-1">
-请判断下列句子：
+<h3>请判断下列句子：</h3>
+<div class="pure-g">
 {% for i in sentences %}
-<p>{{ i[1] }}
+<p class="pure-u-2-3">{{ i[1] }}
+</p>
+<div id="crgroup" class="pure-u-1-3">
 <label for="cc-{{ i[0] }}" class="ctrlradiolb">
-<input id="cc-{{ i[0] }}" type="radio" name="{{ i[0] }}" value="0">
+<input id="cc-{{ i[0] }}" type="radio" name="{{ i[0] }}" value="0" required>
 文言文
 </label>
 <label for="cm-{{ i[0] }}" class="ctrlradiolb">
 <input id="cm-{{ i[0] }}" type="radio" name="{{ i[0] }}" value="1">
 现代文
 </label>
-</p>
+</span>
+</div>
 {% endfor %}
+</div>
 </div>

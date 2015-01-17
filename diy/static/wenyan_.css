@@ -12,7 +12,7 @@ body {
     margin: 0 auto;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1, h2 {
     font-weight: bold;
     padding-left: .25em;
 }
@@ -34,6 +34,34 @@ form {
     font-size: 1em;
     color: #777;
 }
+
+label {
+    display :inline-block;
+}
+
+/*
+input[type="radio"] {
+    display:none; 
+}
+
+    background-color:#DAD3CA;
+    padding:.2em .6em;
+    line-height: normal;
+    white-space: nowrap;
+    vertical-align: baseline;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+input[type="radio"]:checked + label { 
+    background-color:#bbb;
+}
+
+input[type="radio"]:invalid {
+    background-color:red;
+}
+*/
 
 #pagetitle {
     padding-bottom: .1em;
@@ -64,7 +92,7 @@ form {
     height: 15em;
     font-size: 14px;
     border: 1px solid #DAD3CA;
-    box-shadow: 1px 1px 1px #EEE9DD inset;
+    box-shadow: 0 0 0 1px rgba(238,233,221,0.6) inset;
 }
 
 #tinput:focus {
@@ -126,12 +154,19 @@ form {
 .ctrlradiolb {
     margin: 0 .3em;
     color: #665D52;
-    display: inline-block;
 }
 
 #captcha {
     font-size: .9em;
     color: #222;
+}
+
+#captcha p {
+    margin: .5em 0;
+}
+
+#crgroup {
+    margin: .5em 0;
 }
 
 p.error {

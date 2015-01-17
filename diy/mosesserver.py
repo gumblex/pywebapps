@@ -7,6 +7,7 @@ import socket
 import signal
 import time
 from functools import lru_cache
+import resource
 
 from zhconv import convert as zhconv
 from pangu import spacing
@@ -16,8 +17,8 @@ import jiebazhc
 from sqlitecache import SqliteCache
 from config import *
 
-_curpath = os.path.normpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-TIMEOUT_path = os.path.join(_curpath, 'timeout')
+#_curpath = os.path.normpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+#TIMEOUT_path = os.path.join(_curpath, 'timeout')
 
 os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 
@@ -25,8 +26,12 @@ SIGNUM2NAME = dict((k, v) for v, k in signal.__dict__.items() if v.startswith('S
 
 cache = SqliteCache(DB_zhccache, DB_zhccache_maxlen)
 
-c2m = [TIMEOUT_path, '-m', MOSES_MAXMEM, MOSESBIN, '-v', '0', '-f', MOSES_INI_c2m]
-m2c = [TIMEOUT_path, '-m', MOSES_MAXMEM, MOSESBIN, '-v', '0', '-f', MOSES_INI_m2c]
+resource.setrlimit(resource.RLIMIT_RSS, (MOSES_MAXMEM*1024 - 10000, MOSES_MAXMEM*1024))
+
+c2m = [MOSESBIN, '-v', '0', '-f', MOSES_INI_c2m]
+m2c = [MOSESBIN, '-v', '0', '-f', MOSES_INI_m2c]
+#c2m = [TIMEOUT_path, '-m', MOSES_MAXMEM, MOSESBIN, '-v', '0', '-f', MOSES_INI_c2m]
+#m2c = [TIMEOUT_path, '-m', MOSES_MAXMEM, MOSESBIN, '-v', '0', '-f', MOSES_INI_m2c]
 punct = frozenset(''':!),.:;?]}¢'"、。〉》」』】〕〗〞︰︱︳﹐､﹒﹔﹕﹖﹗﹚﹜﹞！），．：；？｜｝︴︶︸︺︼︾﹀﹂﹄﹏､～￠々‖•·ˇˉ―--′’”([{£¥'"‵〈《「『【〔〖（［｛￡￥〝︵︷︹︻︽︿﹁﹃﹙﹛﹝（｛“‘''')
 longpunct = frozenset('-—_…')
 whitespace = frozenset(' \t\n\r\x0b\x0c\u3000')
@@ -60,47 +65,57 @@ class MosesManager:
 		if time.time() - self.lastupdatetime > self.timediff:
 			sys.stderr.write(time.strftime("# %Y-%m-%d %H:%M:%S\n", time.gmtime()))
 			self.lastupdatetime = time.time()
-		if mode == "c2m":
-			rv = cache.get(s)
+		for j in range(5):
+			if mode == "c2m":
+				rv = cache.get(s)
+				if rv:
+					return (rv, 0)
+				returncode = self.pc2m.poll()
+				if returncode is not None:
+					sys.stderr.write('Moses c2m (%s) is dead: %s\n' % (self.pc2m.pid, SIGNUM2NAME.get(-returncode, str(returncode))))
+					self.pc2m.wait()
+					self.pc2m = runmoses('c2m')
+					sys.stderr.write('Restarted Moses c2m: %s\n' % self.pc2m.pid)
+				proc = self.pc2m
+				tok = ' '.join(filter(notwhite, jiebazhc.cut(s,cut_all=False)))
+			else:
+				returncode = self.pm2c.poll()
+				if returncode is not None:
+					sys.stderr.write('Moses m2c (%s) is dead: %s\n' % (self.pm2c.pid, SIGNUM2NAME.get(-returncode, str(returncode))))
+					self.pm2c.wait()
+					self.pm2c = runmoses('m2c')
+					sys.stderr.write('Restarted Moses m2c: %s\n' % self.pm2c.pid)
+				proc = self.pm2c
+				tok = ' '.join(filter(notwhite, jieba.cut(s,cut_all=False)))
+			proc.stdin.write(('%s\n' % tok).encode('utf8'))
+			proc.stdin.flush()
+			rv = detokenize(proc.stdout.readline().decode('utf8'))
 			if rv:
-				return rv
-			returncode = self.pc2m.poll()
-			if returncode is not None:
-				sys.stderr.write('Moses c2m (%s) is dead: %s\n' % (self.pc2m.pid, SIGNUM2NAME.get(-returncode, str(returncode))))
-				self.pc2m.wait()
-				self.pc2m = runmoses('c2m')
-				sys.stderr.write('Restarted Moses c2m: %s\n' % self.pc2m.pid)
-			proc = self.pc2m
-			tok = ' '.join(filter(notwhite, jiebazhc.cut(s,cut_all=False)))
-		else:
-			returncode = self.pm2c.poll()
-			if returncode is not None:
-				sys.stderr.write('Moses m2c (%s) is dead: %s\n' % (self.pm2c.pid, SIGNUM2NAME.get(-returncode, str(returncode))))
-				self.pm2c.wait()
-				self.pm2c = runmoses('m2c')
-				sys.stderr.write('Restarted Moses m2c: %s\n' % self.pm2c.pid)
-			proc = self.pm2c
-			tok = ' '.join(filter(notwhite, jieba.cut(s,cut_all=False)))
-		proc.stdin.write(('%s\n' % tok).encode('utf8'))
-		proc.stdin.flush()
-		rv = detokenize(proc.stdout.readline().decode('utf8'))
+				break
 		if mode == "c2m":
 			cache.add(s, rv)
 			if time.time() - self.lastupdatetime > self.timediff:
 				cache.gc()
 		self.lastupdatetime = time.time()
-		return rv
+		return (rv, 1)
 
 	def translate(self, text, mode, withcount=False):
 		outputtext = []
+		nohitcount = 0
 		for l in text.split('\n'):
 			outputtext.append('<p>')
 			sentences = zhutil.splitsentence(zhconv(l.strip(), 'zh-cn'))
 			for s in sentences:
-				outputtext.append(self.translatesentence(s, mode))
+				res = ''
+				# prevent mem explode
+				for i in range(0, len(s), 128):
+					rv, nohit = self.translatesentence(s[i:i+128], mode)
+					res += rv
+					nohitcount += nohit
+				outputtext.append(res)
 			outputtext.append('</p>\n')
 		if withcount:
-			return (''.join(outputtext), len(outputtext)-2)
+			return (''.join(outputtext), nohit)
 		else:
 			return ''.join(outputtext)
 

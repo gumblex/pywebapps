@@ -30,11 +30,11 @@ mcount = 0
 for c,m in zip(cf, mf):
 	cache.set(c, m)
 	if 15 < len(c) < 25:
-		txt = c.strip('“”‘’；')
+		txt = c.strip('“”‘’；：')
 		cur.execute("REPLACE INTO sentences (id, sent, type) VALUES (?, ?, ?)", (crc32(txt), txt, 0))
 		ccount += 1
 	if 15 < len(m) < 25:
-		txt = m.strip('“”‘’；')
+		txt = m.strip('“”‘’；：')
 		cur.execute("REPLACE INTO sentences (id, sent, type) VALUES (?, ?, ?)", (crc32(txt), txt, 1))
 		mcount += 1
 	count += 1
@@ -44,5 +44,11 @@ for c,m in zip(cf, mf):
 print(count, ccount, mcount)
 cache.gc()
 print('GC done.')
+
+if ccount > mcount:
+	cur.execute("DELETE FROM sentences WHERE id IN (SELECT id FROM sentences WHERE type = 0 ORDER BY RANDOM() LIMIT ?)", (ccount - mcount,))
+else:
+	cur.execute("DELETE FROM sentences WHERE id IN (SELECT id FROM sentences WHERE type = 1 ORDER BY RANDOM() LIMIT ?)", (mcount - ccount,))
+
 db.commit()
 print('TestSent done.')

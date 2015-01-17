@@ -90,7 +90,7 @@ class SqliteCache:
     def clear(self):
         self.connection.commit()
         self.connection.close()
-        self.__init__(self, self.path)
+        self.__init__(self.path, self.maxlen)
 
 
 class SqliteUserLog:
@@ -106,7 +106,7 @@ class SqliteUserLog:
             )
     _len_sql = 'SELECT COUNT(*) FROM userlog'
     _check_sql = 'SELECT SUM(cnt) FROM userlog WHERE (ip = ? AND time > ?)'
-    _clear_sql = 'DELETE FROM userlog WHERE rec IN (SELECT rec FROM userlog WHERE ip = ?)'
+    _delete_sql = 'DELETE FROM userlog WHERE rec IN (SELECT rec FROM userlog WHERE ip = ?)'
     _gc_sql = 'DELETE FROM userlog WHERE rec IN (SELECT rec FROM userlog WHERE time < ?)'
     _add_sql = 'INSERT INTO userlog (ip, cnt, time) VALUES (?, ?, ?)'
 
@@ -143,9 +143,9 @@ class SqliteUserLog:
         conn = self.connection.cursor()
         conn.execute(self._add_sql, (ip, count, int(time.time())))
 
-    def clear(self, ip):
+    def delete(self, ip):
         conn = self.connection.cursor()
-        conn.execute(self._clear_sql, (ip,))
+        conn.execute(self._delete_sql, (ip,))
 
     def gc(self):
         conn = self.connection.cursor()
@@ -159,5 +159,5 @@ class SqliteUserLog:
     def clear(self):
         self.connection.commit()
         self.connection.close()
-        self.__init__(self, self.path)
+        self.__init__(self.path, self.maxcnt, self.expire)
 

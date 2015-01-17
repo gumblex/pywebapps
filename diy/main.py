@@ -9,18 +9,24 @@ import sqlite3
 import mosesproxy
 from werkzeug.contrib.cache import SimpleCache
 from urllib.parse import urlsplit, urlunsplit
+from sqlitecache import SqliteUserLog
 from config import *
 
-jieba = mosesproxy
-jiebazhc = mosesproxy.jiebazhc()
+logging.basicConfig(filename=os.path.join(os.environ['OPENSHIFT_LOG_DIR'], "flask.log"), format='*** %(asctime)s %(levelname)s [in %(filename)s %(funcName)s]\n%(message)s', level=logging.WARNING)
 
 app = flask.Flask(__name__)
-app.config['SERVER_NAME'] = 'gumble.tk'
-app.url_map.default_subdomain = 'app'
-#app.url_map.host_matching = True
+app.secret_key = SECRETKEY
 
-# For debug use
-logging.basicConfig(filename=os.path.join(os.environ['OPENSHIFT_LOG_DIR'], "flask.log"), format='*** %(asctime)s %(levelname)s [in %(filename)s %(funcName)s]\n%(message)s', level=logging.WARNING)
+NOTLOCAL = (os.environ['OPENSHIFT_CLOUD_DOMAIN'] != 'LOCAL')
+
+if NOTLOCAL:
+	app.config['SERVER_NAME'] = 'gumble.tk'
+	app.url_map.default_subdomain = 'app'
+	#app.url_map.host_matching = True
+
+userlog = SqliteUserLog(DB_userlog, DB_userlog_maxcnt, DB_userlog_expire)
+db_ts = sqlite3.connect(DB_testsent)
+cur_ts = db_ts.cursor()
 
 try:
 	from jiebademo import jiebademo
@@ -54,7 +60,6 @@ def gzipped(f):
 		return f(*args, **kwargs)
 
 	return view_func
-
 
 #@app.before_request
 def redirect_subdomain():
@@ -107,13 +112,54 @@ def wenyan():
 	else:
 		lang = 'c2m'
 		ischecked = (' checked', '')
+	ip = flask.request.remote_addr
+	origcnt = userlog.count(ip)
+	count = 0
+	valid, num = wy_validate(ip, origcnt)
+	if valid is True:
+		origcnt = 0
+		userlog.delete(ip)
+		del flask.session['c']
 	if not tinput:
 		toutput = ''
 	elif len(tinput) > MAX_CHAR:
 		toutput = '<p class="error">文本过长，请切分后提交。</p>'
+	elif valid is False:
+		toutput = '<p class="error">回答错误，请重试。</p>'
 	else:
-		toutput = mosesproxy.translate(tinput, lang)
-	return flask.render_template('translate.html', action=flask.url_for('wenyan'), tinput=tinput, lang=lang, ischecked=ischecked, toutput=flask.Markup(toutput))
+		toutput, count = mosesproxy.translate(tinput, lang, True)
+		userlog.add(ip, count)
+	captcha = ''
+	if origcnt + count > userlog.maxcnt:
+		captcha = flask.Markup(wy_gencaptcha(num + 2))
+	return flask.render_template('translate.html', action=flask.url_for('wenyan'), tinput=tinput, lang=lang, ischecked=ischecked, toutput=flask.Markup(toutput), captcha=captcha)
+
+def wy_validate(ip, origcnt):
+	if origcnt > userlog.maxcnt:
+		allcap = flask.session.get('c')
+		if not allcap:
+			return (False, 2)
+		for cap in allcap:
+			try:
+				get = int(flask.request.form.get(str(cap)))
+				cur_ts.execute("SELECT type FROM sentences WHERE id = ?", (cap,))
+				ans = cur_ts.fetchone()[0]
+				if get != ans:
+					return (False, len(allcap))
+			except Exception:
+				return (False, len(allcap))
+		return (True, 0)
+	else:
+		return (None, 0)
+
+def wy_gencaptcha(num):
+	if not num:
+		return ''
+	num = min(num, 10)
+	cur_ts.execute("SELECT id, sent FROM sentences ORDER BY RANDOM() LIMIT ?", (num,))
+	got = cur_ts.fetchall()
+	flask.session['c'] = tuple(i[0] for i in got)
+	return flask.render_template('captcha.html', sentences=got)
 
 RE_NOTA = re.compile(r'^a\s.+|.+\S\sa\s.+')
 
@@ -168,9 +214,12 @@ app.add_url_rule('/favicon.ico', 'favicon', favicon)
 app.add_url_rule("/", 'index_glass', index_glass, subdomain='glass')
 app.add_url_rule("/<path:filename>", "file_glass", file_glass, subdomain='glass')
 app.add_url_rule("/translate/", 'translate_alias', redirect_to="/wenyan/")
-app.add_url_rule("/", "wenyan", wenyan, methods=('GET', 'POST'), subdomain='wenyan')
-app.add_url_rule("/wenyan/", "wenyan", wenyan, methods=('GET', 'POST'), alias=True)
 app.add_url_rule("/clozeword/", 'clozeword', clozeword)
+if NOTLOCAL:
+	app.add_url_rule("/", "wenyan", wenyan, methods=('GET', 'POST'), subdomain='wenyan')
+	app.add_url_rule("/wenyan/", "wenyan", wenyan, methods=('GET', 'POST'), alias=True)
+else:
+	app.add_url_rule("/wenyan/", "wenyan", wenyan, methods=('GET', 'POST'))
 
 if __name__ == "__main__":
 	app.config['SERVER_NAME'] = None
