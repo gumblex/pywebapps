@@ -30,7 +30,7 @@ usage_ends
 }
 # We use require_order because we don't want to process options of the command we run
 use Getopt::Long qw(:config require_order);
-use Time::HiRes qw( gettimeofday ); 
+# use Time::HiRes qw( gettimeofday ); 
 
 my $timelimit = undef;
 my $hanguplimit = undef;
