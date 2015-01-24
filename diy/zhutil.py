@@ -1,4 +1,4 @@
-import sys,os
+import os
 import re
 from itertools import chain
 from zhconv import convert as zhconv
@@ -12,6 +12,12 @@ fullwidth = frozenset(chain(
 	range(0xFF41, 0xFF5A+1)))
 resentencesp = re.compile('([.．；。！？]["’”」』]{0,2}|：(?=["‘“「『]{1,2}|$))')
 refixmissing = re.compile('(^[^"‘“「『’”」』，；。！？]+["’”」』]|^["‘“「『]?[^"‘“「『’”」』]+[，；。！？][^"‘“「『‘“「『]*["’”」』])(?!["‘“「『’”」』，；。！？])')
+
+punct = frozenset(
+	'!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~¢£¥·ˇˉ―‖‘’“”•′‵、。々'
+	'〈〉《》「」『』【】〔〕〖〗〝〞︰︱︳︴︵︶︷︸︹︺︻︼︽︾︿﹀﹁﹂﹃﹄'
+	'﹏﹐﹒﹔﹕﹖﹗﹙﹚﹛﹜﹝﹞！（），．：；？［｛｜｝～､￠￡￥')
+
 tailpunct = (''':!),.:;?]}¢、。〉》」』】〕〗〞︰︱︳'''
              '''﹐､﹒﹔﹕﹖﹗﹚﹜﹞！），．：；？｜｝︴︶︸︺︼︾﹀﹂﹄'''
              '''﹏､～￠々‖•·ˇˉ―--′’”■□○●△ \t\n\r\x0b\x0c\u3000''')
@@ -30,6 +36,14 @@ ucjk = frozenset(chain(
 	range(0xFF3B, 0xFF40+1),
 	range(0xFF5B, 0xFF60+1),
 	range(0x20000, 0x2FFFF+1)))
+
+zhcmodel = None
+zhmmodel = None
+_curpath = os.path.normpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
+RE_WS_IN_FW = re.compile(r'([\u2018\u2019\u201c\u201d\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef])\s+(?=[\u2018\u2019\u201c\u201d\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef])')
+
+detokenize = lambda s: RE_WS_IN_FW.sub(r'\1', s).strip()
 
 def splitsentence(sentence):
 	s = ''.join((chr(ord(ch)+0xFEE0) if ch in halfwidth else ch) for ch in sentence)
@@ -53,10 +67,44 @@ def filterlist(slist):
 		if len(s) > 1:
 			yield s
 
+def addwalls(tokiter):
+	lastwall = False
+	for tok in tokiter:
+		if tok in punct:
+			if not lastwall and tok != '》':
+				yield '<wall />'
+			yield tok
+			if tok != '《':
+				yield '<wall />'
+			lastwall = True
+		else:
+			yield tok
+			lastwall = False
+
+def checktxttype(s):
+	global zhcmodel, zhmmodel
+	if zhcmodel is None:
+		import json
+		zhcmodel = json.load(open(os.path.join(_curpath, 'modelzhc.json'), 'r', encoding='utf-8'))
+		zhmmodel = json.load(open(os.path.join(_curpath, 'modelzhm.json'), 'r', encoding='utf-8'))
+	cscore = 0
+	mscore = 0
+	for ch in s:
+		ordch = ord(ch)
+		if 0x4E00 <= ordch < 0x9FCD:
+			cscore += zhcmodel[ordch-0x4E00]
+			mscore += zhmmodel[ordch-0x4E00]
+	if cscore > mscore:
+		return 'c'
+	elif cscore < mscore:
+		return 'm'
+	else:
+		return None
+
 stripquotes = lambda s: s.lstrip('"‘“「『').rstrip('"’”」』')
 fw2hw = lambda s: ''.join((chr(ord(ch)-0xFEE0) if ord(ch) in fullwidth else ch) for ch in s)
 
-if __name__ == '__main__':
+def _test_fixsplit():
 	test = """从高祖父到曾孙称为“九族”。这“九族”代表着长幼尊卑秩序和家族血统的承续关系。
 《诗》、《书》、《易》、《礼》、《春秋》，再加上《乐》称“六经”，这是中国古代儒家的重要经典，应当仔细阅读。
 这就是：宇宙间万事万物循环变化的道理的书籍。
@@ -68,3 +116,8 @@ if __name__ == '__main__':
 """.split('\n')
 	for s in test:
 		print(fixmissing(splitsentence(s)))
+
+if __name__ == '__main__':
+	import sys
+	_test_fixsplit()
+	#print(checktxttype(sys.stdin.read()))

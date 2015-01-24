@@ -41,7 +41,7 @@ label {
 
 /*
 input[type="radio"] {
-    display:none; 
+    display:none;
 }
 
     background-color:#DAD3CA;
@@ -54,7 +54,7 @@ input[type="radio"] {
     border-radius: 2px;
 }
 
-input[type="radio"]:checked + label { 
+input[type="radio"]:checked + label {
     background-color:#bbb;
 }
 
@@ -154,6 +154,7 @@ input[type="radio"]:invalid {
 .ctrlradiolb {
     margin: 0 .3em;
     color: #665D52;
+    display: inline-block;
 }
 
 #captcha {

@@ -77,7 +77,8 @@ class MosesManager:
 					self.pc2m = runmoses('c2m')
 					sys.stderr.write('Restarted Moses c2m: %s\n' % self.pc2m.pid)
 				proc = self.pc2m
-				tok = ' '.join(filter(notwhite, jiebazhc.cut(s,cut_all=False)))
+				tok = ' '.join(zhutil.addwalls(filter(notwhite, jiebazhc.cut(s,cut_all=False))))
+				#print(tok)
 			else:
 				returncode = self.pm2c.poll()
 				if returncode is not None:
@@ -86,7 +87,7 @@ class MosesManager:
 					self.pm2c = runmoses('m2c')
 					sys.stderr.write('Restarted Moses m2c: %s\n' % self.pm2c.pid)
 				proc = self.pm2c
-				tok = ' '.join(filter(notwhite, jieba.cut(s,cut_all=False)))
+				tok = ' '.join(zhutil.addwalls(filter(notwhite, jieba.cut(s,cut_all=False))))
 			proc.stdin.write(('%s\n' % tok).encode('utf8'))
 			proc.stdin.flush()
 			rv = detokenize(proc.stdout.readline().decode('utf8'))

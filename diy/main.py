@@ -8,21 +8,25 @@ import logging
 import sqlite3
 import mosesproxy
 from werkzeug.contrib.cache import SimpleCache
+from werkzeug.contrib.fixers import ProxyFix
 from urllib.parse import urlsplit, urlunsplit
 from sqlitecache import SqliteUserLog
 from config import *
+from zhutil import checktxttype
+
+NOTLOCAL = (os.environ['OPENSHIFT_CLOUD_DOMAIN'] != 'LOCAL')
 
 logging.basicConfig(filename=os.path.join(os.environ['OPENSHIFT_LOG_DIR'], "flask.log"), format='*** %(asctime)s %(levelname)s [in %(filename)s %(funcName)s]\n%(message)s', level=logging.WARNING)
 
 app = flask.Flask(__name__)
-app.secret_key = SECRETKEY
-
-NOTLOCAL = (os.environ['OPENSHIFT_CLOUD_DOMAIN'] != 'LOCAL')
 
 if NOTLOCAL:
+	app.wsgi_app = ProxyFix(app.wsgi_app, num_proxies=2)
 	app.config['SERVER_NAME'] = 'gumble.tk'
 	app.url_map.default_subdomain = 'app'
 	#app.url_map.host_matching = True
+
+app.secret_key = SECRETKEY
 
 userlog = SqliteUserLog(DB_userlog, DB_userlog_maxcnt, DB_userlog_expire)
 db_ts = sqlite3.connect(DB_testsent)
@@ -106,7 +110,8 @@ def translate_alias():
 @gzipped
 def wenyan():
 	tinput = flask.request.form.get('input', '')
-	if flask.request.form.get('lang') == 'm2c':
+	#if flask.request.form.get('lang') == 'm2c':
+	if checktxttype(tinput) == 'm':
 		lang = 'm2c'
 		ischecked = ('', ' checked')
 	else:
@@ -120,6 +125,8 @@ def wenyan():
 		origcnt = 0
 		userlog.delete(ip)
 		del flask.session['c']
+	else:
+		logging.warning('Captcha failed: %s, %s, %s' % (ip, valid, num))
 	if not tinput:
 		toutput = ''
 	elif len(tinput) > MAX_CHAR:
@@ -138,7 +145,7 @@ def wy_validate(ip, origcnt):
 	if origcnt > userlog.maxcnt:
 		allcap = flask.session.get('c')
 		if not allcap:
-			return (False, 2)
+			return (False, 4)
 		for cap in allcap:
 			try:
 				get = int(flask.request.form.get(str(cap)))
