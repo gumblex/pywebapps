@@ -13,16 +13,20 @@ fullwidth = frozenset(chain(
 resentencesp = re.compile('([.．；。！？]["’”」』]{0,2}|：(?=["‘“「『]{1,2}|$))')
 refixmissing = re.compile('(^[^"‘“「『’”」』，；。！？]+["’”」』]|^["‘“「『]?[^"‘“「『’”」』]+[，；。！？][^"‘“「『‘“「『]*["’”」』])(?!["‘“「『’”」』，；。！？])')
 
-punct = frozenset(
+punctstr = (
 	'!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~¢£¥·ˇˉ―‖‘’“”•′‵、。々'
 	'〈〉《》「」『』【】〔〕〖〗〝〞︰︱︳︴︵︶︷︸︹︺︻︼︽︾︿﹀﹁﹂﹃﹄'
 	'﹏﹐﹒﹔﹕﹖﹗﹙﹚﹛﹜﹝﹞！（），．：；？［｛｜｝～､￠￡￥')
 
-tailpunct = (''':!),.:;?]}¢、。〉》」』】〕〗〞︰︱︳'''
-             '''﹐､﹒﹔﹕﹖﹗﹚﹜﹞！），．：；？｜｝︴︶︸︺︼︾﹀﹂﹄'''
-             '''﹏､～￠々‖•·ˇˉ―--′’”■□○●△ \t\n\r\x0b\x0c\u3000''')
-headpunct = ('''([{£¥`〈《「『【〔〖（［｛￡￥〝︵︷︹︻︽︿﹁﹃﹙﹛﹝（｛“‘'''
-             ''' \t\n\r\x0b\x0c\u3000''')
+punct = frozenset(punctstr)
+
+resplitpunct = re.compile('([%s])' % re.escape(punctstr))
+
+tailpunct = ('''\t\n\x0b\x0c\r !),-.:;?]}¢·ˇˉ―‖’”•′■□△○●\u3000'''
+             '''、。々〉》」』】〕〗〞︰︱︳︴︶︸︺︼︾﹀﹂﹄﹏'''
+             '''﹐﹒﹔﹕﹖﹗﹚﹜﹞！），．：；？｜｝～､￠''')
+headpunct = ('''\t\n\x0b\x0c\r ([`{£¥‘“\u3000〈《「『【〔〖〝'''
+             '''︵︷︹︻︽︿﹁﹃﹙﹛﹝（［｛￡￥''')
 ucjk = frozenset(chain(
 	range(0x1100, 0x11FF+1),
 	range(0x2E80, 0xA4CF+1),
@@ -48,11 +52,35 @@ detokenize = lambda s: RE_WS_IN_FW.sub(r'\1', s).strip()
 def splitsentence(sentence):
 	s = ''.join((chr(ord(ch)+0xFEE0) if ch in halfwidth else ch) for ch in sentence)
 	slist = []
-	for i in re.split(resentencesp, s):
+	for i in resentencesp.split(s):
 		if resentencesp.match(i) and slist:
 			slist[-1] += i
 		elif i:
 			slist.append(i)
+	return slist
+
+def splithard(sentence, maxchar=None):
+	slist = splitsentence(sentence)
+	if maxchar is None:
+		return slist
+	slist1 = []
+	for sent in slist:
+		if len(sent) > maxchar:
+			for i in resplitpunct.split(sent):
+				if resplitpunct.match(i) and slist1:
+					slist1[-1] += i
+				elif i:
+					slist1.append(i)
+		else:
+			slist1.append(sent)
+	slist = slist1
+	slist1 = []
+	for sent in slist:
+		if len(sent) > maxchar:
+			slist1.extend(sent[i:i+maxchar] for i in range(0, len(sent), maxchar))
+		else:
+			slist1.append(sent)
+	slist = slist1
 	return slist
 
 def fixmissing(slist):
@@ -81,7 +109,7 @@ def addwalls(tokiter):
 			yield tok
 			lastwall = False
 
-def checktxttype(s):
+def calctxtstat(s):
 	global zhcmodel, zhmmodel
 	if zhcmodel is None:
 		import json
@@ -94,6 +122,9 @@ def checktxttype(s):
 		if 0x4E00 <= ordch < 0x9FCD:
 			cscore += zhcmodel[ordch-0x4E00]
 			mscore += zhmmodel[ordch-0x4E00]
+	return (cscore, mscore)
+
+def checktxttype(cscore, mscore):
 	if cscore > mscore:
 		return 'c'
 	elif cscore < mscore:
@@ -113,7 +144,8 @@ def _test_fixsplit():
 吾闻老聃多寿，尝读其书曰：‘吾惟无身，是以无患。’盖欲窃之而未能也”齐宣王见孟子于雪宫。
 “昔者齐景公问于晏子曰：‘吾欲观于转附、朝舞，遵海而南，放于琅邪。吾何修而可以比于先王观也？’
 高祖说：“该怎样对付呢？”陈平说：“古代天子有巡察天下，召集诸侯。南方有云梦这个地方，陛下只管假装外出巡游云梦，在陈地召集诸侯。陈地在楚国的西边边境上，韩信听说天子因为爱好外出巡游，看形势必然没有什么大事，就会到国境外来拜见陛下。拜见，陛下趁机抓住他，这只是一个力士的事情而已。”“不知道。”高祖认为有道理。
-""".split('\n')
+。他们就是这样的。
+""".strip().split('\n')
 	for s in test:
 		print(fixmissing(splitsentence(s)))
 

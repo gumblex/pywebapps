@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import re
 import flask
@@ -12,7 +13,7 @@ from werkzeug.contrib.fixers import ProxyFix
 from urllib.parse import urlsplit, urlunsplit
 from sqlitecache import SqliteUserLog
 from config import *
-from zhutil import checktxttype
+from zhutil import calctxtstat, checktxttype
 
 NOTLOCAL = (os.environ['OPENSHIFT_CLOUD_DOMAIN'] != 'LOCAL')
 
@@ -105,18 +106,34 @@ def file_glass(filename):
 def translate_alias():
 	return flask.redirect(flask.url_for('wenyan'))
 
+def linebreak(s):
+	return flask.Markup('<p>%s</p>\n') % flask.Markup('</p>\n<p>').join(s.rstrip().split('\n'))
+
 #@app.route("/", subdomain='wenyan', methods=('GET', 'POST'))
 #@app.route("/wenyan/", methods=('GET', 'POST'))
 @gzipped
 def wenyan():
 	tinput = flask.request.form.get('input', '')
-	#if flask.request.form.get('lang') == 'm2c':
-	if checktxttype(tinput) == 'm':
-		lang = 'm2c'
-		ischecked = ('', ' checked')
-	else:
+	uncertain = False
+	formgetlang = flask.request.form.get('lang')
+	if formgetlang == 'c2m':
 		lang = 'c2m'
-		ischecked = (' checked', '')
+	elif formgetlang == 'm2c':
+		lang = 'm2c'
+	else: # == auto
+		cscore, mscore = calctxtstat(tinput)
+		if cscore == mscore == 0:
+			lang = None
+		elif checktxttype(cscore, mscore) == 'c':
+			lang = 'c2m'
+		else:
+			lang = 'm2c'
+		if abs(cscore - mscore) < 15:
+			if lang == 'c2m':
+				uncertain = 'm2c'
+			elif lang == 'm2c':
+				uncertain = 'c2m'
+	#ischecked = (' checked', '') if lang == 'c2m' else ('', ' checked')
 	ip = flask.request.remote_addr
 	origcnt = userlog.count(ip)
 	count = 0
@@ -125,21 +142,24 @@ def wenyan():
 		origcnt = 0
 		userlog.delete(ip)
 		del flask.session['c']
-	else:
-		logging.warning('Captcha failed: %s, %s, %s' % (ip, valid, num))
+	elif valid is False:
+		logging.warning('Captcha failed: %s, %s' % (ip, num))
 	if not tinput:
 		toutput = ''
-	elif len(tinput) > MAX_CHAR:
-		toutput = '<p class="error">文本过长，请切分后提交。</p>'
 	elif valid is False:
 		toutput = '<p class="error">回答错误，请重试。</p>'
+	elif lang is None:
+		toutput = linebreak(tinput)
+	elif len(tinput) > MAX_CHAR:
+		toutput = '<p class="error">文本过长，请切分后提交。</p>'
 	else:
 		toutput, count = mosesproxy.translate(tinput, lang, True)
+		toutput = linebreak(toutput)
 		userlog.add(ip, count)
 	captcha = ''
 	if origcnt + count > userlog.maxcnt:
 		captcha = flask.Markup(wy_gencaptcha(num + 2))
-	return flask.render_template('translate.html', action=flask.url_for('wenyan'), tinput=tinput, lang=lang, ischecked=ischecked, toutput=flask.Markup(toutput), captcha=captcha)
+	return flask.render_template('translate.html', action=flask.url_for('wenyan'), tinput=tinput, uncertain=uncertain, toutput=flask.Markup(toutput), captcha=captcha)
 
 def wy_validate(ip, origcnt):
 	if origcnt > userlog.maxcnt:

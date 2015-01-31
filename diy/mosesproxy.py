@@ -92,6 +92,14 @@ if __name__ == '__main__':
 		elif sys.argv[1] == 'ping':
 			if not ping():
 				sys.exit(1)
+		elif sys.argv[1] == 'c2m':
+			if not ping():
+				sys.exit(1)
+			sys.stdout.write(translate(sys.stdin.read(), 'c2m'))
+		elif sys.argv[1] == 'm2c':
+			if not ping():
+				sys.exit(1)
+			sys.stdout.write(translate(sys.stdin.read(), 'm2c'))
 	else:
 		if not ping():
 			sys.exit(1)

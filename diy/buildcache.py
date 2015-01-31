@@ -28,7 +28,8 @@ ccount = 0
 mcount = 0
 
 for c,m in zip(cf, mf):
-	cache.set(c, m)
+	if len(c) < 50:
+		cache.set(c, m)
 	if 15 < len(c) < 25:
 		txt = c.strip('“”‘’；：')
 		cur.execute("REPLACE INTO sentences (id, sent, type) VALUES (?, ?, ?)", (crc32(txt), txt, 0))

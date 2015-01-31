@@ -2,9 +2,33 @@ import os
 import sqlite3
 import time
 import hashlib
+import collections
 from itertools import islice
 
 hashmd5 = lambda x: hashlib.md5(x.encode('utf-8')).digest()
+
+class LRUCache:
+    def __init__(self, maxlen):
+        self.capacity = maxlen
+        self.cache = collections.OrderedDict()
+
+    def get(self, key):
+        try:
+            value = self.cache.pop(key)
+            self.cache[key] = value
+            return value
+        except KeyError:
+            return None
+
+    def set(self, key, value):
+        try:
+            self.cache.pop(key)
+        except KeyError:
+            if len(self.cache) >= self.capacity:
+                self.cache.popitem(last=False)
+        self.cache[key] = value
+
+    add = set
 
 class SqliteCache:
 

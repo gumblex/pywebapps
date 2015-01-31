@@ -83,9 +83,9 @@ input[type="radio"]:invalid {
     padding: .7em;
     margin: 0 .2em;
     background-color: #FFFFF8;
-    border-radius: 2px;
     width: 90%;
     line-height: 1.25em;
+    border-radius: 2px;
 }
 
 #tinput {
@@ -109,6 +109,7 @@ input[type="radio"]:invalid {
 #toutput p {
     margin-top: 0;
     margin-bottom: .25em;
+    word-wrap: break-word;
 }
 
 #ctrlgroup {
@@ -118,7 +119,7 @@ input[type="radio"]:invalid {
 #ctrlsubmit {
     padding: .3em 1em;
     margin-right: 5%;
-    width: 80%;
+    width: 85%;
     background-color: #B7966C;
     color: #fff;
     border: none;
@@ -126,11 +127,9 @@ input[type="radio"]:invalid {
     text-decoration: none;
     border-radius: 2px;
     display: inline-block;
-    line-height: normal;
     white-space: nowrap;
     vertical-align: baseline;
     text-align: center;
-    cursor: pointer;
 }
 
 #ctrlsubmit:hover,
@@ -151,6 +150,10 @@ input[type="radio"]:invalid {
     padding: .3em 0;
 }
 
+#ctrlauto {
+    padding-left: .3em;
+}
+
 .ctrlradiolb {
     margin: 0 .3em;
     color: #665D52;
@@ -168,6 +171,25 @@ input[type="radio"]:invalid {
 
 #crgroup {
     margin: .5em 0;
+}
+
+#wrongdir {
+    padding: .5em 1.2em;
+    text-align: right;
+    color: #444;
+}
+
+#changedir, #changedir:visited {
+    text-decoration: none;
+    color: #8D7253;
+}
+
+#changedir:hover {
+    color: #B7966C;
+}
+
+#changedir:active {
+    color: #9A7E5B;
 }
 
 p.error {
