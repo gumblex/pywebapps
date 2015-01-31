@@ -12,8 +12,9 @@ from werkzeug.contrib.cache import SimpleCache
 from werkzeug.contrib.fixers import ProxyFix
 from urllib.parse import urlsplit, urlunsplit
 from sqlitecache import SqliteUserLog
-from config import *
+from zhconv import convert as zhconv
 from zhutil import calctxtstat, checktxttype
+from config import *
 
 NOTLOCAL = (os.environ['OPENSHIFT_CLOUD_DOMAIN'] != 'LOCAL')
 
@@ -65,6 +66,33 @@ def gzipped(f):
 		return f(*args, **kwargs)
 
 	return view_func
+
+# From django.utils.translation.trans_real.parse_accept_lang_header
+accept_language_re = re.compile(r'''
+        ([A-Za-z]{1,8}(?:-[A-Za-z]{1,8})*|\*)       # "en", "en-au", "x-y-z", "*"
+        (?:\s*;\s*q=(0(?:\.\d{,3})?|1(?:.0{,3})?))? # Optional "q=1.00", "q=0.8"
+        (?:\s*,\s*|$)                               # Multiple accepts per header.
+        ''', re.VERBOSE)
+
+def accept_language_zh_tw(lang_string):
+	"""
+	Parses the lang_string, which is the body of an HTTP Accept-Language
+	header, and returns a list of (lang, q-value), ordered by 'q' values.
+	"""
+	result = {}
+	pieces = accept_language_re.split(lang_string)
+	if pieces[-1]:
+		return None
+	for i in range(0, len(pieces) - 1, 3):
+		first, lang, priority = pieces[i : i + 3]
+		if first:
+			return None
+		priority = priority and float(priority) or 1.0
+		result[lang.lower()] = priority
+	if result.get('zh-tw', 0) > result.get('zh-cn', 0):
+		return True
+	else:
+		return False
 
 #@app.before_request
 def redirect_subdomain():
@@ -135,6 +163,7 @@ def wenyan():
 				uncertain = 'c2m'
 	#ischecked = (' checked', '') if lang == 'c2m' else ('', ' checked')
 	ip = flask.request.remote_addr
+	accepttw = accept_language_zh_tw(flask.request.headers.get('Accept-Language', ''))
 	origcnt = userlog.count(ip)
 	count = 0
 	valid, num = wy_validate(ip, origcnt)
@@ -148,18 +177,26 @@ def wenyan():
 		toutput = ''
 	elif valid is False:
 		toutput = '<p class="error">回答错误，请重试。</p>'
+		if accepttw:
+			toutput = zhconv(toutput, 'zh-tw')
 	elif lang is None:
 		toutput = linebreak(tinput)
 	elif len(tinput) > MAX_CHAR:
 		toutput = '<p class="error">文本过长，请切分后提交。</p>'
+		if accepttw:
+			toutput = zhconv(toutput, 'zh-tw')
 	else:
 		toutput, count = mosesproxy.translate(tinput, lang, True)
+		if accepttw:
+			toutput = zhconv(toutput, 'zh-tw')
 		toutput = linebreak(toutput)
 		userlog.add(ip, count)
 	captcha = ''
 	if origcnt + count > userlog.maxcnt:
-		captcha = flask.Markup(wy_gencaptcha(num + 2))
-	return flask.render_template('translate.html', action=flask.url_for('wenyan'), tinput=tinput, uncertain=uncertain, toutput=flask.Markup(toutput), captcha=captcha)
+		captcha = wy_gencaptcha(num + 2)
+		if accepttw:
+			captcha = zhconv(captcha, 'zh-tw')
+	return flask.render_template(('translate_zhtw.html' if accepttw else 'translate.html'), action=flask.url_for('wenyan'), tinput=tinput, uncertain=uncertain, toutput=flask.Markup(toutput), captcha=flask.Markup(captcha))
 
 def wy_validate(ip, origcnt):
 	if origcnt > userlog.maxcnt:

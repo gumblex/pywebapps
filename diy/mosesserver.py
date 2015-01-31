@@ -35,7 +35,7 @@ longpunct = frozenset('-—_…')
 whitespace = frozenset(' \t\n\r\x0b\x0c\u3000')
 notwhite = lambda x: x not in whitespace
 
-RE_WS_IN_FW = re.compile(r'([\u2018\u2019\u201c\u201d\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef])\s+(?=[\u2018\u2019\u201c\u201d\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef])')
+RE_WS_IN_FW = re.compile(r'([\u2018\u2019\u201c\u201d\u2026\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\ufe30-\ufe57\uff00-\uffef])\s+(?=[\u2018\u2019\u201c\u201d\u2026\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\ufe30-\ufe57\uff00-\uffef])')
 
 detokenize = lambda s: RE_WS_IN_FW.sub(r'\1', xml_unescape(s)).strip()
 
@@ -231,6 +231,7 @@ def serve(filename):
 				else:
 					conn.sendall(result)
 				conn.close()
+				sys.stderr.flush()
 	finally:
 		if mm:
 			mm.pc2m.terminate()
@@ -238,6 +239,7 @@ def serve(filename):
 			mm.sqlcache.gc()
 		if os.path.exists(filename):
 			os.unlink(filename)
+		sys.stderr.flush()
 		print("Server stopped.")
 
 if __name__ == '__main__':
