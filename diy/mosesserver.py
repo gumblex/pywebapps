@@ -148,7 +148,7 @@ class MosesManagerThread:
 			snum += 1
 		self.processtasks(mode) # Error handling?
 		self.resultqueue.sort()
-		sys.stderr.write('%s,%s,%s,%s,%s,%.6f\n' % (time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()), mode, misscount, hitcount + misscount, len(l), time.time() - timestart))
+		sys.stderr.write('%s,%s,%s,%s,%s,%.6f\n' % (time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()), mode, misscount, hitcount + misscount, len(text), time.time() - timestart))
 		ig = itemgetter(1)
 		outputtext = ''.join(map(ig, self.resultqueue))
 		if withcount:
