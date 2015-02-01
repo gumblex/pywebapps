@@ -273,6 +273,10 @@ def clozeword():
 		res.append('</tbody></table></p><p><a href="%s">&lt;&lt;返回单词列表...</a></p>' % flask.url_for('clozeword', fl=fl, sp=sp))
 	return flask.render_template('clozeword.html', fl=fl, result=flask.Markup('\n'.join(res)))
 
+@app.errorhandler(500)
+def err500(error):
+	return flask.render_template('e500.html'), 500
+
 app.add_url_rule('/', 'index', index)
 app.add_url_rule('/favicon.ico', 'favicon', favicon)
 app.add_url_rule("/", 'index_glass', index_glass, subdomain='glass')

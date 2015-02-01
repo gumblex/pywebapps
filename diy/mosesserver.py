@@ -129,6 +129,7 @@ class MosesManagerThread:
 		snum = 0
 		self.taskqueue = []
 		self.resultqueue = []
+		timestart = time.time()
 		for l in text.split('\n'):
 			sentences = zhutil.splithard(zhconv(l.strip(), 'zh-cn'), 128)
 			for s in sentences:
@@ -147,7 +148,7 @@ class MosesManagerThread:
 			snum += 1
 		self.processtasks(mode) # Error handling?
 		self.resultqueue.sort()
-		sys.stderr.write('%s Translated %s/%s sentences, %s.\n' % (time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()), misscount, hitcount + misscount, mode))
+		sys.stderr.write('%s,%s,%s,%s,%s,%.6f\n' % (time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()), mode, misscount, hitcount + misscount, len(l), time.time() - timestart))
 		ig = itemgetter(1)
 		outputtext = ''.join(map(ig, self.resultqueue))
 		if withcount:
