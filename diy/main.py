@@ -108,6 +108,11 @@ def redirect_subdomain():
 		response.autocorrect_location_header = False
 		return response
 
+@app.before_request
+def banip():
+	if BANNEDIP.match(flask.request.remote_addr):
+		flask.abort(403)
+
 #@app.route("/")
 @gzipped
 @functools.lru_cache(maxsize=1)
@@ -272,6 +277,10 @@ def clozeword():
 				res.append('<tr><td>%s</td><td>%s</td></tr>' % row)
 		res.append('</tbody></table></p><p><a href="%s">&lt;&lt;返回单词列表...</a></p>' % flask.url_for('clozeword', fl=fl, sp=sp))
 	return flask.render_template('clozeword.html', fl=fl, result=flask.Markup('\n'.join(res)))
+
+@app.errorhandler(403)
+def err403(error):
+	return flask.render_template('e403.html'), 403
 
 @app.errorhandler(500)
 def err500(error):
