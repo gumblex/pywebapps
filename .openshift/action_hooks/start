@@ -3,16 +3,11 @@
 # script. The application will work only if it binds to
 # $OPENSHIFT_DIY_IP:8080
 
-# Stop the 503 server
-if [ ! -z "$(ps -ef | grep 503server.py | grep -v grep)" ]; then
-  kill `ps -ef | grep 503server.py | grep -v grep | awk '{ print $2 }'`
-fi
-
 source ${OPENSHIFT_DEPENDENCIES_DIR}python/bin/activate
 date >> ${OPENSHIFT_LOG_DIR}/mosesserver.log
 nohup python3 ${OPENSHIFT_REPO_DIR}diy/mosesserver.py >> ${OPENSHIFT_LOG_DIR}/mosesserver.log 2>&1 &
 echo Waiting for server...
-sleep 8
+sleep 3
 n=0
 until [ $n -ge 3 ]
 do
@@ -25,6 +20,10 @@ do
 done
 if [ $rc -ne 0 ] ; then
   exit $rc
+fi
+# Stop the 503 server
+if [ ! -z "$(ps -ef | grep 503server.py | grep -v grep)" ]; then
+  kill `ps -ef | grep 503server.py | grep -v grep | awk '{ print $2 }'`
 fi
 rm ${OPENSHIFT_TMP_DIR}uwsgi.pid
 ${OPENSHIFT_DATA_DIR}bin/uwsgi --ini ${OPENSHIFT_REPO_DIR}uwsgi.ini

@@ -8,22 +8,8 @@
 <link rel="stylesheet" href="/static/pure.m.css">
 <link rel="stylesheet" href="/static/wenyan.m.css">
 <link rel="stylesheet" href="/static/grids-responsive-min.css">
-<script>
-function autoGrow (oField) {
-if (oField.scrollHeight > oField.clientHeight) {
-oField.style.height = oField.scrollHeight + oField.clientTop*2 + "px";
-}}
-window.onload = function(){
-autoGrow(document.getElementById('tinput'));
-{% if uncertain %}
-document.getElementById("changedir").onclick = function() {
-document.getElementById("hidden-lang").value = "{{ uncertain }}";
-document.getElementById("translateform").submit();
-return false;
-}
-{% endif %}
-}
-</script>
+<script src="/static/wenyan.js"></script>
+{% if uncertain %}<script>languncertain = "{{ uncertain }}";</script>{% endif %}
 </head>
 <body>
 <div id="container">
@@ -34,27 +20,28 @@ return false;
 <div class="pure-u-1 pure-u-md-1-2">
 	<form id="translateform" action="{{ action }}" method="POST">
 	<h2>原文</h2>
-	<div>
 	<textarea id="tinput" name="input">{{ tinput }}</textarea>
-	</div>
+	<div id="progressbar"></div>
 	<div class="pure-g" id="ctrlgroup">
 	<div class="pure-u-2-3" id="ctrlradiog">
 	<span id="ctrlauto">自动识别翻译方向</span>
 	<input id="hidden-lang" type="hidden" name="lang" value="auto">
 	</div>
-	<div class="pure-u-1-3">
+	<div class="pure-u-1-3" id="ctrlsubmitdiv">
 	<button type="submit" id="ctrlsubmit">翻译</button>
 	</div>
 	{{ captcha }}
 	</div>
-	</form><!-- class="pure-button pure-button-primary"-->
+	</form>
 </div>
 <div class="pure-u-1 pure-u-md-1-2">
+	<div id="translateresult">
 	<h2>译文</h2>
 	<article id="toutput">{{ toutput }}</article>
 	{% if uncertain %}
 	<div id="wrongdir">翻译方向错误？<a href="#" id="changedir">点击重新翻译</a></div>
 	{% endif %}
+	</div>
 </div>
 </section>
 </div>

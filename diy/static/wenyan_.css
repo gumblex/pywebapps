@@ -79,20 +79,25 @@ input[type="radio"]:invalid {
     position: relative;
 }
 
+#translateform, #translateresult {
+    padding: 0 .4em;
+}
+
 #tinput, #toutput {
     padding: .7em;
-    margin: 0 .2em;
     background-color: #FFFFF8;
-    width: 90%;
     line-height: 1.25em;
+    font-size: 14px;
     border-radius: 2px;
 }
 
 #tinput {
-    height: 15em;
-    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    height: 16.53em;
     border: 1px solid #DAD3CA;
     box-shadow: 0 0 0 1px rgba(238,233,221,0.6) inset;
+    resize: vertical;
 }
 
 #tinput:focus {
@@ -100,8 +105,14 @@ input[type="radio"]:invalid {
     border: 1px solid #C39F73;
 }
 
+#progressbar {
+    margin: .2em 0;
+    height: 2px;
+    width: 0;
+    background-color: #C39F73;
+}
+
 #toutput {
-    font-size: 14px;
     border: 1px solid #E6DFD6;
     min-height: 15em;
 }
@@ -116,9 +127,12 @@ input[type="radio"]:invalid {
     margin-top: .5em;
 }
 
+#ctrlsubmitdiv {
+    text-align: right;
+}
+
 #ctrlsubmit {
     padding: .3em 1em;
-    margin-right: 5%;
     width: 85%;
     background-color: #B7966C;
     color: #fff;
@@ -148,10 +162,6 @@ input[type="radio"]:invalid {
 
 #ctrlradiog {
     padding: .3em 0;
-}
-
-#ctrlauto {
-    padding-left: .3em;
 }
 
 .ctrlradiolb {
