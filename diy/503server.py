@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import os
-import BaseHTTPServer
+import http.server
 
 HTMLFILE = open(os.path.join(os.environ['OPENSHIFT_REPO_DIR'], 'diy/templates/e503.html'), 'rb').read()
 HTMLLEN = str(len(HTMLFILE))
 
-class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class HTTPHandler(http.server.BaseHTTPRequestHandler):
 	def do_HEAD(self):
 		self.send_response(503)
 		self.send_header('Retry-After', '300')
@@ -27,7 +27,7 @@ class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 	do_POST = do_GET
 
-def run(server_class=BaseHTTPServer.HTTPServer,
+def run(server_class=http.server.HTTPServer,
 		handler_class=HTTPHandler):
 	server_address = (os.environ['OPENSHIFT_DIY_IP'], int(os.environ['OPENSHIFT_DIY_PORT']))
 	httpd = server_class(server_address, handler_class)

@@ -30,10 +30,6 @@ if NOTLOCAL:
 
 app.secret_key = SECRETKEY
 
-userlog = SqliteUserLog(DB_userlog, DB_userlog_maxcnt, DB_userlog_expire)
-db_ts = sqlite3.connect(DB_testsent)
-cur_ts = db_ts.cursor()
-
 try:
 	from jiebademo import jiebademo
 	app.register_blueprint(jiebademo, url_prefix='/jiebademo')
@@ -142,10 +138,30 @@ def translate_alias():
 def linebreak(s):
 	return flask.Markup('<p>%s</p>\n') % flask.Markup('</p>\n<p>').join(s.rstrip().split('\n'))
 
+def get_db():
+	userlog = getattr(flask.g, 'userlog', None)
+	db_ts = getattr(flask.g, 'db_ts', None)
+	if userlog is None:
+		userlog = flask.g.userlog = SqliteUserLog(DB_userlog, DB_userlog_maxcnt, DB_userlog_expire)
+	if db_ts is None:
+		db_ts = sqlite3.connect(DB_testsent)
+	return (userlog, db_ts)
+
+@app.teardown_appcontext
+def close_connection(exception):
+	userlog = getattr(flask.g, 'userlog', None)
+	db_ts = getattr(flask.g, 'db_ts', None)
+	if userlog is not None:
+		userlog.close()
+	if db_ts is not None:
+		db_ts.close()
+
 #@app.route("/", subdomain='wenyan', methods=('GET', 'POST'))
 #@app.route("/wenyan/", methods=('GET', 'POST'))
 @gzipped
 def wenyan():
+	userlog, db_ts = get_db()
+	cur_ts = db_ts.cursor()
 	tinput = flask.request.form.get('input', '')
 	uncertain = False
 	formgetlang = flask.request.form.get('lang')
@@ -169,9 +185,10 @@ def wenyan():
 	#ischecked = (' checked', '') if lang == 'c2m' else ('', ' checked')
 	ip = flask.request.remote_addr
 	accepttw = accept_language_zh_tw(flask.request.headers.get('Accept-Language', ''))
+	L = (lambda x: zhconv(x, 'zh-tw')) if accepttw else (lambda x: x)
 	origcnt = userlog.count(ip)
 	count = 0
-	valid, num = wy_validate(ip, origcnt)
+	valid, num = wy_validate(ip, origcnt, userlog, cur_ts)
 	if valid is True:
 		origcnt = 0
 		userlog.delete(ip)
@@ -181,29 +198,21 @@ def wenyan():
 	if not tinput:
 		toutput = ''
 	elif valid is False:
-		toutput = '<p class="error">回答错误，请重试。</p>'
-		if accepttw:
-			toutput = zhconv(toutput, 'zh-tw')
+		toutput = L('<p class="error">回答错误，请重试。</p>')
 	elif lang is None:
 		toutput = linebreak(tinput)
 	elif len(tinput) > MAX_CHAR:
-		toutput = '<p class="error">文本过长，请切分后提交。</p>'
-		if accepttw:
-			toutput = zhconv(toutput, 'zh-tw')
+		toutput = L('<p class="error">文本过长，请切分后提交。</p>')
 	else:
 		toutput, count = mosesproxy.translate(tinput, lang, True)
-		if accepttw:
-			toutput = zhconv(toutput, 'zh-tw')
-		toutput = linebreak(toutput)
+		toutput = linebreak(L(toutput))
 		userlog.add(ip, count)
 	captcha = ''
 	if origcnt + count > userlog.maxcnt:
-		captcha = wy_gencaptcha(num + 2)
-		if accepttw:
-			captcha = zhconv(captcha, 'zh-tw')
+		captcha = L(wy_gencaptcha(num + 2, cur_ts))
 	return flask.render_template(('translate_zhtw.html' if accepttw else 'translate.html'), action=flask.url_for('wenyan'), tinput=tinput, uncertain=uncertain, toutput=flask.Markup(toutput), captcha=flask.Markup(captcha))
 
-def wy_validate(ip, origcnt):
+def wy_validate(ip, origcnt, userlog, cur_ts):
 	if origcnt > userlog.maxcnt:
 		allcap = flask.session.get('c')
 		if not allcap:
@@ -221,7 +230,7 @@ def wy_validate(ip, origcnt):
 	else:
 		return (None, 0)
 
-def wy_gencaptcha(num):
+def wy_gencaptcha(num, cur_ts):
 	if not num:
 		return ''
 	num = min(num, 10)

@@ -55,10 +55,15 @@ class SqliteCache:
             self.connection.execute(self._create_sql)
         else:
             self.connection = sqlite3.connect(self.path)
+        self.closed = False
 
     def __del__(self):
-        self.connection.commit()
-        self.connection.close()
+        if not self.closed:
+            self.connection.commit()
+            self.connection.close()
+            self.closed = True
+
+    close = __del__
 
     def commit(self):
         self.connection.commit()
@@ -143,10 +148,15 @@ class SqliteUserLog:
             self.connection.execute(self._create_sql)
         else:
             self.connection = sqlite3.connect(self.path)
+        self.closed = False
 
     def __del__(self):
-        self.connection.commit()
-        self.connection.close()
+        if not self.closed:
+            self.connection.commit()
+            self.connection.close()
+            self.closed = True
+
+    close = __del__
 
     def commit(self):
         self.connection.commit()
