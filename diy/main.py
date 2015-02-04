@@ -16,8 +16,6 @@ from zhconv import convert as zhconv
 from zhutil import calctxtstat, checktxttype
 from config import *
 
-NOTLOCAL = (os.environ['OPENSHIFT_CLOUD_DOMAIN'] != 'LOCAL')
-
 logging.basicConfig(filename=os.path.join(os.environ['OPENSHIFT_LOG_DIR'], "flask.log"), format='*** %(asctime)s %(levelname)s [in %(filename)s %(funcName)s]\n%(message)s', level=logging.WARNING)
 
 app = flask.Flask(__name__)

@@ -5,3 +5,4 @@
 *.egg-info
 dist
 diy/static/*.m.css
+diy/static/wenyan.js
