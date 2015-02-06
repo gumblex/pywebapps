@@ -25,5 +25,6 @@ fi
 if [ ! -z "$(ps -ef | grep 503server.py | grep -v grep)" ]; then
   kill `ps -ef | grep 503server.py | grep -v grep | awk '{ print $2 }'`
 fi
+python3 ${OPENSHIFT_REPO_DIR}diy/speedestimate.py
 rm ${OPENSHIFT_TMP_DIR}uwsgi.pid
 ${OPENSHIFT_DATA_DIR}bin/uwsgi --ini ${OPENSHIFT_REPO_DIR}uwsgi.ini
