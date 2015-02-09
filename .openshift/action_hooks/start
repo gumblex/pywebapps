@@ -21,10 +21,15 @@ done
 if [ $rc -ne 0 ] ; then
   exit $rc
 fi
+echo Caching model files...
+cat ${OPENSHIFT_DATA_DIR}zhc2zhm/* > /dev/null
+cat ${OPENSHIFT_DATA_DIR}zhm2zhc/* > /dev/null
+python3 ${OPENSHIFT_REPO_DIR}diy/speedestimate.py
+
 # Stop the 503 server
 if [ ! -z "$(ps -ef | grep 503server.py | grep -v grep)" ]; then
   kill `ps -ef | grep 503server.py | grep -v grep | awk '{ print $2 }'`
 fi
-python3 ${OPENSHIFT_REPO_DIR}diy/speedestimate.py
+
 rm ${OPENSHIFT_TMP_DIR}uwsgi.pid
 ${OPENSHIFT_DATA_DIR}bin/uwsgi --ini ${OPENSHIFT_REPO_DIR}uwsgi.ini

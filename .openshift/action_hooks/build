@@ -4,6 +4,3 @@ pip3 install --use-mirrors -r ${OPENSHIFT_REPO_DIR}requirements.txt
 for css in ${OPENSHIFT_REPO_DIR}diy/static/*_.css; do
  python3 ${OPENSHIFT_REPO_DIR}diy/csscompressor.py ${css} > ${css::${#css}-5}.m.css
 done
-echo Caching model files...
-cat ${OPENSHIFT_DATA_DIR}zhc2zhm/* > /dev/null
-cat ${OPENSHIFT_DATA_DIR}zhm2zhc/* > /dev/null

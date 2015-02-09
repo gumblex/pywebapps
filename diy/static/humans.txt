@@ -1,0 +1,11 @@
+/* MAIN */
+	Develop & Main Design: Gumble
+	Contact: exez at gumble.tk
+	Site: http://gumble.tk
+
+/* SITE */
+	Last update: 2015/02
+	Language: Simplified Chinese, Traditional Chinese (Only Wenyan site)
+	Standards: HTML5, CSS3
+	Components: Flask, Pure.css, etc.
+	IDE: Geany

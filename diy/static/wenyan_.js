@@ -19,5 +19,5 @@ return false;
 }
 }
 AutoGrow(document.getElementById('tinput'));
-document.getElementById("ctrlsubmit").onclick = PBRun;
+document.getElementById("translateform").onsubmit = PBRun;
 });
