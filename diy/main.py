@@ -324,6 +324,7 @@ def buka_sortid(cid, idx, title, ctype):
 		return (-1, idx, title, cid)
 
 
+@gzipped
 def bukadown():
 	func = flask.request.form.get('f') or flask.request.args.get('f')
 	errmsg = flask.render_template('buka.html', msg=flask.Markup('<p class="error">参数错误。<a href="javascript:history.back()">按此返回</a></p>'))
@@ -331,21 +332,25 @@ def bukadown():
 		return flask.render_template('buka.html')
 	elif func == 'i':
 		cname = flask.request.args.get('name')
-		rv = buka_lookup("SELECT mid,name,author,lastchap,lastup,available FROM comics WHERE mid = ? LIMIT 1", (cname,))
+		rv = buka_lookup("SELECT mid,name,author,lastchap,lastup,available FROM comics WHERE mid = ?", (cname,))
+		mres = None
+		sortfunc = lambda x: abs(len(cname) - len(x[1]))
 		if rv:
 			cinfo = rv[0]
 		else:
-			rv = buka_lookup("SELECT mid,name,author,lastchap,lastup,available FROM comics WHERE name LIKE ? LIMIT 1", ('%%%s%%' % cname,))
-			if rv:
-				cinfo = rv[0]
-			else:
+			rv = buka_lookup("SELECT mid,name,author,lastchap,lastup,available FROM comics WHERE name LIKE ?", ('%%%s%%' % cname,))
+			if not rv:
 				return flask.render_template('buka.html', msg=flask.Markup('<p class="error">未找到符合的漫画。</p>'), sname=cname)
+			rv = sorted(rv, key=sortfunc)
+			cinfo = rv[0]
+			if len(rv) > 1:
+				mres = [('?f=i&name=%s' % r[0], r[1]) for r in rv]
 		rv = buka_lookup("SELECT cid,idx,title,type FROM chapters WHERE mid = ?", (cinfo[0],))
 		chapsortid = dict((i[0], buka_sortid(*i)) for i in rv)
 		sortkey = lambda x: chapsortid[x[0]]
 		chapters = [(i[0], buka_renamef(*i)) for i in rv]
 		chapters.sort(key=sortkey, reverse=True)
-		return flask.render_template('buka.html', sname=cname, cinfo=cinfo, chapters=chapters)
+		return flask.render_template('buka.html', sname=cname, multiresult=mres, cinfo=cinfo, chapters=chapters)
 	elif func == 'u':
 		comicid = flask.request.form.get('mid')
 		if not comicid.isdigit():

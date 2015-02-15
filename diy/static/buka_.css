@@ -156,11 +156,11 @@ textarea {
     resize: vertical;
 }
 
-#fgeturl, #furllist {
+#fsresult, #fgeturl, #furllist {
     line-height: 2.5em;
 }
 
-#furllist a, #furllist span {
+#fsresult a, #furllist a, #furllist span {
     display: inline-block;
     line-height: 1em;
 }

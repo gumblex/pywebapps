@@ -30,12 +30,20 @@ document.getElementById("fgeturl").onsubmit = showwait;
 <section id="app">
 <form class="pure-form" name="fgetinfo" method="GET">
 <fieldset>
-<input name="f" type="hidden" value="i" >
+<input name="f" type="hidden" value="i">
 <input id="sname" name="name" type="text" placeholder="漫画名或ID" value="{{ sname }}">
 <button type="submit" class="pure-button pure-button-primary bukabutton buttonactive">搜索</button>
 </fieldset>
 </form>
 {{ msg }}
+{% if multiresult %}
+<h2>搜索结果：</h2>
+<div id="fsresult">
+{% for res in multiresult %}
+<a class="bukabutton" href="{{ res[0] }}" rel="noreferrer">{{ res[1] }}</a>
+{% endfor %}
+</div>
+{% endif %}
 {% if cinfo %}
 <h2>漫画信息：</h2>
 <table id="comicinfo">
@@ -52,10 +60,14 @@ document.getElementById("fgeturl").onsubmit = showwait;
 <input name="f" type="hidden" value="u">
 <input name="mid" type="hidden" value="{{ cinfo[0] }}">
 <fieldset>
+{% if chapters %}
 {% for chap in chapters %}
 <input type="checkbox" id="c{{ chap[0] }}" class="cbchap c" name="{{ chap[0] }}" value="">
 <label for="c{{ chap[0] }}">{{ chap[1] }}</label>
 {% endfor %}
+{% else %}
+<p class="error">抱歉，无法获得章节列表</p>
+{% endif %}
 </fieldset>
 <input type="checkbox" id="cselall" class="cbchap" onclick="selall(this)">
 <label for="cselall">全选</label>
