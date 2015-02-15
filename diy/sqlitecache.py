@@ -46,6 +46,7 @@ class SqliteCache:
     _gc_sql = 'DELETE FROM cache WHERE key IN (SELECT key FROM cache WHERE freq = ? ORDER BY RANDOM() LIMIT ?)'
     _set_sql = 'REPLACE INTO cache (key, val, freq) VALUES (?, ?, ?)'
     _add_sql = 'INSERT INTO cache (key, val, freq) VALUES (?, ?, ?)'
+    _upd_sql = 'UPDATE cache SET freq=? WHERE key=?'
 
     def __init__(self, path, maxlen=1048576):
         self.path = os.path.abspath(path)
