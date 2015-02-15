@@ -370,6 +370,10 @@ def bukadown():
 def err403(error):
 	return flask.render_template('e403.html'), 403
 
+@app.errorhandler(404)
+def err403(error):
+	return flask.render_template('e404.html'), 404
+
 @app.errorhandler(500)
 def err500(error):
 	return flask.render_template('e500.html'), 500
