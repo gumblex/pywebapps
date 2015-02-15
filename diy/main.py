@@ -335,6 +335,8 @@ def bukadown():
 		return flask.render_template(template)
 	elif func == 'i':
 		cname = flask.request.args.get('name')
+		if not cname:
+			return flask.render_template(template, sname=cname)
 		rv = buka_lookup("SELECT mid,name,author,lastchap,lastup,available FROM comics WHERE mid = ?", (cname,))
 		mres = None
 		sortfunc = lambda x: abs(len(cname) - len(x[1]))
