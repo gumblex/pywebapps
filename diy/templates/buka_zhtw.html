@@ -2,9 +2,9 @@
 <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<meta http-equiv="Content-Language" content="zh-cn">
+<meta http-equiv="Content-Language" content="zh-tw">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>布卡简易下载工具</title>
+<title>布卡簡易下載工具</title>
 <link rel="stylesheet" href="/static/pure.m.css">
 <link rel="stylesheet" href="/static/buka.m.css">
 {% if cinfo %}
@@ -26,18 +26,18 @@ document.getElementById("fgeturl").onsubmit = showwait;
 </head>
 <body>
 <div id="container">
-<h1>布卡简易下载工具</h1>
+<h1>布卡簡易下載工具</h1>
 <section id="app">
 <form class="pure-form" name="fgetinfo" method="GET">
 <fieldset>
 <input name="f" type="hidden" value="i">
-<input id="sname" name="name" type="text" placeholder="漫画名或ID" value="{{ sname }}">
-<button type="submit" class="pure-button pure-button-primary bukabutton buttonactive">搜索</button>
+<input id="sname" name="name" type="text" placeholder="漫畫名或ID" value="{{ sname }}">
+<button type="submit" class="pure-button pure-button-primary bukabutton buttonactive">搜尋</button>
 </fieldset>
 </form>
 {{ msg }}
 {% if multiresult %}
-<h2>搜索结果：</h2>
+<h2>搜尋結果：</h2>
 <div id="fsresult">
 {% for res in multiresult %}
 <a class="bukabutton" href="{{ res[0] }}" rel="noreferrer">{{ res[1] }}</a>
@@ -45,15 +45,15 @@ document.getElementById("fgeturl").onsubmit = showwait;
 </div>
 {% endif %}
 {% if cinfo %}
-<h2>漫画信息：</h2>
+<h2>漫畫資訊：</h2>
 <table id="comicinfo">
-<tr><td>漫画编号：</td><td>{{ cinfo[0] }}</td></tr>
-<tr><td>漫画名：</td><td>{{ cinfo[1] }}</td></tr>
+<tr><td>漫畫編號：</td><td>{{ cinfo[0] }}</td></tr>
+<tr><td>漫畫名：</td><td>{{ cinfo[1] }}</td></tr>
 <tr><td>作者：</td><td>{{ cinfo[2] }}</td></tr>
 <tr><td>最新：</td><td>{{ cinfo[4] }} ({{ cinfo[3] }})</td></tr>
-<tr><td>状态：</td><td>{% if cinfo[5] %}正常{% else %}已下架{% endif %}</td></tr>
+<tr><td>狀態：</td><td>{% if cinfo[5] %}正常{% else %}已下架{% endif %}</td></tr>
 </table>
-<h2>选择需要的章节：</h2>
+<h2>選擇需要的章節：</h2>
 <form id="fgeturl" class="pure-form" name="fgeturl" method="POST">
 <input name="f" type="hidden" value="u">
 <input name="mid" type="hidden" value="{{ cinfo[0] }}">
@@ -64,31 +64,32 @@ document.getElementById("fgeturl").onsubmit = showwait;
 <label for="c{{ chap[0] }}">{{ chap[1] }}</label>
 {% endfor %}
 {% else %}
-<p class="error">抱歉，无法获得章节列表</p>
+<p class="error">抱歉，無法獲得章節列表</p>
 {% endif %}
 </fieldset>
 <input type="checkbox" id="cselall" class="cbchap" onclick="selall(this)">
-<label for="cselall">全选</label>
-<button type="submit" class="pure-button bukabutton buttonactive">获取下载地址</button><span id="plzwait">请稍候……</span>
+<label for="cselall">全選</label>
+<button type="submit" class="pure-button bukabutton buttonactive">獲取下載地址</button><span id="plzwait">請稍候……</span>
 </form>
 {% endif %}
 {% if links %}
-<h2>说明：</h2>
-请将下载文件名从例如“11127-65677-20141004004712.h.dat”格式改成“65677.buka”(安卓)或“pack.dat”(iOS)，即可使用。
-<h2>直接下载：</h2>
+<h2>說明：</h2>
+請將下載檔名從例如“11127-65677-20141004004712.h.dat”格式改成“65677.buka”(安卓)或“pack.dat”(iOS)，即可使用。
+<h2>直接下載：</h2>
 <div id="furllist">
 {% for link in links %}
 {% if link[2] %}
 <a class="bukabutton" href="{{ link[2] }}" title="{{ link[0] }}.buka" download="{{ link[0] }}.buka" rel="noreferrer">{{ link[1] }}</a>
 {% else %}
-<span class="bukabutton">{{ link[1] }} (获取失败)</span>
+<span class="bukabutton">{{ link[1] }} (獲取失敗)</span>
 {% endif %}
 {% endfor %}
 </div>
-<h2>下载地址：</h2>
+<h2>下載地址：</h2>
 <textarea>{{ linklist }}</textarea>
 {% endif %}
 </section>
 </div>
 </body>
 </html>
+

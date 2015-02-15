@@ -327,9 +327,12 @@ def buka_sortid(cid, idx, title, ctype):
 @gzipped
 def bukadown():
 	func = flask.request.form.get('f') or flask.request.args.get('f')
-	errmsg = flask.render_template('buka.html', msg=flask.Markup('<p class="error">参数错误。<a href="javascript:history.back()">按此返回</a></p>'))
+	accepttw = accept_language_zh_tw(flask.request.headers.get('Accept-Language', ''))
+	L = (lambda x: zhconv(x, 'zh-tw')) if accepttw else (lambda x: x)
+	template = 'buka_zhtw.html' if accepttw else 'buka.html'
+	errmsg = flask.render_template(template, msg=flask.Markup(L('<p class="error">参数错误。<a href="javascript:history.back()">按此返回</a></p>')))
 	if not func:
-		return flask.render_template('buka.html')
+		return flask.render_template(template)
 	elif func == 'i':
 		cname = flask.request.args.get('name')
 		rv = buka_lookup("SELECT mid,name,author,lastchap,lastup,available FROM comics WHERE mid = ?", (cname,))
@@ -338,9 +341,9 @@ def bukadown():
 		if rv:
 			cinfo = rv[0]
 		else:
-			rv = buka_lookup("SELECT mid,name,author,lastchap,lastup,available FROM comics WHERE name LIKE ?", ('%%%s%%' % cname,))
+			rv = buka_lookup("SELECT mid,name,author,lastchap,lastup,available FROM comics WHERE name LIKE ?", ('%%%s%%' % zhconv(cname, 'zh-hans'),))
 			if not rv:
-				return flask.render_template('buka.html', msg=flask.Markup('<p class="error">未找到符合的漫画。</p>'), sname=cname)
+				return flask.render_template(template, msg=flask.Markup(L('<p class="error">未找到符合的漫画。</p>')), sname=cname)
 			rv = sorted(rv, key=sortfunc)
 			cinfo = rv[0]
 			if len(rv) > 1:
@@ -348,9 +351,9 @@ def bukadown():
 		rv = buka_lookup("SELECT cid,idx,title,type FROM chapters WHERE mid = ?", (cinfo[0],))
 		chapsortid = dict((i[0], buka_sortid(*i)) for i in rv)
 		sortkey = lambda x: chapsortid[x[0]]
-		chapters = [(i[0], buka_renamef(*i)) for i in rv]
+		chapters = [(i[0], L(buka_renamef(*i))) for i in rv]
 		chapters.sort(key=sortkey, reverse=True)
-		return flask.render_template('buka.html', sname=cname, multiresult=mres, cinfo=cinfo, chapters=chapters)
+		return flask.render_template(template, sname=cname, multiresult=mres, cinfo=cinfo, chapters=chapters)
 	elif func == 'u':
 		comicid = flask.request.form.get('mid')
 		if not comicid.isdigit():
