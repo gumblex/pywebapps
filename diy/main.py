@@ -372,7 +372,7 @@ def bukadown():
 			else:
 				links.append((ch, chapname[ch][1], ''))
 		linklist = '\n'.join(i[2] for i in links)
-		return flask.render_template('buka.html', sname=comicid, links=links, linklist=linklist)
+		return flask.render_template(template, sname=comicid, links=links, linklist=linklist)
 	else:
 		return errmsg
 

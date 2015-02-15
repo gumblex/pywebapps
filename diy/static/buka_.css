@@ -154,6 +154,15 @@ textarea {
     line-height: 1.25em;
     font-size: 14px;
     resize: vertical;
+    background-color:#F5F4F2;
+    border: solid 1px #DDD;
+    border-radius: 3px;
+    padding: .5em;
+}
+
+textarea:focus {
+    outline: 0;
+    border: 1px solid whitesmoke;
 }
 
 #fsresult, #fgeturl, #furllist {
