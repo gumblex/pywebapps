@@ -22,6 +22,9 @@ DB_userlog_maxcnt = 200
 DB_userlog_expire = 3600
 DB_testsent = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "testsent.db")
 
+DB_buka = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "buka.db")
+DB_bukacache = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "bukacache.db")
+
 MOSESBIN = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "moses")
 MOSES_CWD = os.environ['OPENSHIFT_DATA_DIR']
 MOSES_INI_c2m = os.path.join(os.environ['OPENSHIFT_DATA_DIR'], "zhc2zhm", "moses.ini")

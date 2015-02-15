@@ -1,0 +1,181 @@
+@charset "utf-8";
+
+body {
+    font-family: sans-serif;
+    padding: 2em;
+    margin: auto;
+    background-color: #ECECEC;
+}
+
+#container {
+    max-width: 60em;
+    margin: 0 auto;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: bold;
+}
+
+h1 {
+    color: #000000;
+    padding-bottom: .5em;
+    font-size: 2em;
+    margin: .5em 0;
+    border-bottom: solid 1px #DDD;
+}
+
+h2 {
+    color: #000000;
+    font-size: 1.25em;
+    margin: .5em 0;
+}
+
+h3 {
+    font-size: 1.2em;
+}
+
+h4 {
+    font-size: 1.1em;
+}
+
+h5 {
+    font-size: 1em;
+}
+
+h6 {
+    color: #777777;
+    background-color: inherit;
+    font-size: 1em;
+}
+
+hr {
+    height: 0.2em;
+    border: 0;
+    color: #CCCCCC;
+    background-color: #CCCCCC;
+}
+
+p, blockquote, ul, ol, dl, li, table, pre {
+    margin: .5em 0;
+    line-height: 1.25em;
+}
+
+code, pre {
+    border-radius: 3px;
+    background-color: #F8F8F8;
+    color: inherit;
+}
+
+a {
+    color: #006EDC;
+    background-color: inherit;
+    text-decoration: none;
+}
+
+a:visited {
+    color: #005AB4;
+}
+
+a:hover {
+    color: #0080FF;
+}
+
+h1 > a, h1 > a:visited {
+    color: #000000;
+    background-color: inherit;
+    text-decoration: none;
+}
+
+.indent {
+    text-indent: 2em;
+}
+
+form {
+    font-size: 1em;
+    color: #777777;
+}
+
+.bukabutton {
+    padding:.5em 1em;
+    background-color:#F5F4F2;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.buttonactive {
+    color:white;
+    background-color:#D9532B;
+}
+
+#sname {
+    width: 10em;
+}
+
+input.cbchap {
+    display:none;
+}
+
+input.cbchap + label {
+    color:black;
+    background-color:#F5F4F2;
+    padding:.5em 1em;
+    line-height: normal;
+    white-space: nowrap;
+    vertical-align: baseline;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 3px;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+input.cbchap:checked + label {
+    color:white;
+    background-color:#8FB945;
+}
+
+#plzwait {
+    margin-left:1em;
+    display:none;
+}
+
+#pagetitle {
+    padding-bottom: 2px;
+    border-bottom: 1px solid #EEEEEE;
+    font-size: 2em;
+}
+
+textarea {
+    width: 95%;
+    height: 10em;
+    line-height: 1.25em;
+    font-size: 14px;
+    resize: vertical;
+}
+
+#fgeturl, #furllist {
+    line-height: 2.5em;
+}
+
+#furllist a, #furllist span {
+    display: inline-block;
+    line-height: 1em;
+}
+
+.pure-form input[type=text], .pure-form input[type=password], .pure-form input[type=email], .pure-form input[type=url], .pure-form input[type=date], .pure-form input[type=month], .pure-form input[type=time], .pure-form input[type=datetime], .pure-form input[type=datetime-local], .pure-form input[type=week], .pure-form input[type=number], .pure-form input[type=search], .pure-form input[type=tel], .pure-form input[type=color], .pure-form select, .pure-form textarea {
+    background-color: #FCFCFC;
+}
+
+p.error {
+    font-size: 1.2em;
+    color: #FF851B;
+}
+
+footer {
+    margin-top: 2em;
+    border-top: solid 1px #DDD;
+    text-align: right;
+}

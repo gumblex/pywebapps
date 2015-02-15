@@ -8,6 +8,7 @@ import functools
 import logging
 import sqlite3
 import mosesproxy
+from bukadown import getbukaurl
 from werkzeug.contrib.cache import SimpleCache
 from werkzeug.contrib.fixers import ProxyFix
 from urllib.parse import urlsplit, urlunsplit
@@ -136,7 +137,7 @@ def translate_alias():
 def linebreak(s):
 	return flask.Markup('<p>%s</p>\n') % flask.Markup('</p>\n<p>').join(s.rstrip().split('\n'))
 
-def get_db():
+def get_wy_db():
 	userlog = getattr(flask.g, 'userlog', None)
 	db_ts = getattr(flask.g, 'db_ts', None)
 	if userlog is None:
@@ -158,7 +159,7 @@ def close_connection(exception):
 #@app.route("/wenyan/", methods=('GET', 'POST'))
 @gzipped
 def wenyan():
-	userlog, db_ts = get_db()
+	userlog, db_ts = get_wy_db()
 	cur_ts = db_ts.cursor()
 	tinput = flask.request.form.get('input', '')
 	uncertain = False
@@ -208,7 +209,7 @@ def wenyan():
 	captcha = ''
 	if origcnt + count > userlog.maxcnt:
 		captcha = L(wy_gencaptcha(num + 2, cur_ts))
-	return flask.render_template(('translate_zhtw.html' if accepttw else 'translate.html'), action=flask.url_for('wenyan'), tinput=tinput, uncertain=uncertain, toutput=flask.Markup(toutput), captcha=flask.Markup(captcha))
+	return flask.render_template(('translate_zhtw.html' if accepttw else 'translate.html'), tinput=tinput, uncertain=uncertain, toutput=flask.Markup(toutput), captcha=flask.Markup(captcha))
 
 def wy_validate(ip, origcnt, userlog, cur_ts):
 	if origcnt > userlog.maxcnt:
@@ -285,6 +286,86 @@ def clozeword():
 		res.append('</tbody></table></p><p><a href="%s">&lt;&lt;返回单词列表...</a></p>' % flask.url_for('clozeword', fl=fl, sp=sp))
 	return flask.render_template('clozeword.html', fl=fl, result=flask.Markup('\n'.join(res)))
 
+
+@functools.lru_cache(maxsize=128)
+def buka_lookup(sql, replace):
+	db_buka = sqlite3.connect(DB_buka)
+	cur_buka = db_buka.cursor()
+	return tuple(cur_buka.execute(sql, replace))
+
+
+def buka_renamef(cid, idx, title, ctype):
+	if idx is not None:
+		idx = str(idx)
+		if title:
+			return title
+		else:
+			if ctype == 0:
+				return '第' + idx.zfill(3) + '话'
+			elif ctype == 1:
+				return '第' + idx.zfill(2) + '卷'
+			elif ctype == 2:
+				return '番外' + idx.zfill(2)
+			else:
+				return idx.zfill(3)
+	else:
+		return str(cid)
+
+
+def buka_sortid(cid, idx, title, ctype):
+	title = title or ''
+	if ctype == 0:
+		return (2, idx, title, cid)
+	elif ctype == 1:
+		return (1, idx, title, cid)
+	elif ctype == 2:
+		return (0, idx, title, cid)
+	else:
+		return (-1, idx, title, cid)
+
+
+def bukadown():
+	func = flask.request.form.get('f') or flask.request.args.get('f')
+	errmsg = flask.render_template('buka.html', msg=flask.Markup('<p class="error">参数错误。<a href="javascript:history.back()">按此返回</a></p>'))
+	if not func:
+		return flask.render_template('buka.html')
+	elif func == 'i':
+		cname = flask.request.args.get('name')
+		rv = buka_lookup("SELECT mid,name,author,lastchap,lastup,available FROM comics WHERE mid = ? LIMIT 1", (cname,))
+		if rv:
+			cinfo = rv[0]
+		else:
+			rv = buka_lookup("SELECT mid,name,author,lastchap,lastup,available FROM comics WHERE name LIKE ? LIMIT 1", ('%%%s%%' % cname,))
+			if rv:
+				cinfo = rv[0]
+			else:
+				return flask.render_template('buka.html', msg=flask.Markup('<p class="error">未找到符合的漫画。</p>'), sname=cname)
+		rv = buka_lookup("SELECT cid,idx,title,type FROM chapters WHERE mid = ?", (cinfo[0],))
+		chapsortid = dict((i[0], buka_sortid(*i)) for i in rv)
+		sortkey = lambda x: chapsortid[x[0]]
+		chapters = [(i[0], buka_renamef(*i)) for i in rv]
+		chapters.sort(key=sortkey, reverse=True)
+		return flask.render_template('buka.html', sname=cname, cinfo=cinfo, chapters=chapters)
+	elif func == 'u':
+		comicid = flask.request.form.get('mid')
+		if not comicid.isdigit():
+			return errmsg
+		comicid = int(comicid)
+		rv = buka_lookup("SELECT cid,idx,title,type FROM chapters WHERE mid = ?", (comicid,))
+		chapname = dict((i[0], (buka_sortid(*i), buka_renamef(*i))) for i in rv)
+		chaps = sorted(map(int, filter(str.isdigit, flask.request.form.keys())), key=chapname.__getitem__, reverse=True)
+		links = []
+		for ch in chaps:
+			rv = getbukaurl(comicid, ch)
+			if rv:
+				links.append((ch, chapname[ch][1], rv))
+			else:
+				links.append((ch, chapname[ch][1], ''))
+		linklist = '\n'.join(i[2] for i in links)
+		return flask.render_template('buka.html', sname=comicid, links=links, linklist=linklist)
+	else:
+		return errmsg
+
 @app.errorhandler(403)
 def err403(error):
 	return flask.render_template('e403.html'), 403
@@ -299,6 +380,7 @@ app.add_url_rule("/", 'index_glass', index_glass, subdomain='glass')
 app.add_url_rule("/<path:filename>", "file_glass", file_glass, subdomain='glass')
 app.add_url_rule("/translate/", 'translate_alias', redirect_to="/wenyan/")
 app.add_url_rule("/clozeword/", 'clozeword', clozeword)
+app.add_url_rule("/buka/", 'bukadown', bukadown, methods=('GET', 'POST'))
 if NOTLOCAL:
 	app.add_url_rule("/", "wenyan", wenyan, methods=('GET', 'POST'), subdomain='wenyan')
 	app.add_url_rule("/wenyan/", "wenyan", wenyan, methods=('GET', 'POST'), alias=True)
