@@ -4,5 +4,7 @@ source ${OPENSHIFT_DEPENDENCIES_DIR}python/bin/activate
 # The logic to stop your application should be put in this script.
 ${OPENSHIFT_DATA_DIR}bin/uwsgi --stop ${OPENSHIFT_TMP_DIR}uwsgi.pid
 python3 ${OPENSHIFT_REPO_DIR}diy/mosesproxy.py stop
+if kill -0 `cat ${OPENSHIFT_TMP_DIR}uwsgi.pid`; then
+ sleep 1
+fi
 nohup python $OPENSHIFT_REPO_DIR/diy/503server.py >> ${OPENSHIFT_LOG_DIR}/python.log 2>&1 &
-
