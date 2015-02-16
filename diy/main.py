@@ -379,6 +379,9 @@ def bukadown():
 	else:
 		return errmsg
 
+def bukadownloader_zip():
+	return flask.send_from_directory(OS_DATA, 'bukadownloader.zip')
+
 @app.errorhandler(403)
 def err403(error):
 	return flask.render_template('e403.html'), 403
@@ -398,6 +401,7 @@ app.add_url_rule("/<path:filename>", "file_glass", file_glass, subdomain='glass'
 app.add_url_rule("/translate/", 'translate_alias', redirect_to="/wenyan/")
 app.add_url_rule("/clozeword/", 'clozeword', clozeword)
 app.add_url_rule("/buka/", 'bukadown', bukadown, methods=('GET', 'POST'))
+app.add_url_rule("/buka/bukadownloader.zip", 'bukadownloader_zip', bukadownloader_zip)
 if NOTLOCAL:
 	app.add_url_rule("/", "wenyan", wenyan, methods=('GET', 'POST'), subdomain='wenyan')
 	app.add_url_rule("/wenyan/", "wenyan", wenyan, methods=('GET', 'POST'), alias=True)

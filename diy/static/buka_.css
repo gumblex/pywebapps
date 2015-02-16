@@ -95,6 +95,11 @@ form {
     color: #777777;
 }
 
+#opt {
+    text-align:right;
+    font-size: 0.9em;
+}
+
 .bukabutton {
     padding:.5em 1em;
     background-color:#F5F4F2;
