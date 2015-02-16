@@ -10,7 +10,7 @@ fullwidth = frozenset(chain(
 	range(0xFF10, 0xFF19+1),
 	range(0xFF20, 0xFF3A+1),
 	range(0xFF41, 0xFF5A+1)))
-resentencesp = re.compile('([.．；。！？]["’”」』]{0,2}|：(?=["‘“「『]{1,2}|$))')
+resentencesp = re.compile('([.﹒﹔﹖﹗．；。！？]["’”」』]{0,2}|：(?=["‘“「『]{1,2}|$))')
 refixmissing = re.compile('(^[^"‘“「『’”」』，；。！？]+["’”」』]|^["‘“「『]?[^"‘“「『’”」』]+[，；。！？][^"‘“「『‘“「『]*["’”」』])(?!["‘“「『’”」』，；。！？])')
 
 punctstr = (
@@ -50,7 +50,8 @@ RE_WS_IN_FW = re.compile(r'([\u2018\u2019\u201c\u201d\u2026\u2500\u2e80-\u312f\u
 detokenize = lambda s: RE_WS_IN_FW.sub(r'\1', s).strip()
 
 def splitsentence(sentence):
-	s = ''.join((chr(ord(ch)+0xFEE0) if ch in halfwidth else ch) for ch in sentence)
+	# s = ''.join((chr(ord(ch)+0xFEE0) if ch in halfwidth else ch) for ch in sentence)
+	s = sentence
 	slist = []
 	for i in resentencesp.split(s):
 		if resentencesp.match(i) and slist:
@@ -134,6 +135,7 @@ def checktxttype(cscore, mscore):
 
 stripquotes = lambda s: s.lstrip('"‘“「『').rstrip('"’”」』')
 fw2hw = lambda s: ''.join((chr(ord(ch)-0xFEE0) if ord(ch) in fullwidth else ch) for ch in s)
+hw2fw = lambda s: ''.join((chr(ord(ch)+0xFEE0) if ch in halfwidth else ch) for ch in s)
 
 def _test_fixsplit():
 	test = """从高祖父到曾孙称为“九族”。这“九族”代表着长幼尊卑秩序和家族血统的承续关系。

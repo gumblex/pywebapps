@@ -118,6 +118,11 @@ class MosesManagerThread:
 		return True
 
 	def getcache(self, text, mode):
+		if not any(0x4DFF < ord(ch) < 0x9FCD for ch in text):
+			# no chinese
+			return text
+		# put conversion here
+		text = zhutil.hw2fw(text)
 		rv = self.lrucache.get((text, mode))
 		if rv is None and mode == "c2m":
 			rv = self.sqlcache.get(text)
