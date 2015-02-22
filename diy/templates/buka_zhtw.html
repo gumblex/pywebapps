@@ -53,6 +53,9 @@ document.getElementById("fgeturl").onsubmit = showwait;
 <tr><td>最新：</td><td>{{ cinfo[4] }} ({{ cinfo[3] }})</td></tr>
 <tr><td>狀態：</td><td>{% if cinfo[5] %}正常{% else %}已下架{% endif %}</td></tr>
 </table>
+{% if chapters %}
+<a class="bukabutton" href="?f=c&mid={{ mid }}">重新生成的 chaporder.dat</a>
+{% endif %}
 <h2>選擇需要的章節：</h2>
 <form id="fgeturl" class="pure-form" name="fgeturl" method="POST">
 <input name="f" type="hidden" value="u">
@@ -75,7 +78,10 @@ document.getElementById("fgeturl").onsubmit = showwait;
 {% endif %}
 {% if links %}
 <h2>說明：</h2>
-請將下載檔名從例如“11127-65677-20141004004712.h.dat”格式改成“65677.buka”(安卓)或“pack.dat”(iOS)，即可使用。
+<p>
+請將下載檔名從例如“11127-65677-20141004004712.h.dat”格式改成“65677.buka”(安卓)或“pack.dat”(iOS)，即可使用。<br>下載以下的 chaporder.dat 並放入相應漫畫編號目錄可使布卡能顯示正確的目錄列表以便進一步操作。</p><p>
+<a class="bukabutton" href="?f=c&mid={{ mid }}">重新生成的 chaporder.dat</a></p><p>
+注：此檔案為自動生成，缺少部分資訊。若有原檔案，無需替換。檔名必須為“chaporder.dat”。</p>
 <h2>直接下載：</h2>
 <div id="furllist">
 {% for link in links %}
