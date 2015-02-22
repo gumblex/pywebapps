@@ -18,7 +18,7 @@ h1, h2, h3, h4, h5, h6 {
 
 h1 {
     color: #000000;
-    padding-bottom: .5em;
+    padding: .3em;
     font-size: 2em;
     margin: .5em 0;
     border-bottom: solid 1px #DDD;

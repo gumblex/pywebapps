@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import os
 import re
-import flask
+import time
 import datetime
 import gzip
 import functools
 import logging
 import sqlite3
+import flask
 import mosesproxy
 from bukadown import getbukaurl
 from werkzeug.contrib.cache import SimpleCache
@@ -324,6 +325,49 @@ def buka_sortid(cid, idx, title, ctype):
 		return (-1, idx, title, cid)
 
 
+def genchaporder(comicid):
+	d = {'author': '', #mangainfo/author
+		 'discount': '0', 'favor': 0,
+		 'finish': '0', #ismangaend/isend
+		 'intro': '',
+		 'lastup': '', #mangainfo/recentupdatename
+		 'lastupcid': '', #Trim and lookup chapterinfo/fulltitle
+		 'lastuptime': '', #mangainfo/recentupdatetime
+		 'lastuptimeex': '', #mangainfo/recentupdatetime + ' 00:00:00'
+		 'links': [], #From chapterinfo
+		 'logo': '', #mangainfo/logopath
+		 'logos': '', #mangainfo/logopath.split('-')[0]+'-s.jpg'
+		 'name': '', #mangainfo/title
+		 'popular': 9999999, 'populars': '10000000+', 'rate': '20',
+		 'readmode': 50331648, 'readmode2': '0',
+		 'recomctrlparam': '101696', 'recomctrltype': '1',
+		 'recomdelay': '2000', 'recomenter': '', 'recomwords': '',
+		 'res': [],
+		 #'res': [{'cid': '0', #downloadview/cid
+			#'csize': '4942', 'restype': '1'}]
+		 'resupno': '0', 'ret': 0, 'upno': '0'}
+	lst = buka_lookup('SELECT name, author, logo, finish, lastchap, lastuptime, lastup FROM comics WHERE mid = ?', (comicid,))[0]
+	d['name'] = lst[0]
+	d['author'] = lst[1]
+	d['logo'] = lst[2]
+	d['logos'] = lst[2]
+	d['finish'] = str(lst[3])
+	d['lastupcid'] = str(lst[4])
+	d['lastuptime'] = time.strftime("%Y-%m-%d", time.gmtime(lst[5]))
+	d['lastuptimeex'] = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(lst[5]))
+	d['lastup'] = lst[6]
+	chlst = buka_lookup('SELECT cid, idx, title, type FROM chapters WHERE mid = ?', (comicid,))
+	for lst in chlst:
+		d['links'].append({'cid': str(lst[0]), #chapterinfo/cid
+						'idx': str(lst[1]), #chapterinfo/idx
+						'ressupport': '7', 'size': '0',
+						'title': lst[2], 'type': str(lst[3])})
+		d['res'].append({'cid': str(lst[0]), 'csize': '2000', 'restype': '4'})
+		d['res'].append({'cid': str(lst[0]), 'csize': '2000', 'restype': '2'})
+		d['res'].append({'cid': str(lst[0]), 'csize': '2000', 'restype': '1'})
+	return d
+
+
 @gzipped
 def bukadown():
 	func = flask.request.form.get('f') or flask.request.args.get('f')
@@ -358,7 +402,7 @@ def bukadown():
 		sortkey = lambda x: chapsortid[x[0]]
 		chapters = [(i[0], L(buka_renamef(*i))) for i in rv]
 		chapters.sort(key=sortkey, reverse=True)
-		return flask.render_template(template, sname=cname, multiresult=mres, cinfo=cinfo, chapters=chapters)
+		return flask.render_template(template, sname=cname, multiresult=mres, cinfo=cinfo, chapters=chapters, mid=cinfo[0])
 	elif func == 'u':
 		comicid = flask.request.form.get('mid')
 		if not comicid.isdigit():
@@ -375,7 +419,14 @@ def bukadown():
 			else:
 				links.append((ch, chapname[ch][1], ''))
 		linklist = '\n'.join(i[2] for i in links)
-		return flask.render_template(template, sname=comicid, links=links, linklist=linklist)
+		return flask.render_template(template, sname=comicid, links=links, linklist=linklist, mid=comicid)
+	elif func == 'c':
+		comicid = flask.request.args.get('mid')
+		if not comicid.isdigit():
+			return errmsg
+		comicid = int(comicid)
+		d = genchaporder(comicid)
+		return flask.Response(flask.json.dumps(d), mimetype="application/json", headers={"Content-Disposition": "attachment;filename=chaporder.dat"})
 	else:
 		return errmsg
 
