@@ -359,9 +359,9 @@ def genchaporder(comicid):
 	chlst = buka_lookup('SELECT cid, idx, title, type FROM chapters WHERE mid = ?', (comicid,))
 	for lst in chlst:
 		d['links'].append({'cid': str(lst[0]), #chapterinfo/cid
-						'idx': str(lst[1]), #chapterinfo/idx
-						'ressupport': '7', 'size': '0',
-						'title': lst[2], 'type': str(lst[3])})
+						'idx': str(lst[1] or lst[0]), #chapterinfo/idx
+						'ressupport': '7', 'size': '2000',
+						'title': lst[2] or '', 'type': str(lst[3] or '0')})
 		d['res'].append({'cid': str(lst[0]), 'csize': '2000', 'restype': '4'})
 		d['res'].append({'cid': str(lst[0]), 'csize': '2000', 'restype': '2'})
 		d['res'].append({'cid': str(lst[0]), 'csize': '2000', 'restype': '1'})
@@ -399,9 +399,9 @@ def bukadown():
 				mres = [('?f=i&name=%s' % r[0], r[1]) for r in rv]
 		rv = buka_lookup("SELECT cid,idx,title,type FROM chapters WHERE mid = ?", (cinfo[0],))
 		chapsortid = dict((i[0], buka_sortid(*i)) for i in rv)
-		sortkey = lambda x: chapsortid[x[0]]
+		sortfunc = lambda x: chapsortid[x[0]]
 		chapters = [(i[0], L(buka_renamef(*i))) for i in rv]
-		chapters.sort(key=sortkey, reverse=True)
+		chapters.sort(key=sortfunc, reverse=True)
 		return flask.render_template(template, sname=cname, multiresult=mres, cinfo=cinfo, chapters=chapters, mid=cinfo[0])
 	elif func == 'u':
 		comicid = flask.request.form.get('mid')

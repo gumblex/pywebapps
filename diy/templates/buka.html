@@ -79,7 +79,7 @@ document.getElementById("fgeturl").onsubmit = showwait;
 {% if links %}
 <h2>说明：</h2>
 <p>
-请将下载文件名从例如“11127-65677-20141004004712.h.dat”格式改成“65677.buka”(安卓)或“pack.dat”(iOS)，即可使用。<br>下载以下的 chaporder.dat 并放入相应漫画编号目录可使布卡能显示正确的目录列表以便进一步操作。</p><p>
+请将下载文件名从例如“{{ mid }}-{{ links[0][0] }}-20141004004712.h.dat”格式改成“{{ links[0][0] }}.buka”(安卓)或“pack.dat”(iOS)，即可使用。<br>下载以下的 chaporder.dat 并放入相应漫画编号目录可使布卡能显示正确的目录列表以便进一步操作。</p><p>
 <a class="bukabutton" href="?f=c&mid={{ mid }}">重新生成的 chaporder.dat</a></p><p>
 注：此文件为自动生成，缺少部分信息。若有原文件，无需替换。文件名必须为“chaporder.dat”。</p>
 <h2>直接下载：</h2>
