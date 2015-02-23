@@ -315,6 +315,7 @@ def buka_renamef(cid, idx, title, ctype):
 
 def buka_sortid(cid, idx, title, ctype):
 	title = title or ''
+	idx = idx or 0
 	if ctype == 0:
 		return (2, idx, title, cid)
 	elif ctype == 1:
