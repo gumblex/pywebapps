@@ -26,7 +26,6 @@ if NOTLOCAL:
 	app.wsgi_app = ProxyFix(app.wsgi_app, num_proxies=2)
 	app.config['SERVER_NAME'] = 'gumble.tk'
 	app.url_map.default_subdomain = 'app'
-	#app.url_map.host_matching = True
 
 app.secret_key = SECRETKEY
 
@@ -109,34 +108,36 @@ def banip():
 	if BANNEDIP.match(flask.request.remote_addr):
 		flask.abort(403)
 
-#@app.route("/")
+
 @gzipped
 @functools.lru_cache(maxsize=1)
 def index():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
 
-#@app.route('/favicon.ico')
+
 def favicon():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
-#@app.route("/", subdomain='glass')
+
 @gzipped
 @functools.lru_cache(maxsize=1)
 def index_glass():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static/glass'), 'index.html')
 
-#@app.route("/<path:filename>", subdomain='glass')
+
 @gzipped
 @functools.lru_cache(maxsize=25)
 def file_glass(filename):
 	return flask.send_from_directory(os.path.join(app.root_path, 'static/glass'), filename)
 
-#@app.route("/translate/")
+
 def translate_alias():
 	return flask.redirect(flask.url_for('wenyan'))
 
+
 def linebreak(s):
 	return flask.Markup('<p>%s</p>\n') % flask.Markup('</p>\n<p>').join(s.rstrip().split('\n'))
+
 
 def get_wy_db():
 	userlog = getattr(flask.g, 'userlog', None)
@@ -147,6 +148,7 @@ def get_wy_db():
 		db_ts = sqlite3.connect(DB_testsent)
 	return (userlog, db_ts)
 
+
 @app.teardown_appcontext
 def close_connection(exception):
 	userlog = getattr(flask.g, 'userlog', None)
@@ -156,8 +158,7 @@ def close_connection(exception):
 	if db_ts is not None:
 		db_ts.close()
 
-#@app.route("/", subdomain='wenyan', methods=('GET', 'POST'))
-#@app.route("/wenyan/", methods=('GET', 'POST'))
+
 @gzipped
 def wenyan():
 	userlog, db_ts = get_wy_db()
@@ -182,7 +183,7 @@ def wenyan():
 				uncertain = 'm2c'
 			elif lang == 'm2c':
 				uncertain = 'c2m'
-	#ischecked = (' checked', '') if lang == 'c2m' else ('', ' checked')
+
 	ip = flask.request.remote_addr
 	accepttw = accept_language_zh_tw(flask.request.headers.get('Accept-Language', ''))
 	L = (lambda x: zhconv(x, 'zh-tw')) if accepttw else (lambda x: x)
@@ -212,6 +213,7 @@ def wenyan():
 		captcha = L(wy_gencaptcha(num + 2, cur_ts))
 	return flask.render_template(('translate_zhtw.html' if accepttw else 'translate.html'), tinput=tinput, uncertain=uncertain, toutput=flask.Markup(toutput), captcha=flask.Markup(captcha))
 
+
 def wy_validate(ip, origcnt, userlog, cur_ts):
 	if origcnt > userlog.maxcnt:
 		allcap = flask.session.get('c')
@@ -230,6 +232,7 @@ def wy_validate(ip, origcnt, userlog, cur_ts):
 	else:
 		return (None, 0)
 
+
 def wy_gencaptcha(num, cur_ts):
 	if not num:
 		return ''
@@ -247,8 +250,7 @@ def clozeword_lookup(sql, replace):
 	cur_cloze = db_cloze.cursor()
 	return tuple(cur_cloze.execute(sql, replace))
 
-#@app.route("/", subdomain='clozeword')
-#@app.route("/clozeword/")
+
 @gzipped
 def clozeword():
 	fl = flask.request.args.get('fl', '').lower()
@@ -434,17 +436,21 @@ def bukadown():
 def bukadownloader_zip():
 	return flask.send_from_directory(OS_DATA, 'bukadownloader.zip')
 
+TMPL403 = open(os.path.join(app.root_path, 'templates/e403.html')).read()
+TMPL404 = open(os.path.join(app.root_path, 'templates/e404.html')).read()
+TMPL500 = open(os.path.join(app.root_path, 'templates/e500.html')).read()
+
 @app.errorhandler(403)
 def err403(error):
-	return flask.render_template('e403.html'), 403
+	return TMPL403, 403
 
 @app.errorhandler(404)
-def err403(error):
-	return flask.render_template('e404.html'), 404
+def err404(error):
+	return TMPL404, 404
 
 @app.errorhandler(500)
 def err500(error):
-	return flask.render_template('e500.html'), 500
+	return TMPL500, 500
 
 app.add_url_rule('/', 'index', index)
 app.add_url_rule('/favicon.ico', 'favicon', favicon)
