@@ -8,10 +8,10 @@ if kill -0 `cat ${OPENSHIFT_TMP_DIR}uwsgi.pid`; then
  sleep 1
 fi
 nohup python $OPENSHIFT_REPO_DIR/diy/503server.py >> ${OPENSHIFT_LOG_DIR}/python.log 2>&1 &
-# Stop the dead mosesproxy
-if [ ! -z "$(ps -ef | grep mosesproxy.py | grep -v grep)" ]; then
+# Stop the dead mosesserver
+if [ ! -z "$(ps -ef | grep mosesserver.py | grep -v grep)" ]; then
  sleep 1
 fi
-if [ ! -z "$(ps -ef | grep mosesproxy.py | grep -v grep)" ]; then
-  kill `ps -ef | grep mosesproxy.py | grep -v grep | awk '{ print $2 }'`
+if [ ! -z "$(ps -ef | grep mosesserver.py | grep -v grep)" ]; then
+  kill `ps -ef | grep mosesserver.py | grep -v grep | awk '{ print $2 }'`
 fi

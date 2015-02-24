@@ -436,9 +436,9 @@ def bukadown():
 def bukadownloader_zip():
 	return flask.send_from_directory(OS_DATA, 'bukadownloader.zip')
 
-TMPL403 = open(os.path.join(app.root_path, 'templates/e403.html')).read()
-TMPL404 = open(os.path.join(app.root_path, 'templates/e404.html')).read()
-TMPL500 = open(os.path.join(app.root_path, 'templates/e500.html')).read()
+TMPL403 = open(os.path.join(app.root_path, 'templates/e403.html'), 'rb').read()
+TMPL404 = open(os.path.join(app.root_path, 'templates/e404.html'), 'rb').read()
+TMPL500 = open(os.path.join(app.root_path, 'templates/e500.html'), 'rb').read()
 
 @app.errorhandler(403)
 def err403(error):
