@@ -53,7 +53,7 @@ document.getElementById("fgeturl").onsubmit = showwait;
 <tr><td>最新：</td><td>{{ cinfo[4] }} ({{ cinfo[3] }})</td></tr>
 <tr><td>狀態：</td><td>{% if cinfo[5] %}正常{% else %}已下架{% endif %}</td></tr>
 </table>
-{% if chapters %}
+{% if chapters and not cinfo[5] %}
 <a class="bukabutton" href="?f=c&mid={{ mid }}">重新生成的 chaporder.dat</a>
 {% endif %}
 <h2>選擇需要的章節：</h2>

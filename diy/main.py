@@ -7,6 +7,7 @@ import gzip
 import functools
 import logging
 import sqlite3
+import zipfile
 import flask
 import mosesproxy
 from bukadown import getbukaurl
@@ -407,7 +408,7 @@ def bukadown():
 		chapters.sort(key=sortfunc, reverse=True)
 		return flask.render_template(template, sname=cname, multiresult=mres, cinfo=cinfo, chapters=chapters, mid=cinfo[0])
 	elif func == 'u':
-		comicid = flask.request.form.get('mid')
+		comicid = flask.request.form.get('mid', '')
 		if not comicid.isdigit():
 			return errmsg
 		comicid = int(comicid)
@@ -424,12 +425,14 @@ def bukadown():
 		linklist = '\n'.join(i[2] for i in links)
 		return flask.render_template(template, sname=comicid, links=links, linklist=linklist, mid=comicid)
 	elif func == 'c':
-		comicid = flask.request.args.get('mid')
+		comicid = flask.request.args.get('mid', '')
 		if not comicid.isdigit():
 			return errmsg
-		comicid = int(comicid)
-		d = genchaporder(comicid)
-		return flask.Response(flask.json.dumps(d), mimetype="application/json", headers={"Content-Disposition": "attachment;filename=chaporder.dat"})
+		try:
+			z = zipfile.ZipFile(ZIP_bkchap)
+			return flask.Response(z.read('chaporder/%s.dat' % comicid), mimetype="application/json", headers={"Content-Disposition": "attachment;filename=chaporder.dat"})
+		except Exception:
+			flask.abort(404)
 	else:
 		return errmsg
 

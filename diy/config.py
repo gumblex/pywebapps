@@ -24,6 +24,7 @@ DB_testsent = os.path.join(OS_DATA, "testsent.db")
 
 DB_buka = os.path.join(OS_DATA, "buka.db")
 DB_bukacache = os.path.join(OS_DATA, "bukacache.db")
+ZIP_bkchap = os.path.join(OS_DATA, "chaporder.zip")
 
 MOSESBIN = os.path.join(OS_DATA, "moses")
 MOSES_CWD = OS_DATA
