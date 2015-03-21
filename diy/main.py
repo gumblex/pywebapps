@@ -372,6 +372,14 @@ def genchaporder(comicid):
 	return d
 
 
+@functools.lru_cache(maxsize=16)
+def getchaporder(comicid):
+	z = zipfile.ZipFile(ZIP_bkchap)
+	try:
+		return z.read('chaporder/%s.dat' % comicid)
+	except Exception:
+		return None
+
 @gzipped
 def bukadown():
 	func = flask.request.form.get('f') or flask.request.args.get('f')
@@ -428,11 +436,10 @@ def bukadown():
 		comicid = flask.request.args.get('mid', '')
 		if not comicid.isdigit():
 			return errmsg
-		try:
-			z = zipfile.ZipFile(ZIP_bkchap)
-			return flask.Response(z.read('chaporder/%s.dat' % comicid), mimetype="application/json", headers={"Content-Disposition": "attachment;filename=chaporder.dat"})
-		except Exception:
+		chaporder = getchaporder(comicid)
+		if chaporder is None:
 			flask.abort(404)
+		return flask.Response(chaporder, mimetype="application/json", headers={"Content-Disposition": "attachment;filename=chaporder.dat"})
 	else:
 		return errmsg
 

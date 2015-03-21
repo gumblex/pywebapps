@@ -80,7 +80,6 @@ def xml_escape(text):
 
 
 def xml_unescape(text):
-	"""Produce entities within text."""
 	return " ".join(xml_unescape_table.get(c, c) for c in text.split(' '))
 
 
@@ -201,7 +200,7 @@ class MosesManagerThread:
 			self.resultqueue = []
 			timestart = time.time()
 			for l in text.split('\n'):
-				sentences = zhutil.splithard(zhconv(l.strip(), 'zh-cn'), 128)
+				sentences = zhutil.splithard(zhconv(l.strip(), 'zh-cn'), 80)
 				for s in sentences:
 					if s:
 						crv = self.getcache(s)
