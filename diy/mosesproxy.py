@@ -14,29 +14,34 @@ filename = MS_SOCK
 def recvall(sock, buf=1024):
 	data = sock.recv(buf)
 	alldata = [data]
-	while len(data) == buf:
+	while data and data[-1] != 0xc1:
 		data = sock.recv(buf)
 		alldata.append(data)
-	return b''.join(alldata)
+	return b''.join(alldata)[:-1]
+
+
+def sendall(sock, data):
+	sock.sendall(data + b'\xc1')
+
 
 def receive(data, autorestart=True):
 	global filename
 	sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 	try:
 		sock.connect(filename)
-		sock.sendall(data)
+		sendall(sock, data)
 	except (FileNotFoundError, ConnectionRefusedError, BrokenPipeError) as ex:
 		if autorestart:
 			Popen(('/bin/bash', startserver_path)).wait()
 			sock.connect(filename)
-			sock.sendall(data)
+			sendall(sock, data)
 		else:
 			raise ex
-	received = recvall(sock, 1024)
+	received = recvall(sock)
 	if not received and autorestart:
 		Popen(('/bin/bash', startserver_path)).wait()
-		sock.sendall(data)
-		received = recvall(sock, 1024)
+		sendall(sock, data)
+		received = recvall(sock)
 	sock.close()
 	return received
 

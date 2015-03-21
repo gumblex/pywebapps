@@ -52,10 +52,11 @@ class SqliteCache:
         self.path = os.path.abspath(path)
         self.maxlen = maxlen
         if not os.path.isfile(self.path):
-            self.connection = sqlite3.connect(self.path)
+            # Remember to lock write operations
+            self.connection = sqlite3.connect(self.path, check_same_thread=False)
             self.connection.execute(self._create_sql)
         else:
-            self.connection = sqlite3.connect(self.path)
+            self.connection = sqlite3.connect(self.path, check_same_thread=False)
         self.closed = False
 
     def __del__(self):
