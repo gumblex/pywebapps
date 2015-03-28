@@ -99,7 +99,7 @@ input[type="radio"]:invalid {
     resize: vertical;
 }
 
-#tinput:focus {
+#tinput:focus, #captcha-input:focus {
     outline: 0;
     border: 1px solid #C39F73;
 }
@@ -170,11 +170,37 @@ input[type="radio"]:invalid {
 }
 
 #captcha {
-    font-size: .9em;
     color: #222;
 }
 
-#captcha p {
+#captcha-pic, #captcha-input {
+    border: 1px solid #E6DFD6;
+    background-color: #FFFFF8;
+    border-radius: 2px;
+}
+
+#captcha-input {
+    padding: .15em;
+}
+
+#captcha-pic {
+    white-space: pre;
+    word-wrap: normal;
+    font-size: 0.5em;
+    font-family: Consolas,"DejaVu Sans Mono","Liberation Mono","Courier New",monospace;
+    overflow: auto;
+    width: auto;
+    height: auto;
+    padding: .7em;
+}
+
+#captcha-title {
+    font-weight: bold;
+    margin: .5em 0;
+}
+
+#captcha-input {
+    width: 3em;
     margin: .5em 0;
 }
 

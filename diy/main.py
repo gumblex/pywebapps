@@ -4,12 +4,15 @@ import re
 import time
 import datetime
 import gzip
+import hashlib
+import base64
 import functools
 import logging
 import sqlite3
 import zipfile
 import flask
 import mosesproxy
+import figcaptcha
 from bukadown import getbukaurl
 from werkzeug.contrib.cache import SimpleCache
 from werkzeug.contrib.fixers import ProxyFix
@@ -142,12 +145,9 @@ def linebreak(s):
 
 def get_wy_db():
 	userlog = getattr(flask.g, 'userlog', None)
-	db_ts = getattr(flask.g, 'db_ts', None)
 	if userlog is None:
 		userlog = flask.g.userlog = SqliteUserLog(DB_userlog, DB_userlog_maxcnt, DB_userlog_expire)
-	if db_ts is None:
-		db_ts = sqlite3.connect(DB_testsent)
-	return (userlog, db_ts)
+	return userlog
 
 
 @app.teardown_appcontext
@@ -162,8 +162,7 @@ def close_connection(exception):
 
 @gzipped
 def wenyan():
-	userlog, db_ts = get_wy_db()
-	cur_ts = db_ts.cursor()
+	userlog = get_wy_db()
 	tinput = flask.request.form.get('input', '')
 	uncertain = False
 	formgetlang = flask.request.form.get('lang')
@@ -190,16 +189,15 @@ def wenyan():
 	L = (lambda x: zhconv(x, 'zh-tw')) if accepttw else (lambda x: x)
 	origcnt = userlog.count(ip)
 	count = 0
-	valid, num = wy_validate(ip, origcnt, userlog, cur_ts)
-	if valid is True:
+	valid = wy_validate(ip, origcnt, userlog)
+	if valid == 1:
 		origcnt = 0
 		userlog.delete(ip)
-		del flask.session['c']
-	elif valid is False:
-		logging.warning('Captcha failed: %s, %s' % (ip, num))
+	elif valid == 0:
+		logging.warning('Captcha failed: %s' % ip)
 	if not tinput:
 		toutput = ''
-	elif valid is False:
+	elif valid == 0:
 		toutput = L('<p class="error">回答错误，请重试。</p>')
 	elif lang is None:
 		toutput = linebreak(tinput)
@@ -211,37 +209,32 @@ def wenyan():
 		userlog.add(ip, count)
 	captcha = ''
 	if origcnt + count > userlog.maxcnt:
-		captcha = L(wy_gencaptcha(num + 2, cur_ts))
+		captcha = L(wy_gencaptcha())
 	return flask.render_template(('translate_zhtw.html' if accepttw else 'translate.html'), tinput=tinput, uncertain=uncertain, toutput=flask.Markup(toutput), captcha=flask.Markup(captcha))
 
 
-def wy_validate(ip, origcnt, userlog, cur_ts):
+def wy_validate(ip, origcnt, userlog):
 	if origcnt > userlog.maxcnt:
-		allcap = flask.session.get('c')
-		if not allcap:
-			return (False, 4)
-		for cap in allcap:
-			try:
-				get = int(flask.request.form.get(str(cap)))
-				cur_ts.execute("SELECT type FROM sentences WHERE id = ?", (cap,))
-				ans = cur_ts.fetchone()[0]
-				if get != ans:
-					return (False, len(allcap))
-			except Exception:
-				return (False, len(allcap))
-		return (True, 0)
-	else:
-		return (None, 0)
+		try:
+			key = flask.request.form.get('cq', '').encode('ascii')
+			ans = flask.request.form.get('ca', '').lower().encode('ascii')
+			key2 = base64.urlsafe_b64encode(hashlib.pbkdf2_hmac('sha256', ans, SECRETKEY, 100))
+			if key == key2:
+				return 1
+			else:
+				return 0
+		except Exception:
+			logging.exception('captcha')
+			return 0
+	return None
 
 
-def wy_gencaptcha(num, cur_ts):
-	if not num:
-		return ''
-	num = min(num, 10)
-	cur_ts.execute("SELECT id, sent FROM sentences ORDER BY RANDOM() LIMIT ?", (num,))
-	got = cur_ts.fetchall()
-	flask.session['c'] = tuple(i[0] for i in got)
-	return flask.render_template('captcha.html', sentences=got)
+def wy_gencaptcha():
+	captcha = figcaptcha.combinecaptcha(figcaptcha.getcaptcha(2) for i in range(2))
+	ask = figcaptcha.noise(captcha[0])
+	ans = captcha[1].lower().encode('ascii')
+	key = base64.urlsafe_b64encode(hashlib.pbkdf2_hmac('sha256', ans, SECRETKEY, 100)).decode('ascii')
+	return flask.render_template('captcha.html', pic=ask, ans=key)
 
 RE_NOTA = re.compile(r'^a\s.+|.+\S\sa\s.+')
 
