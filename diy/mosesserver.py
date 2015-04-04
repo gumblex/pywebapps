@@ -153,7 +153,7 @@ class MosesManagerThread:
 			tok = t.strip()
 			if tok:
 				if RE_UCJK.match(tok):
-					tokens.extend(cut(tok))
+					tokens.extend(cut(tok, HMM=False))
 				else:
 					tokens.extend(xml_escape(tok).split())
 		return ' '.join(zhutil.addwalls(tokens))

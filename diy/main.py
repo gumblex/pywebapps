@@ -178,7 +178,7 @@ def wenyan():
 			lang = 'c2m'
 		else:
 			lang = 'm2c'
-		if abs(cscore - mscore) < 15:
+		if abs(cscore - mscore) < 45:
 			if lang == 'c2m':
 				uncertain = 'm2c'
 			elif lang == 'm2c':
