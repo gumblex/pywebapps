@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os
@@ -28,6 +28,7 @@ class ThreadingHTTPServer(ThreadingMixIn, http.server.HTTPServer):
 	pass
 
 class HTTPHandler(http.server.BaseHTTPRequestHandler):
+
 	def do_HEAD(self):
 		self.send_response(503)
 		self.send_header('Retry-After', '300')
@@ -44,6 +45,10 @@ class HTTPHandler(http.server.BaseHTTPRequestHandler):
 		return
 
 	do_POST = do_GET
+
+	def log_message(self, format, *args):
+		sys.stderr.write("%s - - [%s] %s\n" % (self.headers.get('X-Forwarded-For') or self.address_string(), self.log_date_time_string(), format%args))
+
 
 def run(server_class=ThreadingHTTPServer,
 		handler_class=HTTPHandler):
