@@ -214,17 +214,22 @@ input[type="radio"]:invalid {
     color: #444;
 }
 
-#changedir, #changedir:visited {
+.abutton, .abutton:visited {
     text-decoration: none;
     color: #8D7253;
 }
 
-#changedir:hover {
+.abutton:hover {
     color: #B7966C;
 }
 
-#changedir:active {
+.abutton:active {
     color: #9A7E5B;
+}
+
+#ctrlchange {
+    margin-left: 1em;
+    display: none;
 }
 
 p.error {

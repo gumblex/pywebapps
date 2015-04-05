@@ -164,7 +164,6 @@ def close_connection(exception):
 def wenyan():
 	userlog = get_wy_db()
 	tinput = flask.request.form.get('input', '')
-	uncertain = False
 	formgetlang = flask.request.form.get('lang')
 	if formgetlang == 'c2m':
 		lang = 'c2m'
@@ -172,17 +171,12 @@ def wenyan():
 		lang = 'm2c'
 	else: # == auto
 		cscore, mscore = calctxtstat(tinput)
-		if cscore == mscore == 0:
+		if cscore == mscore:
 			lang = None
 		elif checktxttype(cscore, mscore) == 'c':
 			lang = 'c2m'
 		else:
 			lang = 'm2c'
-		if abs(cscore - mscore) < 45:
-			if lang == 'c2m':
-				uncertain = 'm2c'
-			elif lang == 'm2c':
-				uncertain = 'c2m'
 
 	ip = flask.request.remote_addr
 	accepttw = accept_language_zh_tw(flask.request.headers.get('Accept-Language', ''))
@@ -210,7 +204,7 @@ def wenyan():
 	captcha = ''
 	if origcnt + count > userlog.maxcnt:
 		captcha = L(wy_gencaptcha())
-	return flask.render_template(('translate_zhtw.html' if accepttw else 'translate.html'), tinput=tinput, uncertain=uncertain, toutput=flask.Markup(toutput), captcha=flask.Markup(captcha))
+	return flask.render_template(('translate_zhtw.html' if accepttw else 'translate.html'), tinput=tinput, toutput=flask.Markup(toutput), captcha=flask.Markup(captcha))
 
 
 def wy_validate(ip, origcnt, userlog):

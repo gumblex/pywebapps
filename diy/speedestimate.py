@@ -3,18 +3,21 @@
 
 import os
 import sys
+import re
 import math
 import time
-import re
+import json
+
 from config import NOTLOCAL
 
 EPSILON = 0.0000001
 LOGDIR = os.environ['OPENSHIFT_LOG_DIR']
-JSFILE = os.path.join(os.environ['OPENSHIFT_REPO_DIR'], 'diy/static/wenyan_.js')
-JSWRITETO = JSFILE[:-4] + '.js'
 
 if not NOTLOCAL:
 	LOGDIR = os.path.join(LOGDIR, '../server/logs')
+
+jswriteto = lambda s: s[:-4] + '.js'
+_curpath = os.path.normpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 class SimpleLinearRegression:
 
@@ -73,6 +76,8 @@ class SimpleLinearRegression:
 re_log = re.compile(r'^(.+?),(.+?),(\d+),(\d+),(\d+),(.+)$')
 re_js = re.compile(r'(var k =) \d+(, b =) \d+')
 
+striplines = lambda s: '\n'.join(l.strip() for l in s.splitlines())
+
 def parselog(fromtime):
 	logfile = os.path.join(LOGDIR, 'mosesserver.log')
 	fromtime = time.strptime(fromtime, '%Y-%m-%d %H:%M:%S')
@@ -95,14 +100,20 @@ def parselog(fromtime):
 	return None
 
 
-def editjs(value, jsfile=JSFILE, writeto=''):
-	if not writeto:
-		writeto = jsfile
-	f = open(jsfile, 'r').read()
-	f = re_js.sub(r'\1 %s\2 %s' % value, f)
+joinlist = lambda l: ''.join(chr(126-int(-n*4.75)) for n in l).replace('"','\"').replace('\\','\\\\')
+
+def writejs(value, jsfile):
+	writeto = jswriteto(jsfile)
+	js_zhdetect = 'var zhcmodel = "%s";\nvar zhmmodel = "%s";\n%s'
+	zhcmodel = json.load(open(os.path.join(_curpath, 'modelzhc.json'), 'r'))
+	zhmmodel = json.load(open(os.path.join(_curpath, 'modelzhm.json'), 'r'))
+	f = striplines(js_zhdetect % (
+		joinlist(zhcmodel), joinlist(zhmmodel),
+		re_js.sub(r'\1 %s\2 %s' % value, open(jsfile, 'r').read())
+	)) + '\n'
 	with open(writeto, 'w') as w:
 		w.write(f)
 
-
 if __name__ == '__main__':
-	editjs(parselog('2015-02-01 14:09:16'), JSFILE, JSWRITETO)
+	REPODIR = os.environ['OPENSHIFT_REPO_DIR']
+	writejs(parselog('2015-02-01 14:09:16'), os.path.join(REPODIR, 'diy/static/wenyan_.js'))
