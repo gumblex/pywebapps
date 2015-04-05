@@ -2,8 +2,24 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import http.server
 from socketserver import ThreadingMixIn
+
+class Unbuffered(object):
+
+	def __init__(self, stream):
+		self.stream = stream
+
+	def write(self, data):
+		self.stream.write(data)
+		self.stream.flush()
+
+	def __getattr__(self, attr):
+		return getattr(self.stream, attr)
+
+sys.stdout = Unbuffered(sys.stdout)
+sys.stderr = Unbuffered(sys.stderr)
 
 HTMLFILE = open(os.path.join(os.environ['OPENSHIFT_REPO_DIR'], 'diy/templates/e503.html'), 'rb').read()
 HTMLLEN = str(len(HTMLFILE))

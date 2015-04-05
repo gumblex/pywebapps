@@ -28,9 +28,8 @@ fi
 # Stop the 503 server
 SREVPROC="$(ps -ef | grep 503server.py | grep -v grep)"
 if [ ! -z "$SREVPROC" ]; then
-  kill -INT `echo "$SREVPROC" | awk '{ print $2 }'`
-  sleep 1
   kill `echo "$SREVPROC" | awk '{ print $2 }'`
+  sleep 1
 fi
 
 rm ${OPENSHIFT_TMP_DIR}uwsgi.pid
