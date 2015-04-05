@@ -12,6 +12,7 @@ nohup python $OPENSHIFT_REPO_DIR/diy/503server.py >> ${OPENSHIFT_LOG_DIR}/python
 if [ ! -z "$(ps -ef | grep mosesserver.py | grep -v grep)" ]; then
  sleep 1
 fi
-if [ ! -z "$(ps -ef | grep mosesserver.py | grep -v grep)" ]; then
-  kill `ps -ef | grep mosesserver.py | grep -v grep | awk '{ print $2 }'`
+SREVPROC="$(ps -ef | grep mosesserver.py | grep -v grep)"
+if [ ! -z "$SREVPROC" ]; then
+  kill `echo "$SREVPROC" | awk '{ print $2 }'`
 fi
