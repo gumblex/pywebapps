@@ -217,6 +217,7 @@ input[type="radio"]:invalid {
 .abutton, .abutton:visited {
     text-decoration: none;
     color: #8D7253;
+    display: inline-block;
 }
 
 .abutton:hover {

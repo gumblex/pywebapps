@@ -225,6 +225,7 @@ class MosesManagerThread:
 				misscount, hitcount + misscount, len(text),
 				time.time() - timestart))
 			outputtext = ''.join(map(self._ig, self.resultqueue))
+			sys.stderr.flush()
 		if withcount:
 			return (outputtext, misscount)
 		else:

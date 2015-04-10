@@ -31,8 +31,8 @@ function TypeHint() {
         detectedlang = Checktxttype(document.getElementById("tinput").value);
         if (detectedlang !== 'auto') {
             document.getElementById("hilang").value = detectedlang;
-            document.getElementById("ctrlauto").innerText = (detectedlang === 'c2m' ? c2mtxt : m2ctxt);
-            document.getElementById("ctrlchange").style.display = "inline";
+            document.getElementById("ctrlauto").textContent = (detectedlang === 'c2m' ? c2mtxt : m2ctxt);
+            document.getElementById("ctrlchange").style.display = "inline-block";
         }
     }
 }
