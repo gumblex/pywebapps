@@ -99,8 +99,9 @@ def parselog(fromtime):
 			return (int(lr.b*1000), int(lr.a*1000))
 	return None
 
+# min: -24.219574739049666
 
-joinlist = lambda l: ''.join(chr(126-int(-n*4.75)) for n in l).replace('"','\"').replace('\\','\\\\')
+joinlist = lambda l: ''.join(chr(32+int(-n*3.9)) for n in l).replace('\\','\\\\').replace('"',r'\"')
 
 def writejs(value, jsfile):
 	writeto = jswriteto(jsfile)

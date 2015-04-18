@@ -5,8 +5,8 @@ function Checktxttype(s) {
     while (i--) {
         o = s.charCodeAt(i);
         if (0x4E00 <= o && o < 0x9FCD) {
-            cscore -= 126-zhcmodel.charCodeAt(o-0x4E00);
-            mscore -= 126-zhmmodel.charCodeAt(o-0x4E00);
+            cscore -= zhcmodel.charCodeAt(o-0x4E00);
+            mscore -= zhmmodel.charCodeAt(o-0x4E00);
         }
     }
     if (cscore > mscore) {return 'c2m'}
