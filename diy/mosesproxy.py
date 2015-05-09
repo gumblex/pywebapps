@@ -48,6 +48,9 @@ def receive(data, autorestart=True):
 def translate(text, mode, withcount=False):
 	return umsgpack.loads(receive(umsgpack.dumps((mode,text,withcount))))
 
+def rawtranslate(text, mode, withcount=False):
+	return umsgpack.loads(receive(umsgpack.dumps((mode+'.raw',text))))
+
 def cut(*args, **kwargs):
 	return umsgpack.loads(receive(umsgpack.dumps(('cut',args,kwargs))))
 
@@ -105,6 +108,14 @@ if __name__ == '__main__':
 			if not ping():
 				sys.exit(1)
 			sys.stdout.write(translate(sys.stdin.read(), 'm2c'))
+		elif sys.argv[1] == 'c2m.raw':
+			if not ping():
+				sys.exit(1)
+			sys.stdout.write(translate(sys.stdin.read(), 'c2m.raw'))
+		elif sys.argv[1] == 'm2c.raw':
+			if not ping():
+				sys.exit(1)
+			sys.stdout.write(translate(sys.stdin.read(), 'm2c.raw'))
 	else:
 		if not ping():
 			sys.exit(1)

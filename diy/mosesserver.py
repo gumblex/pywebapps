@@ -32,8 +32,8 @@ os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 resource.setrlimit(
 	resource.RLIMIT_RSS, (MOSES_MAXMEM * 1024 - 10000, MOSES_MAXMEM * 1024))
 
-c2m = [MOSESBIN, '-v', '0', '-f', MOSES_INI_c2m]
-m2c = [MOSESBIN, '-v', '0', '-f', MOSES_INI_m2c]
+c2m = [MOSESBIN, '-v', '0', '-f', MOSES_INI_c2m] + sys.argv[1:]
+m2c = [MOSESBIN, '-v', '0', '-f', MOSES_INI_m2c] + sys.argv[1:]
 
 punct = frozenset(
 	''':!),.:;?]}¢'"、。〉》」』】〕〗〞︰︱︳﹐､﹒﹔'''
@@ -169,7 +169,7 @@ class MosesManagerThread:
 			proc.stdin.write(('%s\n' % tok).encode('utf8'))
 		proc.stdin.flush()
 		for sn, s in self.taskqueue:
-			rv = detokenize(proc.stdout.readline().decode('utf8'))
+			rv = detokenize(proc.stdout.readline().rstrip(b'\n').decode('utf8'))
 			if not rv:
 				return False
 			self.resultqueue.append((sn, rv))
@@ -177,6 +177,18 @@ class MosesManagerThread:
 			if self.mode == "c2m":
 				self.sqlcache.add(s, rv)
 		return True
+
+	def rawtranslate(self, text):
+		proc = self.checkmoses()
+		lines = text.splitlines()
+		for s in lines:
+			proc.stdin.write(('%s\n' % s).encode('utf8'))
+		proc.stdin.flush()
+		out = []
+		for s in lines:
+			rv = proc.stdout.readline().rstrip(b'\n').decode('utf8')
+			out.append(rv)
+		return '\n'.join(out)
 
 	def getcache(self, text):
 		if not any(0x4DFF < ord(ch) < 0x9FCD for ch in text):
@@ -202,7 +214,7 @@ class MosesManagerThread:
 			for l in text.split('\n'):
 				sentences = zhutil.splithard(zhconv(l.strip(), 'zh-cn'), 80)
 				for s in sentences:
-					if s:
+					if s.strip():
 						crv = self.getcache(s)
 						if crv:
 							self.resultqueue.append((snum, crv))
@@ -256,6 +268,10 @@ def handlemsg(data):
 		return umsgpack.dumps(mc.c2m.translate(oper[1], oper[2]))
 	elif oper[0] == 'm2c':
 		return umsgpack.dumps(mc.m2c.translate(oper[1], oper[2]))
+	elif oper[0] == 'c2m.raw':
+		return umsgpack.dumps(mc.c2m.rawtranslate(oper[1]))
+	elif oper[0] == 'm2c.raw':
+		return umsgpack.dumps(mc.m2c.rawtranslate(oper[1]))
 	elif oper[0] == 'cut':
 		return umsgpack.dumps(tuple(jieba.cut(*oper[1], **oper[2])))
 	elif oper[0] == 'cut_for_search':
