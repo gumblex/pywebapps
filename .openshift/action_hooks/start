@@ -32,5 +32,5 @@ if [ ! -z "$SREVPROC" ]; then
   sleep 1
 fi
 
-rm ${OPENSHIFT_TMP_DIR}uwsgi.pid
+rm ${OPENSHIFT_DATA_DIR}uwsgi.pid
 ${OPENSHIFT_DATA_DIR}bin/uwsgi --ini ${OPENSHIFT_REPO_DIR}uwsgi.ini

@@ -22,6 +22,8 @@ punctstr = (
 
 punct = frozenset(punctstr)
 
+whitespace = ' \t\n\r\x0b\x0c\u3000'
+
 resplitpunct = re.compile('([%s])' % re.escape(punctstr))
 
 tailpunct = ('''\t\n\x0b\x0c\r !),-.:;?]}¢·ˇˉ―‖’”•′■□△○●\u3000'''

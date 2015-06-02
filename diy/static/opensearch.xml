@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+    <ShortName>WYWTrans</ShortName>
+    <Description>文言文在线翻译</Description>
+    <Url type="text/html" method="POST" template="https://wenyan.gumble.tk/">
+		<Param name="input" value="{searchTerms}"/>
+		<Param name="lang" value="c2m"/>
+	</Url>
+    <LongName>文言文在线翻译</LongName>
+    <SyndicationRight>limited</SyndicationRight>
+    <AdultContent>false</AdultContent>
+    <Language>zh-cn</Language>
+    <Language>zh-tw</Language>
+    <OutputEncoding>UTF-8</OutputEncoding>
+    <InputEncoding>UTF-8</InputEncoding>
+</OpenSearchDescription>

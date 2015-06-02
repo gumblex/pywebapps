@@ -13,11 +13,10 @@ import time
 import signal
 import resource
 import subprocess
-from functools import lru_cache
 from operator import itemgetter
+from functools import lru_cache
 
 import jieba
-import jiebazhc
 import zhutil
 import umsgpack
 from zhconv import convert as zhconv
@@ -32,8 +31,11 @@ os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 resource.setrlimit(
 	resource.RLIMIT_RSS, (MOSES_MAXMEM * 1024 - 10000, MOSES_MAXMEM * 1024))
 
-c2m = [MOSESBIN, '-v', '0', '-f', MOSES_INI_c2m] + sys.argv[1:]
-m2c = [MOSESBIN, '-v', '0', '-f', MOSES_INI_m2c] + sys.argv[1:]
+c2m = [MOSESBIN, '-v', '0', '-f', MOSES_INI_c2m, '--print-alignment-info'] + sys.argv[1:]
+m2c = [MOSESBIN, '-v', '0', '-f', MOSES_INI_m2c, '--print-alignment-info'] + sys.argv[1:]
+
+jiebazhc = jieba.Tokenizer(DICT_ZHC)
+jiebazhc.cache_file = "jiebazhc.cache"
 
 punct = frozenset(
 	''':!),.:;?]}¢'"、。〉》」』】〕〗〞︰︱︳﹐､﹒﹔'''
@@ -45,10 +47,12 @@ longpunct = frozenset('-—_…')
 whitespace = frozenset(' \t\n\r\x0b\x0c\u3000')
 
 RE_WS_IN_FW = re.compile(
-r'([\u2018\u2019\u201c\u201d\u2026\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\ufe30-\ufe57\uff00-\uffef])\s+(?=[\u2018\u2019\u201c\u201d\u2026\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\ufe30-\ufe57\uff00-\uffef])'
+'([\u2018\u2019\u201c\u201d\u2026\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\ufe30-\ufe57\uff00-\uffef])\\s+(?=[\u2018\u2019\u201c\u201d\u2026\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\ufe30-\ufe57\uff00-\uffef])'
 )
 
-RE_UCJK = re.compile('([\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]+)')
+RE_FW = re.compile('[\u2018\u2019\u201c\u201d\u2026\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\ufe30-\ufe57\uff00-\uffef]')
+
+RE_CTRL = re.compile("[\000-\037\ufeff]")
 
 detokenize = lambda s: RE_WS_IN_FW.sub(r'\1', xml_unescape(s)).strip()
 
@@ -62,17 +66,32 @@ runmoses = lambda mode: (
 )
 
 xml_escape_table = {
-	"&": "&amp;", '"': "&quot;", "'": "&apos;",
-	">": "&gt;", "<": "&lt;",
+	# special characters in moses
+	"&": "&amp;",   # escape escape
+	"|": "&#124;",  # factor separator
+	"<": "&lt;",    # xml
+	">": "&gt;",    # xml
+	"'": "&apos;",  # xml
+	'"': "&quot;",  # xml
+	"[": "&#91;",   # syntax non-terminal
+	"]": "&#93;",   # syntax non-terminal
 }
 
-xml_unescape_table = {
-	"&amp;": "&", "&quot;": '"', "&apos;": "'",
-	"&gt;": ">", "&lt;": "<",
-}
-
+xml_unescape_table = dict((v, k) for k, v in xml_escape_table.items())
 
 mc = None
+
+zhconv2s = lambda text: (zhconv(text, 'zh-hans')
+						.replace("「", "“")
+						.replace("」", "”")
+						.replace("『", "‘")
+						.replace("』", "’"))
+
+zhconv2t = lambda text: (zhconv(text, 'zh-hant')
+						.replace("“", "「")
+						.replace("”", "」")
+						.replace("‘", "『")
+						.replace("’", "』"))
 
 def xml_escape(text):
 	"""Produce entities within text."""
@@ -80,7 +99,10 @@ def xml_escape(text):
 
 
 def xml_unescape(text):
-	return " ".join(xml_unescape_table.get(c, c) for c in text.split(' '))
+	# This is a limited version only for entities defined in xml_escape_table
+	for k, v in xml_unescape_table.items():
+		text = text.replace(k, v)
+	return text
 
 
 def recvall(sock, buf=1024):
@@ -99,11 +121,15 @@ def sendall(sock, data):
 class ThreadedUStreamRequestHandler(socketserver.BaseRequestHandler):
 
 	def handle(self):
-		msg = handlemsg(recvall(self.request))
-		if msg == b'stop':
-			self.server.shutdown()
-		elif msg:
-			sendall(self.request, msg)
+		try:
+			msg = handlemsg(recvall(self.request))
+			if msg == b'stop':
+				self.server.shutdown()
+			elif msg:
+				sendall(self.request, msg)
+		except Exception as ex:
+			sendall(self.request, umsgpack.dumps(repr(ex)))
+			raise ex
 
 
 class ThreadedUStreamServer(
@@ -111,14 +137,150 @@ class ThreadedUStreamServer(
 	pass
 
 
+class Sentence:
+	def __init__(self, s, t=None, align=None):
+		self.s = s
+		self.t = t or []
+		self.align = align or []
+		self.stok = None
+
+	def __repr__(self):
+		return 'Sentence(%r, t=%r, align=%r)' % (self.s, self.t, self.align)
+
+	@staticmethod
+	def eq(s):
+		return Sentence(s, (s,))
+
+	@staticmethod
+	def eqa(s):
+		return Sentence(s, (s,), (((0, len(s)),),))
+
+dumptsentence = lambda s: umsgpack.dumps((s.t, s.align))
+loadtsentence = lambda s, d: Sentence(s, *umsgpack.loads(d))
+SNewline = Sentence.eq('\n')
+
+class TranslateContext:
+	def __init__(self, cache, tokenizer):
+		self.sentences = []
+		self.lrucache = cache
+		self.tokenizer = tokenizer
+		self.hitcount = 0
+		self.misscount = 0
+
+	def getcache(self, text):
+		return self.lrucache.get(text)
+
+	def prefilter(self, s):
+		"""No adding or removing characters."""
+		return zhconv2s(zhutil.hw2fw(s.strip()))
+
+	def postfilter(self, s):
+		return xml_escape(' '.join(s.split()))
+
+	def raw2moses(self, text):
+		# Step 1: Filter, Cut sentences, Assign tasks
+		for l in text.splitlines():
+			sentences = zhutil.splithard(RE_CTRL.sub("", l.strip()), 80)
+			for s in sentences:
+				if any(0x4DFF < ord(ch) < 0x9FCD for ch in s):
+					s = self.prefilter(s)
+					crv = self.getcache(s)
+					if crv:
+						self.sentences.append(loadtsentence(s, crv))
+						self.hitcount += 1
+					else:
+						self.sentences.append(Sentence(s))
+						self.misscount += 1
+				else:
+					self.sentences.append(Sentence.eq(s))
+			self.sentences.append(SNewline)
+		self.sentences.pop()
+
+		# Step 2: Pre-process tasks, Convert to Moses input format
+		tknz = self.tokenizer.tokenize
+		needtrans = []
+		for k, sent in enumerate(self.sentences):
+			if sent.t:
+				continue
+			needtrans.append(k)
+			start = 0
+			tokens = []
+			align = []
+			for t in zhutil.RE_UCJK.split(sent.s):
+				tok = t.strip(zhutil.whitespace)
+				if tok:
+					if zhutil.RE_UCJK.match(tok):
+						for tw, ws, we in self.tokenizer.tokenize(tok):
+							tokens.append(tw)
+							align.append((start + ws, start + we))
+					else:
+						ws = 0
+						for tw in tok.split(' '):
+							tokens.append(xml_escape(tw))
+							align.append((start + ws, start + ws + len(tw) + 1))
+							ws += len(tw) + 1
+				start += len(t)
+			sent.stok = align
+			yield (k, ' '.join(zhutil.addwalls(tokens)))
+
+	def postrecv(self, text, key):
+		sent = self.sentences[key]
+		ttxtraw, alnraw = text.strip().split('|||')
+		tkns = xml_unescape(ttxtraw.strip()).split(' ')
+		for k, tok in enumerate(tkns[:-1]):
+			if RE_FW.match(tok[-1]) and RE_FW.match(tkns[k+1][0]):
+				sent.t.append(tok)
+			else:
+				sent.t.append(tok + ' ')
+		sent.t.append(tkns[-1])
+		sent.align = [None] * len(sent.t)
+		for align in alnraw.strip().split(' '):
+			src, tgt = align.split('-')
+			src = sent.stok[int(src)]
+			tgt = int(tgt)
+			if sent.align[tgt]:
+				if sent.align[tgt][-1][1] == src[0]:
+					sent.align[tgt][-1] = (sent.align[tgt][-1][0], src[1])
+				else:
+					sent.align[tgt].append(src)
+			else:
+				sent.align[tgt] = [src]
+		self.lrucache.add(sent.s, dumptsentence(sent))
+
+	def tokenoutput(self):
+		rawin = []
+		tokout = []
+		pos = 0
+		for sent in self.sentences:
+			rawin.append(sent.s)
+			if sent.align:
+				for k, tok in enumerate(sent.t):
+					if sent.align[k]:
+						tokout.append((tok, tuple((pos+ws, pos+we) for ws,we in sent.align[k])))
+					else:
+						tokout.append((tok, None))
+			else:
+				tokout.extend((tok, None) for tok in sent.t)
+			pos += len(sent.s)
+		return ''.join(rawin), tokout
+
+	def rawoutput(self):
+		rawin = []
+		tokout = []
+		for sent in self.sentences:
+			rawin.append(sent.s)
+			tokout.extend(sent.t)
+		return ''.join(rawin), ''.join(tokout)
+
+
 class MosesManagerThread:
 
 	def __init__(self, mode, lock):
 		self.mode = mode
 		if self.mode == "c2m":
-			self.sqlcache = SqliteCache(DB_zhccache, DB_zhccache_maxlen)
+			self.tokenizer = jiebazhc
 		else:
-			self.sqlcache = None
+			self.tokenizer = jieba.dt
 		self.lrucache = LRUCache(128)
 		self.proc = runmoses(mode)
 		sys.stderr.write('Started Moses %s: %s\n' % (mode, self.proc.pid))
@@ -143,40 +305,33 @@ class MosesManagerThread:
 				self.mode, self.proc.pid))
 		return self.proc
 
-	def tokenize(self, s):
-		if self.mode == "c2m":
-			cut = jiebazhc.cut
-		else:
-			cut = jieba.cut
-		tokens = []
-		for t in RE_UCJK.split(s):
-			tok = t.strip()
-			if tok:
-				if RE_UCJK.match(tok):
-					tokens.extend(cut(tok, HMM=False))
-				else:
-					tokens.extend(xml_escape(tok).split())
-		return ' '.join(zhutil.addwalls(tokens))
-
-	def processtasks(self):
-		if not self.taskqueue:
-			return True
-		elif not self.run:
-			return False
-		proc = self.checkmoses()
-		for sn, s in self.taskqueue:
-			tok = self.tokenize(s)
-			proc.stdin.write(('%s\n' % tok).encode('utf8'))
-		proc.stdin.flush()
-		for sn, s in self.taskqueue:
-			rv = detokenize(proc.stdout.readline().rstrip(b'\n').decode('utf8'))
-			if not rv:
-				return False
-			self.resultqueue.append((sn, rv))
-			self.lrucache.add(s, rv)
-			if self.mode == "c2m":
-				self.sqlcache.add(s, rv)
-		return True
+	def translate(self, text, withcount=False, withinput=True, align=True):
+		with self.lock:
+			if not self.run:
+				return
+			proc = self.checkmoses()
+			timestart = time.time()
+			ctx = TranslateContext(self.lrucache, self.tokenizer)
+			keys = []
+			for k, sent in ctx.raw2moses(text):
+				keys.append(k)
+				proc.stdin.write(('%s\n' % sent).encode('utf8'))
+			proc.stdin.flush()
+			for k in keys:
+				rv = proc.stdout.readline()
+				if not rv:
+					return False
+				rv = rv.rstrip(b'\n').decode('utf8')
+				ctx.postrecv(rv, k)
+			intxt, outtxt = ctx.tokenoutput() if align else ctx.rawoutput()
+			sys.stderr.write('%s,%s,%s,%s,%s,%.6f\n' % (
+				time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()), self.mode,
+				ctx.misscount, ctx.hitcount + ctx.misscount, len(text),
+				time.time() - timestart))
+			if withinput:
+				return (intxt, outtxt, ctx.misscount) if withcount else (intxt, outtxt)
+			else:
+				return (outtxt, ctx.misscount) if withcount else outtxt
 
 	def rawtranslate(self, text):
 		proc = self.checkmoses()
@@ -190,64 +345,9 @@ class MosesManagerThread:
 			out.append(rv)
 		return '\n'.join(out)
 
-	def getcache(self, text):
-		if not any(0x4DFF < ord(ch) < 0x9FCD for ch in text):
-			# no chinese
-			return text
-		# put conversion here
-		text = zhutil.hw2fw(text)
-		rv = self.lrucache.get(text)
-		if rv is None and self.mode == "c2m":
-			rv = self.sqlcache.get(text)
-		return rv
-
-	def translate(self, text, withcount=False):
-		hitcount = 0
-		misscount = 0
-		snum = 0
-		with self.lock:
-			if not self.run:
-				return
-			self.taskqueue = []
-			self.resultqueue = []
-			timestart = time.time()
-			for l in text.split('\n'):
-				sentences = zhutil.splithard(zhconv(l.strip(), 'zh-cn'), 80)
-				for s in sentences:
-					if s.strip():
-						crv = self.getcache(s)
-						if crv:
-							self.resultqueue.append((snum, crv))
-							hitcount += 1
-						else:
-							self.taskqueue.append((snum, s))
-							misscount += 1
-					else:
-						self.resultqueue.append((snum, s))
-					snum += 1
-				self.resultqueue.append((snum, '\n'))
-				snum += 1
-			try:
-				res = self.processtasks()  # Error handling?
-			except Exception:
-				res = False
-			self.resultqueue.sort()
-			sys.stderr.write('%s,%s,%s,%s,%s,%.6f\n' % (
-				time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()), self.mode,
-				misscount, hitcount + misscount, len(text),
-				time.time() - timestart))
-			outputtext = ''.join(map(self._ig, self.resultqueue))
-			sys.stderr.flush()
-		if withcount:
-			return (outputtext, misscount)
-		else:
-			return outputtext
-
 	def shutdown(self):
 		self.run = False
 		self.proc.terminate()
-		if self.sqlcache:
-			self.sqlcache.gc()
 
 class MosesContext:
 
@@ -265,9 +365,9 @@ class MosesContext:
 def handlemsg(data):
 	oper = umsgpack.loads(data)
 	if oper[0] == 'c2m':
-		return umsgpack.dumps(mc.c2m.translate(oper[1], oper[2]))
+		return umsgpack.dumps(mc.c2m.translate(*oper[1:]))
 	elif oper[0] == 'm2c':
-		return umsgpack.dumps(mc.m2c.translate(oper[1], oper[2]))
+		return umsgpack.dumps(mc.m2c.translate(*oper[1:]))
 	elif oper[0] == 'c2m.raw':
 		return umsgpack.dumps(mc.c2m.rawtranslate(oper[1]))
 	elif oper[0] == 'm2c.raw':
@@ -295,6 +395,8 @@ def handlemsg(data):
 		return b'stop'
 	elif oper[0] == 'ping':
 		return b'pong'
+	else:
+		return umsgpack.dumps('Command not found')
 
 
 def serve(filename):

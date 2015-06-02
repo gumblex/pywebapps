@@ -1,5 +1,3 @@
-@charset "utf-8";
-
 body {
     font-family: Helvetica,Arial,FreeSans,sans-serif;
     padding: 2em;
@@ -82,18 +80,44 @@ input[type="radio"]:invalid {
     padding: 0 .4em;
 }
 
-#tinput, #toutput {
-    padding: .7em;
-    background-color: #FFFFF8;
-    line-height: 1.25em;
+#tinputgroup, #tinput, #toutput {
     font-size: 14px;
+    line-height: 1.25em;
+}
+
+#tinputgroup, #toutput {
+    position: relative;
+    background-color: #FFFFF8;
+}
+
+#hl-input, #tinput, #toutput {
+    padding: .7em;
+}
+
+#tinput, #toutput {
     border-radius: 2px;
 }
 
-#tinput {
-    width: 100%;
+#hl-input, #tinput {
     box-sizing: border-box;
+    width: 100%;
+    font-family: sans-serif;
+}
+
+#hl-input {
+    position: absolute;
+    left: 0;
+    top: 0;
+    margin: 0;
+    word-wrap: break-word;
+    border: 1px solid transparent;
+    color: transparent;
+    display: none;
+}
+
+#tinput {
     height: 16.53em;
+    background-color: transparent;
     border: 1px solid #DAD3CA;
     box-shadow: 0 0 0 1px rgba(238,233,221,0.6) inset;
     resize: vertical;
@@ -102,6 +126,12 @@ input[type="radio"]:invalid {
 #tinput:focus, #captcha-input:focus {
     outline: 0;
     border: 1px solid #C39F73;
+}
+
+.hl {
+    color: black;
+    background-color: #dad3ca;
+    border-radius: 2px;
 }
 
 #progressbar {
@@ -157,6 +187,10 @@ input[type="radio"]:invalid {
 
 #ctrlsubmit:active {
     box-shadow: 0 0 0 1px rgba(2,2,1,0.15) inset, 0 0 6px rgba(2,2,1,0.2) inset;
+}
+
+#ctrlsubmit:disabled {
+    background-color: #d5c6b3;
 }
 
 #ctrlradiog {

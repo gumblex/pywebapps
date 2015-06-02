@@ -10,6 +10,7 @@ _curpath = os.path.normpath(os.path.join(os.getcwd(), os.path.dirname(__file__))
 startserver_path = os.path.join(_curpath, 'startserver')
 
 filename = MS_SOCK
+RESTART = True
 
 def recvall(sock, buf=1024):
 	data = sock.recv(buf)
@@ -24,8 +25,9 @@ def sendall(sock, data):
 	sock.sendall(data + b'\xc1')
 
 
-def receive(data, autorestart=True):
-	global filename
+def receive(data, autorestart=None):
+	global filename, RESTART
+	autorestart = RESTART if autorestart is None else autorestart
 	sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 	try:
 		sock.connect(filename)
@@ -45,8 +47,8 @@ def receive(data, autorestart=True):
 	sock.close()
 	return received
 
-def translate(text, mode, withcount=False):
-	return umsgpack.loads(receive(umsgpack.dumps((mode,text,withcount))))
+def translate(text, mode, withcount=False, withinput=True, align=True):
+	return umsgpack.loads(receive(umsgpack.dumps((mode,text,withcount,withinput, align))))
 
 def rawtranslate(text, mode, withcount=False):
 	return umsgpack.loads(receive(umsgpack.dumps((mode+'.raw',text))))

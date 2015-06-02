@@ -74,14 +74,15 @@ class SimpleLinearRegression:
 		return "y = f(x) = %(a)f + %(b)f*x" % self.__dict__
 
 re_log = re.compile(r'^(.+?),(.+?),(\d+),(\d+),(\d+),(.+)$')
-re_js = re.compile(r'(var k =) \d+(, b =) \d+')
+re_js = re.compile(r'(var kc =) \d+(, bc =) \d+(, km =) \d+(, bm =) \d+')
 
 striplines = lambda s: '\n'.join(l.strip() for l in s.splitlines())
 
 def parselog(fromtime):
 	logfile = os.path.join(LOGDIR, 'mosesserver.log')
 	fromtime = time.strptime(fromtime, '%Y-%m-%d %H:%M:%S')
-	validline = []
+	validlinec = []
+	validlinem = []
 	with open(logfile, 'r') as f:
 		for ln in f:
 			l = ln.strip()
@@ -92,12 +93,18 @@ def parselog(fromtime):
 				continue
 			realchar = int(m.group(5)) * int(m.group(3)) / float(m.group(4))
 			usedtime = float(m.group(6))
-			validline.append((realchar, usedtime))
-	if validline:
-		lr = SimpleLinearRegression(validline)
-		if lr.run():
-			return (int(lr.b*1000), int(lr.a*1000))
-	return None
+			if m.group(2) == 'c2m':
+				validlinec.append((realchar, usedtime))
+			else:
+				validlinem.append((realchar, usedtime))
+	lrc = SimpleLinearRegression(validlinec)
+	lrm = SimpleLinearRegression(validlinem)
+	kc, bc, km, bm = 28, 8883, 28, 8883
+	if lrc.run():
+		kc, bc = int(lrc.b*1000), int(lrc.a*1000)
+	if lrm.run():
+		km, bm = int(lrm.b*1000), int(lrm.a*1000)
+	return kc, bc, km, bm
 
 # min: -24.219574739049666
 
@@ -110,7 +117,7 @@ def writejs(value, jsfile):
 	zhmmodel = json.load(open(os.path.join(_curpath, 'modelzhm.json'), 'r'))
 	f = striplines(js_zhdetect % (
 		joinlist(zhcmodel), joinlist(zhmmodel),
-		re_js.sub(r'\1 %s\2 %s' % value, open(jsfile, 'r').read())
+		re_js.sub(r'\1 %s\2 %s\3 %s\4 %s' % value, open(jsfile, 'r').read())
 	)) + '\n'
 	with open(writeto, 'w') as w:
 		w.write(f)

@@ -123,6 +123,10 @@ def favicon():
 	return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
+def generate_204():
+	return flask.Response(status=204)
+
+
 @gzipped
 @functools.lru_cache(maxsize=1)
 def index_glass():
@@ -160,11 +164,26 @@ def close_connection(exception):
 		db_ts.close()
 
 
+def translateresult(result, convfunc):
+	markup = []
+	jsond = []
+	nl = flask.Markup('</p>\n<p>')
+	for tok, pos in result:
+		if tok == '\n':
+			markup.append(nl)
+		elif pos:
+			markup.append(flask.Markup('<span>%s</span>') % convfunc(tok))
+			jsond.append(pos)
+		else:
+			markup.append(convfunc(tok))
+	return (flask.Markup('<p>%s</p>\n') % flask.Markup().join(markup),
+			flask.Markup(flask.json.dumps(jsond, separators=(',', ':'))))
+
 @gzipped
 def wenyan():
 	userlog = get_wy_db()
-	tinput = flask.request.form.get('input', '')
-	formgetlang = flask.request.form.get('lang')
+	tinput = flask.request.values.get('input', '')
+	formgetlang = flask.request.values.get('lang')
 	if formgetlang == 'c2m':
 		lang = 'c2m'
 	elif formgetlang == 'm2c':
@@ -184,6 +203,7 @@ def wenyan():
 	origcnt = userlog.count(ip)
 	count = 0
 	valid = wy_validate(ip, origcnt, userlog)
+	talign = flask.Markup('[]')
 	if valid == 1:
 		origcnt = 0
 		userlog.delete(ip)
@@ -198,20 +218,20 @@ def wenyan():
 	elif len(tinput) > MAX_CHAR:
 		toutput = L('<p class="error">文本过长，请切分后提交。</p>')
 	else:
-		toutput, count = mosesproxy.translate(tinput, lang, True)
-		toutput = linebreak(L(toutput))
+		tinput, tres, count = mosesproxy.translate(tinput, lang, True, True, True)
+		toutput, talign = translateresult(tres, L)
 		userlog.add(ip, count)
 	captcha = ''
 	if origcnt + count > userlog.maxcnt:
 		captcha = L(wy_gencaptcha())
-	return flask.render_template(('translate_zhtw.html' if accepttw else 'translate.html'), tinput=tinput, toutput=flask.Markup(toutput), captcha=flask.Markup(captcha))
+	return flask.render_template(('translate_zhtw.html' if accepttw else 'translate.html'), tinput=tinput, toutput=toutput, talign=talign, captcha=flask.Markup(captcha))
 
 
 def wy_validate(ip, origcnt, userlog):
 	if origcnt > userlog.maxcnt:
 		try:
-			key = flask.request.form.get('cq', '').encode('ascii')
-			ans = flask.request.form.get('ca', '').lower().encode('ascii')
+			key = flask.request.values.get('cq', '').encode('ascii')
+			ans = flask.request.values.get('ca', '').lower().encode('ascii')
 			key2 = base64.urlsafe_b64encode(hashlib.pbkdf2_hmac('sha256', ans, SECRETKEY, 100))
 			if key == key2:
 				return 1
@@ -451,6 +471,7 @@ def err500(error):
 
 app.add_url_rule('/', 'index', index)
 app.add_url_rule('/favicon.ico', 'favicon', favicon)
+app.add_url_rule('/generate_204', 'generate_204', generate_204)
 app.add_url_rule("/", 'index_glass', index_glass, subdomain='glass')
 app.add_url_rule("/<path:filename>", "file_glass", file_glass, subdomain='glass')
 app.add_url_rule("/translate/", 'translate_alias', redirect_to="/wenyan/")

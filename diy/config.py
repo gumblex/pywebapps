@@ -12,6 +12,7 @@ SECRETKEY = b'\xc6\x89\xaa:MC\x0b\xa9g\x86+\xe6\x06/\x93\xbfF,ZXY"\xfc\xe3\xd5\x
 
 # Jieba small dict
 DICT_SMALL = os.path.join(OS_DATA, "smalldict.txt")
+DICT_ZHC = os.path.join(OS_DATA, "zhcdict.txt")
 
 # DB to store wordlist
 DB_clozeword = os.path.join(OS_DATA, "cwordlist.db")
@@ -32,10 +33,10 @@ MOSES_INI_c2m = os.path.join(OS_DATA, "zhc2zhm", "moses.ini")
 MOSES_INI_m2c = os.path.join(OS_DATA, "zhm2zhc", "moses.ini")
 MOSES_MAXMEM = 512000
 
-MAX_CHAR = 2048
+MAX_CHAR = 2000
 
 # Mosesserver socket
-MS_SOCK = os.path.join(os.environ['OPENSHIFT_TMP_DIR'], "mosesserver.sock")
+MS_SOCK = os.path.join(OS_DATA, "mosesserver.sock")
 
 OS_ENV = os.environ
 

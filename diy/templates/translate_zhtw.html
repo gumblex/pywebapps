@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-tw">
+<html lang="zh-cn">
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +8,8 @@
 <link rel="stylesheet" href="/static/pure.m.css">
 <link rel="stylesheet" href="/static/wenyan.m.css">
 <link rel="stylesheet" href="/static/grids-responsive-min.css">
-<script>var c2mtxt = "文言文→現代文", m2ctxt = "現代文→文言文";</script>
+<script>var c2mtxt = "文言文→現代文", m2ctxt = "現代文→文言文";
+var talign = {{ talign|default('[]') }};</script>
 <script src="/static/wenyan.js"></script>
 </head>
 <body>
@@ -20,7 +21,10 @@
 <div class="pure-u-1 pure-u-md-1-2">
 	<form id="translateform" method="POST">
 	<h2>原文</h2>
-	<textarea id="tinput" name="input">{{ tinput }}</textarea>
+	<div id="tinputgroup">
+		<pre id="hl-input" name="input"></pre>
+		<textarea id="tinput" name="input" spellcheck="false">{{ tinput }}</textarea>
+	</div>
 	<div id="progressbar"></div>
 	<div class="pure-g" id="ctrlgroup">
 	<div class="pure-u-2-3" id="ctrlradiog">
