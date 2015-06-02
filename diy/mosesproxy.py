@@ -48,7 +48,7 @@ def receive(data, autorestart=None):
 	return received
 
 def translate(text, mode, withcount=False, withinput=True, align=True):
-	return umsgpack.loads(receive(umsgpack.dumps((mode,text,withcount,withinput, align))))
+	return umsgpack.loads(receive(umsgpack.dumps((mode, text, withcount, withinput, align))))
 
 def rawtranslate(text, mode, withcount=False):
 	return umsgpack.loads(receive(umsgpack.dumps((mode+'.raw',text))))
