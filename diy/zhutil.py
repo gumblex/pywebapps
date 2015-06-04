@@ -26,11 +26,15 @@ whitespace = ' \t\n\r\x0b\x0c\u3000'
 
 resplitpunct = re.compile('([%s])' % re.escape(punctstr))
 
-tailpunct = ('''\t\n\x0b\x0c\r !),-.:;?]}¢·ˇˉ―‖’”•′■□△○●\u3000'''
+tailpunct = ('''!),-.:;?]}¢·ˇˉ―‖’”•′■□△○●'''
              '''、。々〉》」』】〕〗〞︰︱︳︴︶︸︺︼︾﹀﹂﹄﹏'''
-             '''﹐﹒﹔﹕﹖﹗﹚﹜﹞！），．：；？｜｝～､￠''')
-headpunct = ('''\t\n\x0b\x0c\r ([`{£¥‘“\u3000〈《「『【〔〖〝'''
-             '''︵︷︹︻︽︿﹁﹃﹙﹛﹝（［｛￡￥''')
+             '''﹐﹒﹔﹕﹖﹗﹚﹜﹞！），．：；？｜］｝～､￠''') + whitespace
+headpunct = ('''([`{£¥‘“〈《「『【〔〖〝'''
+             '''︵︷︹︻︽︿﹁﹃﹙﹛﹝（［｛￡￥''') + whitespace
+
+openbrckt = '([{‘“〈《「『【〔〖〝︵︷︹︻︽︿﹁﹃﹙﹛﹝（［｛'
+clozbrckt = ')]}’”〉》」』】〕〗〞︶︸︺︼︾﹀﹂﹄﹚﹜﹞）］｝'
+
 ucjk = frozenset(itertools.chain(
     range(0x1100, 0x11FF + 1),
     range(0x2E80, 0xA4CF + 1),
@@ -54,7 +58,8 @@ _curpath = os.path.normpath(
 RE_WS_IN_FW = re.compile(
     r'([‘’“”…─\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\ufe30-\ufe57\uff00-\uffef\U00020000-\U0002A6D6])\s+(?=[‘’“”…\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\ufe30-\ufe57\uff00-\uffef\U00020000-\U0002A6D6])')
 
-RE_UCJK = re.compile('([\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\U00020000-\U0002A6D6]+)')
+RE_UCJK = re.compile(
+    '([\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\U00020000-\U0002A6D6]+)')
 
 detokenize = lambda s: RE_WS_IN_FW.sub(r'\1', s).strip()
 

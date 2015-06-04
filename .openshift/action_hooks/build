@@ -1,6 +1,6 @@
 #!/bin/bash
 source ${OPENSHIFT_DEPENDENCIES_DIR}python/bin/activate
-pip3 install -r ${OPENSHIFT_REPO_DIR}requirements.txt -U
+pip3 install -r ${OPENSHIFT_REPO_DIR}requirements.txt
 rm -rf ${OPENSHIFT_REPO_DIR}diy/__pycache__
 for css in ${OPENSHIFT_REPO_DIR}diy/static/*_.css; do
  python3 ${OPENSHIFT_REPO_DIR}diy/csscompressor.py ${css} > ${css::${#css}-5}.m.css

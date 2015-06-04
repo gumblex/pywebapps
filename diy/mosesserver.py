@@ -138,8 +138,9 @@ class ThreadedUStreamServer(
 
 
 class Sentence:
-	def __init__(self, s, t=None, align=None):
-		self.s = s
+	def __init__(self, s, t=None, align=None, ps=None):
+		self.s = s   # original input
+		self.ps = ps or s # prepared source
 		self.t = t or []
 		self.align = align or []
 		self.stok = None
@@ -183,13 +184,13 @@ class TranslateContext:
 			sentences = zhutil.splithard(RE_CTRL.sub("", l.strip()), 80)
 			for s in sentences:
 				if any(0x4DFF < ord(ch) < 0x9FCD for ch in s):
-					s = self.prefilter(s)
-					crv = self.getcache(s)
+					ps = self.prefilter(s)
+					crv = self.getcache(ps)
 					if crv:
 						self.sentences.append(loadtsentence(s, crv))
 						self.hitcount += 1
 					else:
-						self.sentences.append(Sentence(s))
+						self.sentences.append(Sentence(s, ps=ps))
 						self.misscount += 1
 				else:
 					self.sentences.append(Sentence.eq(s))
@@ -197,7 +198,6 @@ class TranslateContext:
 		self.sentences.pop()
 
 		# Step 2: Pre-process tasks, Convert to Moses input format
-		tknz = self.tokenizer.tokenize
 		needtrans = []
 		for k, sent in enumerate(self.sentences):
 			if sent.t:
@@ -206,11 +206,11 @@ class TranslateContext:
 			start = 0
 			tokens = []
 			align = []
-			for t in zhutil.RE_UCJK.split(sent.s):
+			for t in zhutil.RE_UCJK.split(sent.ps):
 				tok = t.strip(zhutil.whitespace)
 				if tok:
 					if zhutil.RE_UCJK.match(tok):
-						for tw, ws, we in self.tokenizer.tokenize(tok):
+						for tw, ws, we in self.tokenizer.tokenize(tok, HMM=False):
 							tokens.append(tw)
 							align.append((start + ws, start + we))
 					else:
@@ -245,7 +245,7 @@ class TranslateContext:
 					sent.align[tgt].append(src)
 			else:
 				sent.align[tgt] = [src]
-		self.lrucache.add(sent.s, dumptsentence(sent))
+		self.lrucache.add(sent.ps, dumptsentence(sent))
 
 	def tokenoutput(self):
 		rawin = []
@@ -256,7 +256,12 @@ class TranslateContext:
 			if sent.align:
 				for k, tok in enumerate(sent.t):
 					if sent.align[k]:
-						tokout.append((tok, tuple((pos+ws, pos+we) for ws,we in sent.align[k])))
+						tokaln = tuple((pos+ws, pos+we) for ws,we in sent.align[k])
+						if tokout and tokout[-1][1] == tokaln:
+							lastt, lasta = tokout.pop()
+							tokout.append((lastt + tok, tokaln))
+						else:
+							tokout.append((tok, tokaln))
 					else:
 						tokout.append((tok, None))
 			else:
@@ -403,12 +408,16 @@ def serve(filename):
 	global mc
 	if os.path.exists(filename):
 		try:
-			receive(filename, umsgpack.dumps(('ping',)))
+			sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+			sock.connect(filename)
+			sendall(sock, umsgpack.dumps(('ping',)))
+			assert recvall(sock) == b'pong'
+			sock.close()
 			print("Server already started.")
 			return False
-		except Exception:
+		except Exception as ex:
 			# not removed socket
-			print("Found abandoned socket")
+			print("Found abandoned socket: " + repr(ex))
 			os.unlink(filename)
 	try:
 		mc = MosesContext()
