@@ -277,3 +277,12 @@ footer {
     border-top: solid 1px #DDD;
     text-align: right;
 }
+
+@media screen and (max-width: 48em) {
+    #tinput {
+        height: 10em;
+    }
+    #toutput {
+        min-height: 5em;
+    }
+}

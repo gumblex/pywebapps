@@ -58,6 +58,9 @@ _curpath = os.path.normpath(
 RE_WS_IN_FW = re.compile(
     r'([‘’“”…─\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\ufe30-\ufe57\uff00-\uffef\U00020000-\U0002A6D6])\s+(?=[‘’“”…\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\ufe30-\ufe57\uff00-\uffef\U00020000-\U0002A6D6])')
 
+RE_FW = re.compile(
+    '([\u2018\u2019\u201c\u201d\u2026\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\ufe30-\ufe57\uff00-\uffef\U00020000-\U0002A6D6]+)')
+
 RE_UCJK = re.compile(
     '([\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\U00020000-\U0002A6D6]+)')
 
@@ -120,15 +123,43 @@ def addwalls(tokiter):
     lastwall = False
     for tok in tokiter:
         if tok in punct:
-            if not lastwall and tok != '》':
+            if not lastwall:
                 yield '<wall />'
             yield tok
-            if tok != '《':
-                yield '<wall />'
+            yield '<wall />'
             lastwall = True
         else:
             yield tok
             lastwall = False
+
+
+def addwallzone(tokiter):
+    W = '<wall />'
+    out = []
+    expect = zidx = None
+    for tok in tokiter:
+        if tok in punct:
+            if not (out and out[-1] == W):
+                out.append(W)
+            if tok == expect:
+                out[zidx] = '<zone>'
+                out.append(tok)
+                out.append('</zone>')
+                expect = zidx = None
+            else:
+                bid = openbrckt.find(tok)
+                if bid > -1:
+                    expect = clozbrckt[bid]
+                    zidx = len(out) - 1
+                out.append(tok)
+                out.append(W)
+        else:
+            out.append(tok)
+    if out and out[0] == W:
+        out.pop(0)
+    if out and out[-1] == W:
+        out.pop()
+    return out
 
 
 def calctxtstat(s):
@@ -269,4 +300,5 @@ def _test_fixsplit():
 if __name__ == '__main__':
     import sys
     _test_fixsplit()
+    print(' '.join(addwallzone('《连山》、《归藏》、《周易》，是我国古代的三部书，这三部书合称“三易”，“三易”是用“卦”的形式来说明(宇宙间万事万物循环变化的道理的书籍。')))
     # print(checktxttype(sys.stdin.read()))
