@@ -184,6 +184,7 @@ def wenyan():
 	userlog = get_wy_db()
 	tinput = flask.request.values.get('input', '')
 	formgetlang = flask.request.values.get('lang')
+	displaylang = flask.request.values.get('dl')
 	if formgetlang == 'c2m':
 		lang = 'c2m'
 	elif formgetlang == 'm2c':
@@ -198,7 +199,7 @@ def wenyan():
 			lang = 'm2c'
 
 	ip = flask.request.remote_addr
-	accepttw = accept_language_zh_tw(flask.request.headers.get('Accept-Language', ''))
+	accepttw = accept_language_zh_tw(flask.request.headers.get('Accept-Language', '')) and displaylang not in ('zhs', 'zh-cn', 'zh-hans')
 	L = (lambda x: zhconv(x, 'zh-tw')) if accepttw else (lambda x: x)
 	origcnt = userlog.count(ip)
 	count = 0
