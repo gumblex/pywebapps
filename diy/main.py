@@ -2,20 +2,21 @@
 import os
 import re
 import time
-import datetime
 import gzip
-import hashlib
 import base64
-import functools
 import logging
+import hashlib
 import sqlite3
 import zipfile
+import datetime
+import functools
+
 import flask
 import mosesproxy
 import figcaptcha
 from bukadown import getbukaurl
-from werkzeug.contrib.cache import SimpleCache
 from werkzeug.contrib.fixers import ProxyFix
+from werkzeug.contrib.cache import SimpleCache
 from urllib.parse import urlsplit, urlunsplit
 from sqlitecache import SqliteUserLog
 from zhconv import convert as zhconv
@@ -108,9 +109,13 @@ def redirect_subdomain():
 		return response
 
 @app.before_request
-def banip():
+def before_req():
 	if BANNEDIP.match(flask.request.remote_addr):
 		flask.abort(403)
+	displaylang = flask.request.values.get('dl')
+	accepttw = accept_language_zh_tw(flask.request.headers.get('Accept-Language', ''))
+	flask.g.accepttw = ((accepttw or displaylang in ('zht', 'zh-tw', 'zh-hant'))
+						 and displaylang not in ('zhs', 'zh-cn', 'zh-hans'))
 
 
 @gzipped
@@ -199,7 +204,7 @@ def wenyan():
 			lang = 'm2c'
 
 	ip = flask.request.remote_addr
-	accepttw = accept_language_zh_tw(flask.request.headers.get('Accept-Language', '')) and displaylang not in ('zhs', 'zh-cn', 'zh-hans')
+	accepttw = flask.g.get('accepttw')
 	L = (lambda x: zhconv(x, 'zh-tw')) if accepttw else (lambda x: x)
 	origcnt = userlog.count(ip)
 	count = 0
@@ -391,7 +396,7 @@ def getchaporder(comicid):
 @gzipped
 def bukadown():
 	func = flask.request.form.get('f') or flask.request.args.get('f')
-	accepttw = accept_language_zh_tw(flask.request.headers.get('Accept-Language', ''))
+	accepttw = flask.g.get('accepttw')
 	L = (lambda x: zhconv(x, 'zh-tw')) if accepttw else (lambda x: x)
 	template = 'buka_zhtw.html' if accepttw else 'buka.html'
 	errmsg = flask.render_template(template, msg=flask.Markup(L('<p class="error">参数错误。<a href="javascript:history.back()">按此返回</a></p>')))

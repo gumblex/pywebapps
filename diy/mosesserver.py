@@ -187,7 +187,7 @@ class TranslateContext:
 
     def raw2moses(self, text):
         # Step 1: Filter, Cut sentences, Assign tasks
-        for l in text.splitlines():
+        for l in text.strip().splitlines():
             sentences = zhutil.splithard(RE_CTRL.sub("", l.strip()), 80)
             for s in sentences:
                 if any(0x4DFF < ord(ch) < 0x9FCD for ch in s):

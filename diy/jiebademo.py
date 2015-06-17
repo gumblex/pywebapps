@@ -55,6 +55,21 @@ PS: 我觉得开源有一个好处，就是能够敦促自己不断改进，避�
 张晓梅去人民医院做了个B超然后去买了件T恤
 AT&T是一件不错的公司，给你发offer了吗？
 C++和c#是什么关系？11+122=133，是吗？
+峨嵋山下少人行，旌旗无光日色薄。
+蜀江水碧蜀山青，圣主朝朝暮暮情。
+行宫见月伤心色，夜雨闻铃肠断声。
+天旋日转回龙驭，到此踌躇不能去。
+马嵬坡下泥土中，不见玉颜空死处。
+君臣相顾尽沾衣，东望都门信马归。
+归来池苑皆依旧，太液芙蓉未央柳。
+芙蓉如面柳如眉，对此如何不泪垂。
+春风桃李花开日，秋雨梧桐叶落时。
+西宫南内多秋草，落叶满阶红不扫。
+梨园弟子白发新，椒房阿监青娥老。
+夕殿萤飞思悄然，孤灯挑尽未成眠。
+迟迟钟鼓初长夜，耿耿星河欲曙天。
+鸳鸯瓦冷霜华重，翡翠衾寒谁与共。
+悠悠生死别经年，魂魄不曾来入梦。
 '''
     if flask.request.method == 'GET':
         return flask.render_template("cut_form.html",content=sample_sentences,selected=functools.partial(match,1))
@@ -65,7 +80,7 @@ C++和c#是什么关系？11+122=133，是吗？
         elif flask.request.form.get('opt')=="2":
             result = " / ".join(jieba.cut_for_search(text))
         elif flask.request.form.get('opt')=="3":
-            result = " / ".join(jiebazhc.cut(text))
+            result = " / ".join(jiebazhc.cut(text, HMM=False))
         else:
             result = ""
         return flask.render_template("cut_form.html",content=result,selected=functools.partial(match,int(flask.request.form.get('opt', '1'))))
