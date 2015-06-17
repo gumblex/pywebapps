@@ -13,16 +13,16 @@ correct = 0
 delta = []
 
 for sent, typ in cur_ts.execute("SELECT sent, type FROM sentences"):
-	cscore, mscore = zhutil.calctxtstat(sent)
-	delta.append(cscore - mscore)
-	count += 1
-	if cscore > mscore and typ == 0 or cscore < mscore and typ == 1:
-		correct += 1
+    cscore, mscore = zhutil.calctxtstat(sent)
+    delta.append(cscore - mscore)
+    count += 1
+    if cscore > mscore and typ == 0 or cscore < mscore and typ == 1:
+        correct += 1
 
 print('Correct/Count:', correct, count)
 print('             :', correct / count)
 
 mean = sum(delta) / len(delta)
-stdev = (sum((x-mean)**2 for x in delta) / len(delta))**.5
+stdev = (sum((x - mean)**2 for x in delta) / len(delta))**.5
 
 print('Mean, Stdev  :', mean, stdev)

@@ -7,7 +7,9 @@ from itertools import islice
 
 hashmd5 = lambda x: hashlib.md5(x.encode('utf-8')).digest()
 
+
 class LRUCache:
+
     def __init__(self, maxlen):
         self.capacity = maxlen
         self.cache = collections.OrderedDict()
@@ -30,16 +32,17 @@ class LRUCache:
 
     add = set
 
+
 class SqliteCache:
 
     _create_sql = (
-            'CREATE TABLE IF NOT EXISTS cache '
-            '('
-            '  key BLOB PRIMARY KEY,'
-            '  val TEXT,'
-            '  freq INTEGER'
-            ')'
-            )
+        'CREATE TABLE IF NOT EXISTS cache '
+        '('
+        '  key BLOB PRIMARY KEY,'
+        '  val TEXT,'
+        '  freq INTEGER'
+        ')'
+    )
     _len_sql = 'SELECT COUNT(*) FROM cache'
     _get_sql = 'SELECT val, freq FROM cache WHERE key = ?'
     _del_sql = 'DELETE FROM cache WHERE key = ?'
@@ -53,10 +56,12 @@ class SqliteCache:
         self.maxlen = maxlen
         if not os.path.isfile(self.path):
             # Remember to lock write operations
-            self.connection = sqlite3.connect(self.path, check_same_thread=False)
+            self.connection = sqlite3.connect(
+                self.path, check_same_thread=False)
             self.connection.execute(self._create_sql)
         else:
-            self.connection = sqlite3.connect(self.path, check_same_thread=False)
+            self.connection = sqlite3.connect(
+                self.path, check_same_thread=False)
         self.closed = False
 
     def __del__(self):
@@ -114,7 +119,7 @@ class SqliteCache:
             leastfreq += 1
             conn.execute(self._len_sql)
             dblen = conn.fetchone()[0]
-        if origdblen%2:
+        if origdblen % 2:
             conn.execute('VACUUM')
         self.connection.commit()
 
@@ -127,13 +132,13 @@ class SqliteCache:
 class SqliteIntCache:
 
     _create_sql = (
-            'CREATE TABLE IF NOT EXISTS cache '
-            '('
-            '  key INTEGER PRIMARY KEY,'
-            '  val TEXT,'
-            '  freq INTEGER'
-            ')'
-            )
+        'CREATE TABLE IF NOT EXISTS cache '
+        '('
+        '  key INTEGER PRIMARY KEY,'
+        '  val TEXT,'
+        '  freq INTEGER'
+        ')'
+    )
     _len_sql = 'SELECT COUNT(*) FROM cache'
     _get_sql = 'SELECT val, freq FROM cache WHERE key = ?'
     _del_sql = 'DELETE FROM cache WHERE key = ?'
@@ -203,7 +208,7 @@ class SqliteIntCache:
             leastfreq += 1
             conn.execute(self._len_sql)
             dblen = conn.fetchone()[0]
-        if origdblen%2:
+        if origdblen % 2:
             conn.execute('VACUUM')
         self.connection.commit()
 
@@ -216,14 +221,14 @@ class SqliteIntCache:
 class SqliteUserLog:
 
     _create_sql = (
-            'CREATE TABLE IF NOT EXISTS userlog '
-            '('
-            '  rec INTEGER PRIMARY KEY ASC,'
-            '  ip TEXT,'
-            '  cnt INTEGER,'
-            '  time INTEGER'
-            ')'
-            )
+        'CREATE TABLE IF NOT EXISTS userlog '
+        '('
+        '  rec INTEGER PRIMARY KEY ASC,'
+        '  ip TEXT,'
+        '  cnt INTEGER,'
+        '  time INTEGER'
+        ')'
+    )
     _len_sql = 'SELECT COUNT(*) FROM userlog'
     _check_sql = 'SELECT SUM(cnt) FROM userlog WHERE (ip = ? AND time > ?)'
     _delete_sql = 'DELETE FROM userlog WHERE rec IN (SELECT rec FROM userlog WHERE ip = ?)'
@@ -277,7 +282,7 @@ class SqliteUserLog:
         conn.execute(self._len_sql)
         origdblen = conn.fetchone()[0]
         conn.execute(self._gc_sql, (time.time() - self.expire,))
-        if origdblen%2:
+        if origdblen % 2:
             conn.execute('VACUUM')
         self.connection.commit()
 
@@ -285,4 +290,3 @@ class SqliteUserLog:
         self.connection.commit()
         self.connection.close()
         self.__init__(self.path, self.maxcnt, self.expire)
-

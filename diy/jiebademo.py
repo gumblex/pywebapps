@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-#encoding=utf-8
+# encoding=utf-8
 import os
 import flask
 import mosesproxy as jieba
@@ -9,11 +9,12 @@ jiebazhc = jieba.jiebazhc
 
 jiebademo = flask.Blueprint('jiebademo', __name__)
 
-match = lambda a,b: "checked" if a==b else ''
+match = lambda a, b: "checked" if a == b else ''
+
 
 @jiebademo.route('/', methods=('GET', 'POST'))
 def main():
-    sample_sentences='''
+    sample_sentences = '''
 我不喜欢日本和服。
 雷猴回归人间。
 工信处女干事每月经过下属科室都要亲口交代24口交换机等技术性器件的安装工作。
@@ -72,15 +73,15 @@ C++和c#是什么关系？11+122=133，是吗？
 悠悠生死别经年，魂魄不曾来入梦。
 '''
     if flask.request.method == 'GET':
-        return flask.render_template("cut_form.html",content=sample_sentences,selected=functools.partial(match,1))
+        return flask.render_template("cut_form.html", content=sample_sentences, selected=functools.partial(match, 1))
     else:
         text = flask.request.form.get('text', '')
-        if flask.request.form.get('opt')=="1":
+        if flask.request.form.get('opt') == "1":
             result = " / ".join(jieba.cut(text))
-        elif flask.request.form.get('opt')=="2":
+        elif flask.request.form.get('opt') == "2":
             result = " / ".join(jieba.cut_for_search(text))
-        elif flask.request.form.get('opt')=="3":
+        elif flask.request.form.get('opt') == "3":
             result = " / ".join(jiebazhc.cut(text, HMM=False))
         else:
             result = ""
-        return flask.render_template("cut_form.html",content=result,selected=functools.partial(match,int(flask.request.form.get('opt', '1'))))
+        return flask.render_template("cut_form.html", content=result, selected=functools.partial(match, int(flask.request.form.get('opt', '1'))))

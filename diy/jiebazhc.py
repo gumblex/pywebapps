@@ -5,7 +5,7 @@ import os
 import jieba
 
 _get_module_path = lambda path: os.path.normpath(os.path.join(os.getcwd(),
-                                                 os.path.dirname(__file__), path))
+                                                              os.path.dirname(__file__), path))
 _get_abs_path = lambda path: os.path.normpath(os.path.join(os.getcwd(), path))
 
 dt = jieba.Tokenizer()
@@ -13,9 +13,9 @@ dt = jieba.Tokenizer()
 dt.cache_file = "jiebazhc.cache"
 
 if os.path.isfile(_get_module_path("dict.txt")):
-	dt.set_dictionary(_get_module_path("dict.txt"))
+    dt.set_dictionary(_get_module_path("dict.txt"))
 elif os.path.isfile(_get_abs_path("dict.txt")):
-	dt.set_dictionary(_get_abs_path("dict.txt"))
+    dt.set_dictionary(_get_abs_path("dict.txt"))
 
 FREQ = dt.FREQ
 add_word = dt.add_word

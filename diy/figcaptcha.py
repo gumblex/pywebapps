@@ -19,7 +19,9 @@ default_fonts = (
     'basic',
 )
 
+
 class TextBlock:
+
     def __init__(self, captcha=''):
         self.lines = []
         # strip first blank lines
@@ -39,13 +41,13 @@ class TextBlock:
         start = 0
         if delta > 0:
             if justify > 0:
-                self.lines.extendleft(' '*self.width for i in range(delta))
+                self.lines.extendleft(' ' * self.width for i in range(delta))
             elif justify < 0:
-                self.lines.extend(' '*self.width for i in range(delta))
+                self.lines.extend(' ' * self.width for i in range(delta))
             else:
                 top = delta // 2
-                self.lines.extendleft(' '*self.width for i in range(top))
-                self.lines.extend(' '*self.width for i in range(delta - top))
+                self.lines.extendleft(' ' * self.width for i in range(top))
+                self.lines.extend(' ' * self.width for i in range(delta - top))
             self.height = other.height
         elif delta < 0:
             if justify > 0:
@@ -53,11 +55,11 @@ class TextBlock:
             elif justify == 0:
                 start = -delta // 2
         for ln in range(start):
-            self.lines[ln] += ' '*other.width
+            self.lines[ln] += ' ' * other.width
         for ln in range(other.height):
             self.lines[ln + start] += other.lines[ln]
         for ln in range(start + other.height, self.height):
-            self.lines[ln] += ' '*other.width
+            self.lines[ln] += ' ' * other.width
         self.width += other.width
 
     def __str__(self):

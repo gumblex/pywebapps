@@ -41,4 +41,4 @@ MS_SOCK = os.path.join(OS_DATA, "mosesserver.sock")
 OS_ENV = os.environ
 
 BANNEDIP = re.compile(
-'|'.join(filter(lambda x: x[:1].isdigit(), open(os.path.join(OS_DATA, "banip.txt")).read().strip().replace('.', r'\.').replace('*', r'\d+').splitlines())))
+    '|'.join(filter(lambda x: x[:1].isdigit(), open(os.path.join(OS_DATA, "banip.txt")).read().strip().replace('.', r'\.').replace('*', r'\d+').splitlines())))
