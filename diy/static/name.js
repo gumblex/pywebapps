@@ -12,7 +12,9 @@ function LoadJSON(fc, fnum) {
             FillInResult(xmlhttp.responseText, xmlhttp.status);
         }
     }
-    xmlhttp.open("GET", "?c=" + encodeURIComponent(fc) + "&num=" + fnum, true);
+    var url = "?c=" + encodeURIComponent(fc) + "&num=" + fnum
+    document.getElementById("fixaddr").href = url;
+    xmlhttp.open("GET", url, true);
     xmlhttp.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     xmlhttp.send();
 }

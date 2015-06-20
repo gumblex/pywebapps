@@ -4,7 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="keywords" content="命名,起名,姓名,名字,中文姓名,取名,拼音转姓名">
-<meta name="description" content="快速生成随机中文姓名，以及输入拼音转姓名">
+<meta name="description" content="快速生成中文姓名">
 <title>中文姓名生成器</title>
 <link rel="stylesheet" href="/static/min.css">
 <link rel="stylesheet" href="/static/style.css">
@@ -35,6 +35,10 @@ input:focus, select:focus {
 	margin: .2em;
 	border-radius: 2px;
 	display: inline-block;
+}
+#fixaddr {
+	font-size: .75em;
+	padding: 0 2em;
 }
 .hid {display: none;}
 .ib {display: inline-block;}
@@ -81,14 +85,14 @@ input:focus, select:focus {
 	</div>
 	</div>
 	<h3>“姓/拼音”说明</h3>
-	<p>此栏可填入姓，或姓名的拼音表示，或拼音的首字母。拼音可加入空格或 ' 单引号 加以分隔。例如：</p>
+	<p>此栏可输入汉字、拼音或拼音首字母，拼音可用空格或单引号来分隔。例如：</p>
 	<p id="example">
 	<a>王</a> <a>wangxiaoming</a> <a>xiaoming wang</a> <a>wxm</a> <a>/xm</a>
 	</p>
 </div>
 </form>
 <div id="result" class="col c6">
-	<h2>生成结果</h2>
+	<h2>生成结果<a id="fixaddr" href="#">固定链接</a></h2>
 	<div id="surnames"{% if not surnames %} class="hid"{% endif %}>
 	<h3>姓：</h3><p id="snlist">{{ surnames }}</p>
 	</div>
