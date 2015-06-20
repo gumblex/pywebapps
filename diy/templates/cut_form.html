@@ -14,9 +14,18 @@ text-align: center;
 #Wrapper{text-align: center;}
 #Content{
 max-width: 960px;
-margin: 0 auto 0 auto;
+margin: 0 auto;
 }
-#Bottom{text-align: center;}
+#Content span{
+display: inline-block;
+padding: 0 1em;
+}
+#Bottom{
+text-align: center;
+margin: 1em;
+}
+a, a:visited {color: #777;}
+a:hover {color: #444;}
 textarea{width: 100%;}
 textarea, input, select, button{border-radius: 2px}
 #bsubmit{border-color: #AAA;}
@@ -30,22 +39,24 @@ textarea, input, select, button{border-radius: 2px}
 <div id="Wrapper">
 	<div id="Content">
 		<form action="/jiebademo/" method="post">
-		<div>
-			<textarea rows="15" name="text">{{ content }}</textarea>
-		</div>
+		<textarea rows="15" name="text">{{ content }}</textarea>
 		<span>
-			<input type="radio" name="opt" value="1" {{ selected(1) }}>精确分词
+			<input type="radio" id="opt1" name="opt" value="1" {{ selected(1) }}>
+			<label for="opt1">普通分词</label>
 		</span>
 		<span>
-			<input type="radio" name="opt" value="2" {{ selected(2) }}>搜索引擎分词
+			<input type="radio" id="opt3" name="opt" value="3" {{ selected(3) }}>
+			<label for="opt3">文言文分词</label>
 		</span>
-		<span>
-			<input type="radio" name="opt" value="3" {{ selected(3) }}>文言文分词
-		</span>
+		<p>
 		<input type="submit" value="开始分词" id="bsubmit">
 		<input type="button" value="重置" onclick="javascript:window.location.href='/jiebademo/'">
+		</p>
+		</form>
 	</div>
-</form>
+</div>
+<div id="Bottom">
+&lt;<a href="https://github.com/gumblex/jieba">GitHub fork</a>&gt;
 </div>
 </body>
 </html>
