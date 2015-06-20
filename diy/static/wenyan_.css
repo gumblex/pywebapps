@@ -88,6 +88,7 @@ input[type="radio"]:invalid {
 #tinputgroup, #toutput {
     position: relative;
     background-color: #FFFFF8;
+    margin-bottom: 0;
 }
 
 #hl-input, #tinput, #toutput {
@@ -155,6 +156,7 @@ input[type="radio"]:invalid {
 
 #ctrlgroup {
     margin-top: .5em;
+    padding: 0;
 }
 
 #ctrlsubmitdiv {

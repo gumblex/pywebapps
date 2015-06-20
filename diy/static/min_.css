@@ -58,12 +58,12 @@ form>* {
     background: #0ae
 }
 
-.btn-a:hover {
+.btn-a:hover,
+.btn-a:focus {
     background: #09d
 }
 
-.btn-a:active,
-.btn-a:focus {
+.btn-a:active {
     background: #08b
 }
 
@@ -71,12 +71,12 @@ form>* {
     background: #3c5
 }
 
-.btn-b:hover {
+.btn-b:hover,
+.btn-b:focus {
     background: #2b4
 }
 
-.btn-b:active,
-.btn-b:focus {
+.btn-b:active {
     background: #2a4
 }
 
@@ -84,12 +84,12 @@ form>* {
     background: #d33
 }
 
-.btn-c:hover {
+.btn-c:hover,
+.btn-c:focus {
     background: #c22
 }
 
-.btn-c:active,
-.btn-c:focus {
+.btn-c:active {
     background: #b22
 }
 
