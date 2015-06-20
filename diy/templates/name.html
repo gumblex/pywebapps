@@ -36,9 +36,8 @@ input:focus, select:focus {
 	border-radius: 2px;
 	display: inline-block;
 }
-#fixaddr {
-	font-size: .75em;
-	padding: 0 2em;
+#info {
+	margin-top: 1.5em;
 }
 .hid {display: none;}
 .ib {display: inline-block;}
@@ -55,44 +54,25 @@ input:focus, select:focus {
 <form id="formgetname" class="col c6" method="GET">
 <div class="c11">
 <h2>选项</h2>
-	<p>
-	<input name="c" type="text" id="fc" value="{{ c }}" maxlength="25" placeholder="（可选）姓/拼音" class="smooth">
-	</p>
 	<div class="row">
 	<div class="col c7">
-	<span class="ib">
-	<select name="num" id="fnum" class="smooth">
-	<option value="10"{{ num[10]|d('') }}>10</option>
-	<option value="50"{{ num[50]|d('') }}>50</option>
-	<option value="100"{{ num[100]|d('') }}>100</option>
-	<option value="200"{{ num[200]|d('') }}>200</option>
-	<option value="500"{{ num[500]|d('') }}>500</option>
-	<option value="1000"{{ num[1000]|d('') }}>1000</option>
-	</select>
-	<label for="fnum"> 个</label>
-	</span>
-	<span class="ib">
-	<select name="sp" id="fsp" class="smooth">
-	<option value=", "{{ sp[', ']|d('') }}>, </option>
-	<option value="、"{{ sp['、']|d('') }}>、</option>
-	<option value="br"{{ sp['br']|d('') }}>行</option>
-	</select>
-	<label for="fsp"> 分隔</label>
-	</span>
+	<input name="c" type="text" id="fc" value="{{ c }}" maxlength="25" placeholder="[可选] 姓/拼音" class="smooth">
 	</div>
-	<div class="col c5" id="btncontainer">
+	<div id="btncontainer" class="col c4">
 	<input class="btn btn-a smooth" type="submit" value="生成" id="fsubmit">
 	</div>
 	</div>
-	<h3>“姓/拼音”说明</h3>
-	<p>此栏可输入汉字、拼音或拼音首字母，拼音可用空格或单引号来分隔。例如：</p>
+	<p>此栏留空可随机生成姓名；或可输入汉字、拼音或拼音首字母，拼音可用空格或单引号来分隔。例如：</p>
 	<p id="example">
 	<a>王</a> <a>wangxiaoming</a> <a>xiaoming wang</a> <a>wxm</a> <a>/xm</a>
+	</p>
+	<p id="info">
+	此工具通过统计模型生成中文姓名名单，以大陆姓名为基础。生成姓名仅供参考，使用后果自负。
 	</p>
 </div>
 </form>
 <div id="result" class="col c6">
-	<h2>生成结果<a id="fixaddr" href="#">固定链接</a></h2>
+	<h2>生成结果</h2>
 	<div id="surnames"{% if not surnames %} class="hid"{% endif %}>
 	<h3>姓：</h3><p id="snlist">{{ surnames }}</p>
 	</div>
@@ -102,9 +82,6 @@ input:focus, select:focus {
 </div>
 </section>
 <footer>
-<p id="info">
-此工具通过统计模型生成中文姓名名单，以大陆姓名为基础。生成姓名仅供参考，使用后果自负。
-</p>
 <p>&copy; 2015 Gumble (<a id="gh" href="https://github.com/gumblex/chinesename">GitHub repo</a>)</p>
 </footer>
 </div>

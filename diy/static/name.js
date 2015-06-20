@@ -1,4 +1,4 @@
-function LoadJSON(fc, fnum) {
+function LoadJSON(fc) {
     var xmlhttp;
     if (window.XMLHttpRequest) {
         // code for IE7+, Firefox, Chrome, Opera, Safari
@@ -12,9 +12,7 @@ function LoadJSON(fc, fnum) {
             FillInResult(xmlhttp.responseText, xmlhttp.status);
         }
     }
-    var url = "?c=" + encodeURIComponent(fc) + "&num=" + fnum
-    document.getElementById("fixaddr").href = url;
-    xmlhttp.open("GET", url, true);
+    xmlhttp.open("GET", "?c=" + encodeURIComponent(fc), true);
     xmlhttp.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     xmlhttp.send();
 }
@@ -27,13 +25,11 @@ function FillInResult(result, code) {
     } else {
         document.getElementById("surnames").className = 'hid';
     }
-    var sp = document.getElementById("fsp").value;
-    if (sp === 'br') {sp = '<br>'}
-    document.getElementById("nlist").innerHTML = d[1].join(sp);
+    document.getElementById("nlist").innerHTML = d[1].join(', ');
 }
 
 function MakeRequest() {
-    LoadJSON(document.getElementById("fc").value, document.getElementById("fnum").value);
+    LoadJSON(document.getElementById("fc").value);
     return false;
 }
 

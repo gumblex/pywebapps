@@ -233,25 +233,40 @@ def clozeword():
     return flask.render_template('clozeword.html', fl=fl, result=flask.Markup('\n'.join(res)))
 
 
+@functools.lru_cache(maxsize=25)
+def select_name(userinput, num):
+    namemodel = getattr(flask.g, 'namemodel', None)
+    if namemodel is None:
+        namemodel = flask.g.namemodel = chinesename.NameModel(MODEL_name)
+    return namemodel.processinput(userinput, num)
+
+
 def name_generator():
-    L = (lambda x: zhconv(x, 'zh-tw')) if flask.g.get('accepttw') else (lambda x: x)
+    accepttw = flask.g.get('accepttw')
+    L = (lambda x: zhconv(x, 'zh-tw')) if accepttw else (lambda x: x)
     c = zhconv(flask.request.args.get('c', ''), 'zh-cn')
     sp = rawsp = flask.request.args.get('sp', ', ')
     if sp == 'br':
         sp = flask.Markup('<br>')
     try:
-        num = int(flask.request.args.get('num'))
+        num = int(flask.request.args.get('num', 100))
     except Exception:
         num = 100
     fjson = flask.request.is_xhr or flask.request.args.get('f') == "json"
-    namemodel = getattr(flask.g, 'namemodel', None)
-    if namemodel is None:
-        namemodel = flask.g.namemodel = chinesename.NameModel(MODEL_name)
-    surnames, names = namemodel.processinput(c, num)
+    if c:
+        surnames, names = select_name(c, num)
+    else:
+        namemodel = getattr(flask.g, 'namemodel', None)
+        if namemodel is None:
+            namemodel = flask.g.namemodel = chinesename.NameModel(MODEL_name)
+        surnames, names = namemodel.processinput(c, num)
     if fjson:
         return flask.json.dumps([list(map(L, surnames)), list(map(L, names))])
     else:
-        return L(flask.render_template('name.html', c=c, num=option_dict(int(num)), sp=option_dict(rawsp), surnames=sp.join(surnames), names=sp.join(names)))
+        tmpl = flask.render_template('name.html', c=c, surnames=sp.join(surnames), names=sp.join(names))
+        if accepttw:
+            tmpl = zhconv(tmpl.replace('zh-cn', 'zh-tw'), 'zh-tw')
+        return tmpl
 
 @functools.lru_cache(maxsize=128)
 def buka_lookup(sql, replace):
