@@ -5,13 +5,11 @@
 <meta http-equiv="Content-Language" content="zh-cn">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>结巴分词演示</title>
-<link rel="stylesheet" href="style.m.css">
+<link rel="stylesheet" href="/static/min.css">
+<link rel="stylesheet" href="/static/style.css">
 <style type="text/css">
 #Top{
 text-align: center;
-background-color: #000000;
-color: #ffffff;
-height: 30px;
 }
 #Wrapper{text-align: center;}
 #Content{
@@ -20,6 +18,9 @@ margin: 0 auto 0 auto;
 }
 #Bottom{text-align: center;}
 textarea{width: 100%;}
+textarea, input, select, button{border-radius: 2px}
+#bsubmit{border-color: #AAA;}
+#bsubmit:focus {border-color: #19E;}
 </style>
 </head>
 <body>
@@ -33,16 +34,16 @@ textarea{width: 100%;}
 			<textarea rows="15" name="text">{{ content }}</textarea>
 		</div>
 		<span>
-			<input type="radio" name="opt" value="1" {{ selected(1) }}/>精确分词
+			<input type="radio" name="opt" value="1" {{ selected(1) }}>精确分词
 		</span>
 		<span>
-			<input type="radio" name="opt" value="2" {{ selected(2) }}/>搜索引擎分词
+			<input type="radio" name="opt" value="2" {{ selected(2) }}>搜索引擎分词
 		</span>
 		<span>
-			<input type="radio" name="opt" value="3" {{ selected(3) }}/>文言文分词
+			<input type="radio" name="opt" value="3" {{ selected(3) }}>文言文分词
 		</span>
-		<input type="submit" value="开始分词"/>
-		<input type="button" value="重置" onclick="javascript:window.location.href='/jiebademo/'"/>
+		<input type="submit" value="开始分词" id="bsubmit">
+		<input type="button" value="重置" onclick="javascript:window.location.href='/jiebademo/'">
 	</div>
 </form>
 </div>

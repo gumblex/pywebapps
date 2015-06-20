@@ -95,6 +95,14 @@ form {
     color: #777777;
 }
 
+input, select, textarea {
+    background-color: #FCFCFC;
+}
+
+input {
+    border-radius: 3px;
+}
+
 #opt {
     margin-top:2em;
     text-align:right;
@@ -102,6 +110,7 @@ form {
 }
 
 .bukabutton {
+    border: none;
     padding:.5em 1em;
     background-color:#F5F4F2;
     cursor: pointer;
@@ -115,6 +124,7 @@ form {
 
 #sname {
     width: 10em;
+    padding: .5em;
 }
 
 input.cbchap {
@@ -178,10 +188,6 @@ textarea:focus {
 #fsresult a, #furllist a, #furllist span {
     display: inline-block;
     line-height: 1em;
-}
-
-.pure-form input[type=text], .pure-form input[type=password], .pure-form input[type=email], .pure-form input[type=url], .pure-form input[type=date], .pure-form input[type=month], .pure-form input[type=time], .pure-form input[type=datetime], .pure-form input[type=datetime-local], .pure-form input[type=week], .pure-form input[type=number], .pure-form input[type=search], .pure-form input[type=tel], .pure-form input[type=color], .pure-form select, .pure-form textarea {
-    background-color: #FCFCFC;
 }
 
 p.error {

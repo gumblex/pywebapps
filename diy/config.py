@@ -23,6 +23,8 @@ DB_userlog_maxcnt = 200
 DB_userlog_expire = 3600
 DB_testsent = os.path.join(OS_DATA, "testsent.db")
 
+MODEL_name = os.path.join(OS_DATA, "namemodel.m")
+
 DB_buka = os.path.join(OS_DATA, "buka.db")
 DB_bukacache = os.path.join(OS_DATA, "bukacache.db")
 ZIP_bkchap = os.path.join(OS_DATA, "chaporder.zip")

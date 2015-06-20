@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="keywords" content="命名,起名,姓名,名字,中文姓名,取名,拼音转姓名">
+<meta name="description" content="快速生成随机中文姓名，以及输入拼音转姓名">
+<title>中文姓名生成器</title>
+<link rel="stylesheet" href="/static/min.css">
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/name.js"></script>
+<style>
+input, select {
+	border-width: 0px 0px 2px;
+	border-style: solid; 
+	border-color: #CCC;
+}
+input:focus, select:focus {
+    border-color: #19E
+}
+#fc {
+	width: 100%;
+	padding: .4em .3em;
+}
+#btncontainer {
+	text-align: right;
+}
+#fsubmit {
+	display: inline;
+	padding: .3em 1.25em;
+}
+#example a {
+	background-color: #eee;
+	padding: .2em .5em;
+	margin: .2em;
+	border-radius: 2px;
+	display: inline-block;
+}
+.hid {display: none;}
+.ib {display: inline-block;}
+#gh, #gh:visited {color: #444;}
+#gh:hover {color: #777;}
+</style>
+</head>
+<body>
+<div id="container">
+<header>
+<h1 id="pagetitle">中文姓名生成器</h1>
+</header>
+<section id="appmain" class="row rmd">
+<form id="formgetname" class="col c6" method="GET">
+<div class="c11">
+<h2>选项</h2>
+	<p>
+	<input name="c" type="text" id="fc" value="{{ c }}" maxlength="25" placeholder="（可选）姓/拼音" class="smooth">
+	</p>
+	<div class="row">
+	<div class="col c7">
+	<span class="ib">
+	<select name="num" id="fnum" class="smooth">
+	<option value="10"{{ num[10]|d('') }}>10</option>
+	<option value="50"{{ num[50]|d('') }}>50</option>
+	<option value="100"{{ num[100]|d('') }}>100</option>
+	<option value="200"{{ num[200]|d('') }}>200</option>
+	<option value="500"{{ num[500]|d('') }}>500</option>
+	<option value="1000"{{ num[1000]|d('') }}>1000</option>
+	</select>
+	<label for="fnum"> 个</label>
+	</span>
+	<span class="ib">
+	<select name="sp" id="fsp" class="smooth">
+	<option value=", "{{ sp[', ']|d('') }}>, </option>
+	<option value="、"{{ sp['、']|d('') }}>、</option>
+	<option value="br"{{ sp['br']|d('') }}>行</option>
+	</select>
+	<label for="fsp"> 分隔</label>
+	</span>
+	</div>
+	<div class="col c5" id="btncontainer">
+	<input class="btn btn-a smooth" type="submit" value="生成" id="fsubmit">
+	</div>
+	</div>
+	<h3>“姓/拼音”说明</h3>
+	<p>此栏可填入姓，或姓名的拼音表示，或拼音的首字母。拼音可加入空格或 ' 单引号 加以分隔。例如：</p>
+	<p id="example">
+	<a>王</a> <a>wangxiaoming</a> <a>xiaoming wang</a> <a>wxm</a> <a>/xm</a>
+	</p>
+</div>
+</form>
+<div id="result" class="col c6">
+	<h2>生成结果</h2>
+	<div id="surnames"{% if not surnames %} class="hid"{% endif %}>
+	<h3>姓：</h3><p id="snlist">{{ surnames }}</p>
+	</div>
+	<div id="names">
+	<h3>名：</h3><p id="nlist">{{ names }}</p>
+	</div>
+</div>
+</section>
+<footer>
+<p id="info">
+此工具通过统计模型生成中文姓名名单，以大陆姓名为基础。生成姓名仅供参考，使用后果自负。
+</p>
+<p>&copy; 2015 Gumble (<a id="gh" href="https://github.com/gumblex/chinesename">GitHub repo</a>)</p>
+</footer>
+</div>
+</body>
+</html>

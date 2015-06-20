@@ -5,8 +5,8 @@
 <meta http-equiv="Content-Language" content="zh-tw">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>布卡漫畫下載工具</title>
-<link rel="stylesheet" href="/static/pure.m.css">
-<link rel="stylesheet" href="/static/buka.m.css">
+<link rel="stylesheet" href="/static/min.css">
+<link rel="stylesheet" href="/static/buka.css">
 {% if cinfo %}
 <script>
 function selall(source) {
@@ -27,12 +27,12 @@ document.getElementById("fgeturl").onsubmit = showwait;
 <body>
 <div id="container">
 <h1>布卡漫畫下載工具</h1>
-<section id="app">
-<form class="pure-form" name="fgetinfo" method="GET">
 <fieldset>
+<section id="app">
+<form name="fgetinfo" method="GET">
 <input name="f" type="hidden" value="i">
 <input id="sname" name="name" type="text" placeholder="漫畫名或ID" value="{{ sname }}">
-<button type="submit" class="pure-button pure-button-primary bukabutton buttonactive">搜尋</button>
+<button type="submit" class="bukabutton buttonactive">搜尋</button>
 </fieldset>
 </form>
 {{ msg }}
@@ -57,7 +57,7 @@ document.getElementById("fgeturl").onsubmit = showwait;
 <a class="bukabutton" href="?f=c&mid={{ mid }}">重新生成的 chaporder.dat</a>
 {% endif %}
 <h2>選擇需要的章節：</h2>
-<form id="fgeturl" class="pure-form" name="fgeturl" method="POST">
+<form id="fgeturl" name="fgeturl" method="POST">
 <input name="f" type="hidden" value="u">
 <input name="mid" type="hidden" value="{{ cinfo[0] }}">
 <fieldset>
@@ -72,7 +72,7 @@ document.getElementById("fgeturl").onsubmit = showwait;
 </fieldset>
 <input type="checkbox" id="cselall" class="cbchap" onclick="selall(this)">
 <label for="cselall">全選</label>
-<button type="submit" class="pure-button bukabutton buttonactive">獲取下載地址</button><span id="plzwait">請稍候……</span>
+<button type="submit" class="bukabutton buttonactive">獲取下載地址</button><span id="plzwait">請稍候……</span>
 </form>
 <div id="opt"><a href="bukadownloader.zip">下載原始碼</a></div>
 {% endif %}
@@ -99,4 +99,3 @@ document.getElementById("fgeturl").onsubmit = showwait;
 </div>
 </body>
 </html>
-

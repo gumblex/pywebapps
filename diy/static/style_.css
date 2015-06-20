@@ -25,7 +25,7 @@ h1 {
 
 h2 {
     color: #000000;
-    font-size: 1.25em;
+    font-size: 1.5em;
     margin: .5em 0;
 }
 
@@ -107,16 +107,13 @@ textarea {
     font-size: 14px;
 }
 
-.pure-form input[type=text], .pure-form input[type=password], .pure-form input[type=email], .pure-form input[type=url], .pure-form input[type=date], .pure-form input[type=month], .pure-form input[type=time], .pure-form input[type=datetime], .pure-form input[type=datetime-local], .pure-form input[type=week], .pure-form input[type=number], .pure-form input[type=search], .pure-form input[type=tel], .pure-form input[type=color], .pure-form select, .pure-form textarea {
-    background-color: #FCFCFC;
-}
-
 p.error {
     font-size: 1.2em;
     color: #FF851B;
 }
 
 footer {
+    color: #777;
     margin-top: 2em;
     border-top: solid 1px #DDD;
     text-align: right;

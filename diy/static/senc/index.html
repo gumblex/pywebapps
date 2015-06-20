@@ -5,12 +5,12 @@
 <meta http-equiv="Content-Language" content="zh-cn">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>简易文本加密</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/0.5.0/pure-min.css">
+<link rel="stylesheet" href="/static/min.css">
 <link rel="stylesheet" href="style.css">
 <script src="core-min.js"></script>
 <script src="aes.js"></script>
 <script src="enc-c4096.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/1.0/zxcvbn-async.js"></script>
+<script src="zxcvbn-async.js"></script>
 <script>
 var C4096Formatter = {
 	stringify: function (cipherParams) {
@@ -47,7 +47,7 @@ function dec(s, p){
 }
 function strength(){
 	var pwd = document.getElementById('pwd');
-	pwd.className = 's' + zxcvbn(pwd.value).score;
+	pwd.className = 'smooth s' + zxcvbn(pwd.value).score;
 	return true;
 }
 function validatec4096(s){
@@ -62,7 +62,8 @@ function validatec4096(s){
 	}
 	return true;
 }
-function autoGrow (oField) {
+function autoGrow () {
+	var oField = this;
 	var maxHeight = window.innerHeight - 400;
 	if (oField.scrollHeight > oField.clientHeight) {
 		oField.style.height = Math.min(oField.scrollHeight,maxHeight) + "px";
@@ -73,7 +74,7 @@ function tryencrypt(){
 	var txt = textarea.value;
 	var pwd = document.getElementById('pwd').value;
 	if (!txt || !pwd) {
-		return;
+		return false;
 	}
 	document.getElementById('error').innerHTML = '';
 	if (validatec4096(txt.replace(/\s/g, ""))) {
@@ -85,12 +86,17 @@ function tryencrypt(){
 		}
 	} else {
 		if (txt.length > 500) {
-
 			textarea.value = enc(txt, pwd);
 			document.getElementById('error').innerHTML = '';
 		} else textarea.value = enc(txt, pwd);
 	}
+	return false;
 }
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById("appform").onsubmit = tryencrypt;
+    document.getElementById("text").onchange = autoGrow;
+    document.getElementById("pwd").onkeyup = strength;
+});
 </script>
 <style>
 #error {
@@ -103,8 +109,14 @@ function tryencrypt(){
 .s3 {background-color: #F3FFF3 !important;}
 .s4 {background-color: #F0F8FF !important;}
 .sdemo {
-	padding: 0 1em;
+	padding: 0 .5em;
 	color: #888888;
+}
+#text {
+	color: #111111;
+}
+#pwd {
+	width: 80%;
 }
 #faq {
 	margin:2em 0;
@@ -127,17 +139,17 @@ footer {
 <body>
 <h1>简易文本加密</h1>
 <section id="app">
-	<form class="pure-form" action="" method="POST" onsubmit="tryencrypt();return false;">
+	<form id="appform" action="" method="POST" class="smooth">
 	<p>
-	<textarea name="text" id="text" placeholder="请输入原文或密文：" onchange="autoGrow(this);"></textarea>
+	<textarea name="text" id="text" placeholder="请输入原文或密文：" class="smooth"></textarea>
 	</p>
-	<div class="pure-g">
-	<div class="pure-u-2-3">
-	<input name="pwd" id="pwd" type="password" placeholder="密码" style="width: 80%;" onkeyup="return strength();">
+	<div class="row">
+	<div class="col c8">
+	<input name="pwd" id="pwd" type="password" placeholder="密码" class="smooth">
 	<span id="error"></span>
     </div>
-    <div class="pure-u-1-3">
-    <button type="submit" class="pure-button pure-button-primary" style='width: 100%;'>加密 / 解密</button>
+    <div class="col c4">
+    <button type="submit" class="btn smooth btn-a" style='width: 100%;'>加密 / 解密</button>
 	</div>
 	</div>
 	</form>

@@ -14,13 +14,12 @@ import functools
 import flask
 import mosesproxy
 import figcaptcha
+import chinesename
 from bukadown import getbukaurl
 from werkzeug.contrib.fixers import ProxyFix
 from werkzeug.contrib.cache import SimpleCache
 from urllib.parse import urlsplit, urlunsplit
-from sqlitecache import SqliteUserLog
 from zhconv import convert as zhconv
-from zhutil import calctxtstat, checktxttype
 from config import *
 
 logging.basicConfig(filename=os.path.join(os.environ[
@@ -36,10 +35,16 @@ if NOTLOCAL:
 app.secret_key = SECRETKEY
 
 try:
-    from jiebademo import jiebademo
-    app.register_blueprint(jiebademo, url_prefix='/jiebademo')
+    from jiebademo import jiebademo as bp_jiebademo
+    app.register_blueprint(bp_jiebademo, url_prefix='/jiebademo')
 except Exception:
     logging.exception("Import jiebademo failed.")
+
+try:
+    from wenyan import bp_wenyan
+    #app.register_blueprint(bp_wenyan, url_prefix='/wenyan')
+except Exception:
+    logging.exception("Import wenyan failed.")
 
 
 def gzipped(f):
@@ -92,10 +97,7 @@ def accept_language_zh_tw(lang_string):
             return None
         priority = priority and float(priority) or 1.0
         result[lang.lower()] = priority
-    if result.get('zh-tw', 0) > result.get('zh-cn', 0):
-        return True
-    else:
-        return False
+    return result.get('zh-tw', 0) > result.get('zh-cn', 0)
 
 
 def redirect_subdomain():
@@ -125,7 +127,6 @@ def before_req():
 
 
 @gzipped
-@functools.lru_cache(maxsize=1)
 def index():
     return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
 
@@ -157,123 +158,31 @@ def translate_alias():
 def linebreak(s):
     return flask.Markup('<p>%s</p>\n') % flask.Markup('</p>\n<p>').join(s.rstrip().split('\n'))
 
-
-def get_wy_db():
-    userlog = getattr(flask.g, 'userlog', None)
-    if userlog is None:
-        userlog = flask.g.userlog = SqliteUserLog(
-            DB_userlog, DB_userlog_maxcnt, DB_userlog_expire)
-    return userlog
+def option_dict(v):
+    return {v: ' selected'}
 
 
 @app.teardown_appcontext
 def close_connection(exception):
     userlog = getattr(flask.g, 'userlog', None)
-    db_ts = getattr(flask.g, 'db_ts', None)
+    db_cloze = getattr(flask.g, 'db_cloze', None)
+    db_buka = getattr(flask.g, 'db_buka', None)
     if userlog is not None:
         userlog.close()
-    if db_ts is not None:
-        db_ts.close()
+    if db_cloze is not None:
+        db_cloze.close()
+    if db_buka is not None:
+        db_buka.close()
 
-
-def translateresult(result, convfunc):
-    markup = []
-    jsond = []
-    nl = flask.Markup('</p>\n<p>')
-    for tok, pos in result:
-        if tok == '\n':
-            markup.append(nl)
-        elif pos:
-            markup.append(flask.Markup('<span>%s</span>') % convfunc(tok))
-            jsond.append(pos)
-        else:
-            markup.append(convfunc(tok))
-    return (flask.Markup('<p>%s</p>\n') % flask.Markup().join(markup),
-            flask.Markup(flask.json.dumps(jsond, separators=(',', ':'))))
-
-
-@gzipped
-def wenyan():
-    userlog = get_wy_db()
-    tinput = flask.request.values.get('input', '')
-    formgetlang = flask.request.values.get('lang')
-    displaylang = flask.request.values.get('dl')
-    if formgetlang == 'c2m':
-        lang = 'c2m'
-    elif formgetlang == 'm2c':
-        lang = 'm2c'
-    else:  # == auto
-        cscore, mscore = calctxtstat(tinput)
-        if cscore == mscore:
-            lang = None
-        elif checktxttype(cscore, mscore) == 'c':
-            lang = 'c2m'
-        else:
-            lang = 'm2c'
-
-    ip = flask.request.remote_addr
-    accepttw = flask.g.get('accepttw')
-    L = (lambda x: zhconv(x, 'zh-tw')) if accepttw else (lambda x: x)
-    origcnt = userlog.count(ip)
-    count = 0
-    valid = wy_validate(ip, origcnt, userlog)
-    talign = flask.Markup('[]')
-    if valid == 1:
-        origcnt = 0
-        userlog.delete(ip)
-    elif valid == 0:
-        logging.warning('Captcha failed: %s' % ip)
-    if not tinput:
-        toutput = ''
-    elif valid == 0:
-        toutput = L('<p class="error">回答错误，请重试。</p>')
-    elif lang is None:
-        toutput = linebreak(tinput)
-    elif len(tinput) > MAX_CHAR:
-        toutput = L('<p class="error">文本过长，请切分后提交。</p>')
-    else:
-        tinput, tres, count = mosesproxy.translate(
-            tinput, lang, True, True, True)
-        toutput, talign = translateresult(tres, L)
-        userlog.add(ip, count)
-    captcha = ''
-    if origcnt + count > userlog.maxcnt:
-        captcha = L(wy_gencaptcha())
-    return flask.render_template(('translate_zhtw.html' if accepttw else 'translate.html'), tinput=tinput, toutput=toutput, talign=talign, captcha=flask.Markup(captcha))
-
-
-def wy_validate(ip, origcnt, userlog):
-    if origcnt > userlog.maxcnt:
-        try:
-            key = flask.request.values.get('cq', '').encode('ascii')
-            ans = flask.request.values.get('ca', '').lower().encode('ascii')
-            key2 = base64.urlsafe_b64encode(
-                hashlib.pbkdf2_hmac('sha256', ans, SECRETKEY, 100))
-            if key == key2:
-                return 1
-            else:
-                return 0
-        except Exception:
-            logging.exception('captcha')
-            return 0
-    return None
-
-
-def wy_gencaptcha():
-    captcha = figcaptcha.combinecaptcha(
-        figcaptcha.getcaptcha(2) for i in range(2))
-    ask = figcaptcha.noise(captcha[0])
-    ans = captcha[1].lower().encode('ascii')
-    key = base64.urlsafe_b64encode(
-        hashlib.pbkdf2_hmac('sha256', ans, SECRETKEY, 100)).decode('ascii')
-    return flask.render_template('captcha.html', pic=ask, ans=key)
 
 RE_NOTA = re.compile(r'^a\s.+|.+\S\sa\s.+')
 
 
 @functools.lru_cache(maxsize=16)
 def clozeword_lookup(sql, replace):
-    db_cloze = sqlite3.connect(DB_clozeword)
+    db_cloze = getattr(flask.g, 'db_cloze', None)
+    if db_cloze is None:
+        db_cloze = flask.g.db_cloze = sqlite3.connect(DB_clozeword)
     cur_cloze = db_cloze.cursor()
     return tuple(cur_cloze.execute(sql, replace))
 
@@ -294,7 +203,7 @@ def clozeword():
         sqlchr = fl + '%'
     if pr != 'p':
         res.append(
-            '<p><h2>查询结果：</h2><table border="1"><tbody><tr class="hd"><th>单词</th><th>词性</th><th>解释</th></tr>')
+            '<p><h2>查询结果：</h2><table border="1" class="table"><tbody><tr class="hd"><th>单词</th><th>词性</th><th>解释</th></tr>')
         if sp == 'un':
             exe = clozeword_lookup(
                 "SELECT * FROM wordlist WHERE (speech<>'' AND word LIKE ?)", (sqlchr,))
@@ -309,7 +218,7 @@ def clozeword():
                        (flask.url_for('clozeword', fl=fl, sp=sp, pr='p'), fl))
     else:
         res.append(
-            '<p><h2>查询结果：</h2><table border="1"><tbody><tr class="hd"><th>词组</th><th>解释</th></tr>')
+            '<p><h2>查询结果：</h2><table border="1" class="table"><tbody><tr class="hd"><th>词组</th><th>解释</th></tr>')
         exe = clozeword_lookup(
             "SELECT word,mean FROM wordlist WHERE (speech='' AND (word LIKE ? OR word LIKE ?))", (fl + "%", "% " + fl + "%"))
         if fl == 'a':
@@ -324,9 +233,31 @@ def clozeword():
     return flask.render_template('clozeword.html', fl=fl, result=flask.Markup('\n'.join(res)))
 
 
+def name_generator():
+    L = (lambda x: zhconv(x, 'zh-tw')) if flask.g.get('accepttw') else (lambda x: x)
+    c = zhconv(flask.request.args.get('c', ''), 'zh-cn')
+    sp = rawsp = flask.request.args.get('sp', ', ')
+    if sp == 'br':
+        sp = flask.Markup('<br>')
+    try:
+        num = int(flask.request.args.get('num'))
+    except Exception:
+        num = 100
+    fjson = flask.request.is_xhr or flask.request.args.get('f') == "json"
+    namemodel = getattr(flask.g, 'namemodel', None)
+    if namemodel is None:
+        namemodel = flask.g.namemodel = chinesename.NameModel(MODEL_name)
+    surnames, names = namemodel.processinput(c, num)
+    if fjson:
+        return flask.json.dumps([list(map(L, surnames)), list(map(L, names))])
+    else:
+        return L(flask.render_template('name.html', c=c, num=option_dict(int(num)), sp=option_dict(rawsp), surnames=sp.join(surnames), names=sp.join(names)))
+
 @functools.lru_cache(maxsize=128)
 def buka_lookup(sql, replace):
-    db_buka = sqlite3.connect(DB_buka)
+    db_buka = getattr(flask.g, 'db_buka', None)
+    if db_buka is None:
+        db_buka = flask.g.db_buka = sqlite3.connect(DB_buka)
     cur_buka = db_buka.cursor()
     return tuple(cur_buka.execute(sql, replace))
 
@@ -517,16 +448,15 @@ app.add_url_rule(
     "/<path:filename>", "file_glass", file_glass, subdomain='glass')
 app.add_url_rule("/translate/", 'translate_alias', redirect_to="/wenyan/")
 app.add_url_rule("/clozeword/", 'clozeword', clozeword)
+app.add_url_rule("/name/", 'name_generator', name_generator)
 app.add_url_rule("/buka/", 'bukadown', bukadown, methods=('GET', 'POST'))
 app.add_url_rule(
     "/buka/bukadownloader.zip", 'bukadownloader_zip', bukadownloader_zip)
 if NOTLOCAL:
-    app.add_url_rule(
-        "/", "wenyan", wenyan, methods=('GET', 'POST'), subdomain='wenyan')
-    app.add_url_rule(
-        "/wenyan/", "wenyan", wenyan, methods=('GET', 'POST'), alias=True)
+    app.register_blueprint(bp_wenyan, subdomain='wenyan')
 else:
-    app.add_url_rule("/wenyan/", "wenyan", wenyan, methods=('GET', 'POST'))
+    app.register_blueprint(bp_wenyan, url_prefix='/wenyan')
+
 
 if __name__ == "__main__":
     app.config['SERVER_NAME'] = None

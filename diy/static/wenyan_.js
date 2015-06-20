@@ -24,7 +24,7 @@ function Checktxttype(s) {
 }
 function AutoGrow(oField) {
     if (oField.scrollHeight > oField.clientHeight) {
-        oField.style.height = oField.scrollHeight + oField.clientTop * 2 + 1 + "px";
+        oField.style.height = oField.scrollHeight + oField.clientTop * 2 + 2 + "px";
     }
 }
 function PBRun() {
