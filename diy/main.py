@@ -151,8 +151,8 @@ def file_glass(filename):
     return flask.send_from_directory(os.path.join(app.root_path, 'static/glass'), filename)
 
 
-def translate_alias():
-    return flask.redirect(flask.url_for('wenyan'))
+def redirect_wenyan_to_subdomain():
+    return flask.redirect('https://wenyan.gumble.tk', 301)
 
 
 def linebreak(s):
@@ -454,6 +454,7 @@ app.add_url_rule(
     "/buka/bukadownloader.zip", 'bukadownloader_zip', bukadownloader_zip)
 if NOTLOCAL:
     app.register_blueprint(bp_wenyan, subdomain='wenyan')
+    app.add_url_rule("/wenyan/", 'redirect_wenyan_to_subdomain', redirect_wenyan_to_subdomain, methods=('GET', 'POST'))
 else:
     app.register_blueprint(bp_wenyan, url_prefix='/wenyan')
 
