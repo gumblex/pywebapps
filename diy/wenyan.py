@@ -3,7 +3,11 @@
 import os
 import re
 import flask
+import base64
+import hashlib
+import logging
 import functools
+import figcaptcha
 import mosesproxy
 from zhconv import convert as zhconv
 from sqlitecache import SqliteUserLog

@@ -3,9 +3,7 @@ import os
 import re
 import time
 import gzip
-import base64
 import logging
-import hashlib
 import sqlite3
 import zipfile
 import datetime
@@ -13,7 +11,6 @@ import functools
 
 import flask
 import mosesproxy
-import figcaptcha
 import chinesename
 from bukadown import getbukaurl
 from werkzeug.contrib.fixers import ProxyFix
