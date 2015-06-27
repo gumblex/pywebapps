@@ -11,7 +11,7 @@ function escapeHtml(text) {
 function Checktxttype(s) {
     var cscore = 0, mscore = 0, o = 0;
     var i = s.length;
-    while (i--) {
+    while (i --> 0) {
         o = s.charCodeAt(i);
         if (0x4E00 <= o && o < 0x9FCD) {
             cscore -= zhcmodel.charCodeAt(o-0x4E00);

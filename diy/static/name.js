@@ -19,13 +19,13 @@ function LoadJSON(fc) {
 
 function FillInResult(result, code) {
     var d = JSON.parse(result);
-    if (d[0].length) {
+    if (d['s'].length) {
         document.getElementById("surnames").className = '';
-        document.getElementById("snlist").textContent = d[0].join(', ');
+        document.getElementById("snlist").textContent = d['s'].join(', ');
     } else {
         document.getElementById("surnames").className = 'hid';
     }
-    document.getElementById("nlist").innerHTML = d[1].join(', ');
+    document.getElementById("nlist").innerHTML = d['n'].join(', ');
 }
 
 function MakeRequest() {

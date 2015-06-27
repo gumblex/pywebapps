@@ -119,19 +119,19 @@ if __name__ == '__main__':
         elif sys.argv[1] == 'c2m':
             if not ping():
                 sys.exit(1)
-            sys.stdout.write(translate(sys.stdin.read(), 'c2m', 0, 0, 0))
+            sys.stdout.write(translate(sys.stdin.read(), 'c2m', 0, 0, 0) + '\n')
         elif sys.argv[1] == 'm2c':
             if not ping():
                 sys.exit(1)
-            sys.stdout.write(translate(sys.stdin.read(), 'm2c', 0, 0, 0))
+            sys.stdout.write(translate(sys.stdin.read(), 'm2c', 0, 0, 0) + '\n')
         elif sys.argv[1] == 'c2m.raw':
             if not ping():
                 sys.exit(1)
-            sys.stdout.write(translate(sys.stdin.read(), 'c2m.raw'))
+            sys.stdout.write(translate(sys.stdin.read(), 'c2m.raw') + '\n')
         elif sys.argv[1] == 'm2c.raw':
             if not ping():
                 sys.exit(1)
-            sys.stdout.write(translate(sys.stdin.read(), 'm2c.raw'))
+            sys.stdout.write(translate(sys.stdin.read(), 'm2c.raw') + '\n')
     else:
         if not ping():
             sys.exit(1)

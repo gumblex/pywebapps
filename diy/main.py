@@ -258,7 +258,7 @@ def name_generator():
             namemodel = flask.g.namemodel = chinesename.NameModel(MODEL_name)
         surnames, names = namemodel.processinput(c, num)
     if fjson:
-        return flask.json.dumps([list(map(L, surnames)), list(map(L, names))])
+        return flask.json.dumps({'s': list(map(L, surnames)), 'n': list(map(L, names))})
     else:
         tmpl = flask.render_template('name.html', c=c, surnames=sp.join(surnames), names=sp.join(names))
         if accepttw:
