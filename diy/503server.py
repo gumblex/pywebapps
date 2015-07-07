@@ -3,6 +3,7 @@
 
 import os
 import sys
+import time
 import http.server
 from socketserver import ThreadingMixIn
 
@@ -39,9 +40,16 @@ class HTTPHandler(http.server.BaseHTTPRequestHandler):
         self.send_header('Date', self.date_time_string())
 
     def log_message(self, format, *args):
-        sys.stderr.write('%s - - [%s] %s "%s" "%s"\n' % (self.headers.get('X-Forwarded-For', self.address_string()),
-                                                         self.log_date_time_string(), format % args, self.headers.get('Referer', '-'), self.headers.get('User-Agent', '-')))
+        sys.stderr.write('%s - - [%s] %s "%s" "%s"\n' % (
+            self.headers.get('X-Forwarded-For', self.address_string()),
+            self.log_date_time_string(), format % args, self.headers.get('Referer', '-'), self.headers.get('User-Agent', '-')))
         sys.stderr.flush()
+
+    def log_date_time_string(self):
+        """Return the current time formatted for logging."""
+        lt = time.localtime(time.time())
+        s = time.strftime('%d/%%3s/%Y:%H:%M:%S %z', lt) % self.monthname[lt[1]]
+        return s
 
     def do_HEAD(self):
         self.send_response(503)

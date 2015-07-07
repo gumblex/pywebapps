@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import os
 import sys
 import umsgpack
 import socket
 from subprocess import Popen
-from config import *
+from config import MS_SOCK
 
 _curpath = os.path.normpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
