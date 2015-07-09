@@ -43,7 +43,10 @@ def translateresult(result, convfunc):
             flask.Markup(flask.json.dumps(jsond, separators=(',', ':'))))
 
 
-@bp_wenyan.route('/', methods=('GET', 'POST'))
+def linebreak(s):
+	return flask.Markup('<p>%s</p>\n') % flask.Markup('</p>\n<p>').join(s.rstrip().split('\n'))
+
+
 def wenyan():
     userlog = get_wy_db()
     tinput = flask.request.values.get('input', '')
@@ -119,5 +122,6 @@ def wy_gencaptcha():
         hashlib.pbkdf2_hmac('sha256', ans, SECRETKEY, 100)).decode('ascii')
     return flask.render_template('captcha.html', pic=ask, ans=key)
 
+bp_wenyan.add_url_rule("/", 'wenyan', wenyan, methods=('GET', 'POST'))
 bp_wenyan.add_url_rule(
         "/wenyan/", "wenyan", wenyan, methods=('GET', 'POST'), alias=True)

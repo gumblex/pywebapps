@@ -13,21 +13,53 @@ import flask
 import mosesproxy
 import chinesename
 from bukadown import getbukaurl
-from werkzeug.contrib.fixers import ProxyFix
 from werkzeug.contrib.cache import SimpleCache
 from urllib.parse import urlsplit, urlunsplit
 from zhconv import convert as zhconv
 from config import *
+
+class FrontFix(object):
+    """Fix IP and Host problems.
+
+    :param app: the WSGI application
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        getter = environ.get
+        forwarded_proto = getter('HTTP_X_FORWARDED_PROTO', '')
+        forwarded_cfip = getter('HTTP_CF_CONNECTING_IP', '')
+        forwarded_host = getter('HTTP_X_FORWARDED_HOST', '')
+        http_host = getter('HTTP_HOST')
+        environ.update({
+            'werkzeug.proxy_fix.orig_wsgi_url_scheme':  getter('wsgi.url_scheme'),
+            'werkzeug.proxy_fix.orig_remote_addr':      getter('REMOTE_ADDR'),
+            'werkzeug.proxy_fix.orig_http_host':        http_host
+        })
+        if forwarded_cfip:
+            environ['REMOTE_ADDR'] = forwarded_cfip
+        if forwarded_host:
+            http_host = forwarded_host
+        # Fix subdomain matching here
+        if http_host.endswith('gumble.tk'):
+            environ['HTTP_HOST'] = http_host
+        else:
+            environ['HTTP_HOST'] = 'app.gumble.tk'
+            environ['single_domain'] = 1
+        if forwarded_proto:
+            environ['wsgi.url_scheme'] = forwarded_proto
+        return self.app(environ, start_response)
 
 logging.basicConfig(filename=os.path.join(os.environ[
                     'OPENSHIFT_LOG_DIR'], "flask.log"), format='*** %(asctime)s %(levelname)s [in %(filename)s %(funcName)s]\n%(message)s', level=logging.WARNING)
 
 app = flask.Flask(__name__)
 
-if NOTLOCAL:
-    app.wsgi_app = ProxyFix(app.wsgi_app, num_proxies=2)
-    app.config['SERVER_NAME'] = 'gumble.tk'
-    app.url_map.default_subdomain = 'app'
+app.wsgi_app = FrontFix(app.wsgi_app)
+app.config['SERVER_NAME'] = 'gumble.tk'
+app.url_map.default_subdomain = 'app'
 
 app.secret_key = SECRETKEY
 
@@ -38,7 +70,7 @@ except Exception:
     logging.exception("Import jiebademo failed.")
 
 try:
-    from wenyan import bp_wenyan
+    from wenyan import bp_wenyan, wenyan as wenyan_view
     #app.register_blueprint(bp_wenyan, url_prefix='/wenyan')
 except Exception:
     logging.exception("Import wenyan failed.")
@@ -115,6 +147,7 @@ def redirect_subdomain():
 def before_req():
     if BANNEDIP.match(flask.request.remote_addr):
         flask.abort(403)
+    flask.g.singledomain = not flask.request.headers.get('Host', '').endswith('.gumble.tk')
     displaylang = flask.request.values.get('dl')
     accepttw = accept_language_zh_tw(
         flask.request.headers.get('Accept-Language', ''))
@@ -123,7 +156,6 @@ def before_req():
                         and displaylang not in ('zhs', 'zh-cn', 'zh-hans'))
 
 
-@gzipped
 def index():
     return flask.send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
 
@@ -136,24 +168,26 @@ def generate_204():
     return flask.Response(status=204)
 
 
-@gzipped
 @functools.lru_cache(maxsize=1)
 def index_glass():
     return flask.send_from_directory(os.path.join(app.root_path, 'static/glass'), 'index.html')
 
 
-@gzipped
 @functools.lru_cache(maxsize=25)
 def file_glass(filename):
     return flask.send_from_directory(os.path.join(app.root_path, 'static/glass'), filename)
 
 
 def redirect_wenyan_to_subdomain():
-    return flask.redirect('https://wenyan.gumble.tk', 301)
+    if flask.request.environ.get('single_domain'):
+        return wenyan_view()
+    else:
+        return flask.redirect('https://wenyan.gumble.tk', 301)
 
 
 def linebreak(s):
     return flask.Markup('<p>%s</p>\n') % flask.Markup('</p>\n<p>').join(s.rstrip().split('\n'))
+
 
 def option_dict(v):
     return {v: ' selected'}
@@ -184,7 +218,6 @@ def clozeword_lookup(sql, replace):
     return tuple(cur_cloze.execute(sql, replace))
 
 
-@gzipped
 def clozeword():
     fl = flask.request.args.get('fl', '').lower()
     if not fl:
@@ -359,7 +392,6 @@ def getchaporder(comicid):
         return None
 
 
-@gzipped
 def bukadown():
     func = flask.request.form.get('f') or flask.request.args.get('f')
     accepttw = flask.g.get('accepttw')
@@ -464,12 +496,8 @@ app.add_url_rule("/name/", 'name_generator', name_generator)
 app.add_url_rule("/buka/", 'bukadown', bukadown, methods=('GET', 'POST'))
 app.add_url_rule(
     "/buka/bukadownloader.zip", 'bukadownloader_zip', bukadownloader_zip)
-if NOTLOCAL:
-    app.register_blueprint(bp_wenyan, subdomain='wenyan')
-    app.add_url_rule("/wenyan/", 'redirect_wenyan_to_subdomain', redirect_wenyan_to_subdomain, methods=('GET', 'POST'))
-else:
-    app.register_blueprint(bp_wenyan, url_prefix='/wenyan')
-
+app.register_blueprint(bp_wenyan, subdomain='wenyan')
+app.add_url_rule("/wenyan/", 'redirect_wenyan_to_subdomain', redirect_wenyan_to_subdomain, methods=('GET', 'POST'))
 
 if __name__ == "__main__":
     app.config['SERVER_NAME'] = None
