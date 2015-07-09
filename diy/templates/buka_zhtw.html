@@ -90,7 +90,7 @@ document.getElementById("fgeturl").onsubmit = showwait;
 <div id="furllist">
 {% for link in links %}
 {% if link[2] %}
-<a class="bukabutton" href="{{ link[2] }}" title="{{ link[0] }}.buka" download="{{ link[0] }}.buka" rel="noreferrer">{{ link[1] }}</a>
+<a class="bukabutton" href="{{ link[2] }}" title="{{ link[0] }}.buka" rel="noreferrer">{{ link[1] }}</a>
 {% else %}
 <span class="bukabutton">{{ link[1] }} (獲取失敗)</span>
 {% endif %}
