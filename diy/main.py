@@ -417,7 +417,7 @@ def bukadown():
             else:
                 links.append((ch, chapname[ch][1], ''))
         linklist = '\n'.join(i[2] for i in links)
-        return flask.render_template(template, sname=comicid, links=links, linklist=linklist, mid=comicid)
+        return flask.render_template(template, sname=comicid, links=links, linklist=linklist, coavail=bool(getchaporder(comicid)), mid=comicid)
     elif func == 'c':
         comicid = flask.request.args.get('mid', '')
         if not comicid.isdigit():
