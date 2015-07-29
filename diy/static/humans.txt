@@ -1,10 +1,10 @@
 /* MAIN */
 	Develop & Main Design: Gumble
-	Site: http://gumble.tk
+	Site: https://gumble.tk
 
 /* SITE */
-	Last update: 2015/02
-	Language: Simplified Chinese, Traditional Chinese (Only Wenyan, Buka site)
+	Last update: 2015
+	Language: Simplified Chinese, Traditional Chinese (Part of)
 	Standards: HTML5, CSS3
-	Components: Flask, Pure.css, etc.
+	Components: Flask, Min.css, etc.
 	IDE: Geany
