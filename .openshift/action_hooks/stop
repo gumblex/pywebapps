@@ -5,12 +5,14 @@ source ${OPENSHIFT_DEPENDENCIES_DIR}python/bin/activate
 ${OPENSHIFT_DATA_DIR}bin/uwsgi --stop ${OPENSHIFT_DATA_DIR}uwsgi.pid
 python3 ${OPENSHIFT_REPO_DIR}diy/mosesproxy.py stop
 if kill -0 `cat ${OPENSHIFT_DATA_DIR}uwsgi.pid` 2>/dev/null; then
- sleep 2
+  sleep 2
 fi
-nohup python $OPENSHIFT_REPO_DIR/diy/503server.py >> ${OPENSHIFT_LOG_DIR}/python.log 2>&1 &
+if [ $OPENSHIFT_CLOUD_DOMAIN = 'rhcloud.com' ]; then
+  nohup python $OPENSHIFT_REPO_DIR/diy/503server.py >> ${OPENSHIFT_LOG_DIR}/python.log 2>&1 &
+fi
 # Stop the dead mosesserver
 if [ ! -z "$(ps -ef | grep mosesserver.py | grep -v grep)" ]; then
- sleep 1
+  sleep 1
 fi
 SREVPROC="$(ps -ef | grep mosesserver.py | grep -v grep)"
 if [ ! -z "$SREVPROC" ]; then

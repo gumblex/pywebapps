@@ -25,11 +25,13 @@ if [ $rc -ne 0 ] ; then
   exit $rc
 fi
 
-# Stop the 503 server
-SREVPROC="$(ps -ef | grep 503server.py | grep -v grep)"
-if [ ! -z "$SREVPROC" ]; then
-  kill `echo "$SREVPROC" | awk '{ print $2 }'`
-  sleep 1
+if [ $OPENSHIFT_CLOUD_DOMAIN = 'rhcloud.com' ]; then
+  # Stop the 503 server
+  SREVPROC="$(ps -ef | grep 503server.py | grep -v grep)"
+  if [ ! -z "$SREVPROC" ]; then
+    kill `echo "$SREVPROC" | awk '{ print $2 }'`
+    sleep 1
+  fi
 fi
 
 rm ${OPENSHIFT_DATA_DIR}uwsgi.pid
