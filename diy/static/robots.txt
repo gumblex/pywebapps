@@ -3,4 +3,4 @@ Disallow: /
 User-agent: Sosospider
 Disallow: /
 User-agent: *
-Disallow: 
+Disallow: /orzdaily/
