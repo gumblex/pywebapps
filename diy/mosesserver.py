@@ -3,6 +3,7 @@
 
 import os
 import sys
+import json
 import struct
 import socket
 import threading
@@ -18,10 +19,12 @@ from functools import lru_cache
 
 import jieba
 import zhutil
-import umsgpack
 from zhconv import convert as zhconv
 from sqlitecache import LRUCache, SqliteCache
 from config import *
+
+dumpsjson = lambda x: json.dumps(x).encode('utf-8')
+loadsjson = lambda x: json.loads(x.decode('utf-8'))
 
 SIGNUM2NAME = dict((k, v) for v, k in signal.__dict__.items() if v.startswith(
     'SIG') and not v.startswith('SIG_'))
@@ -112,14 +115,14 @@ def xml_unescape(text):
 def recvall(sock, buf=1024):
     data = sock.recv(buf)
     alldata = [data]
-    while data and data[-1] != 0xc1:
+    while data and data[-1] != 10:
         data = sock.recv(buf)
         alldata.append(data)
     return b''.join(alldata)[:-1]
 
 
 def sendall(sock, data):
-    sock.sendall(data + b'\xc1')
+    sock.sendall(data + b'\n')
 
 
 class ThreadedUStreamRequestHandler(socketserver.BaseRequestHandler):
@@ -132,7 +135,7 @@ class ThreadedUStreamRequestHandler(socketserver.BaseRequestHandler):
             elif msg:
                 sendall(self.request, msg)
         except Exception as ex:
-            sendall(self.request, umsgpack.dumps(repr(ex)))
+            sendall(self.request, dumpsjson(repr(ex)))
             raise ex
 
 
@@ -161,8 +164,8 @@ class Sentence:
     def eqa(s):
         return Sentence(s, (s,), (((0, len(s)),),))
 
-dumptsentence = lambda s: umsgpack.dumps((s.t, s.align))
-loadtsentence = lambda s, d: Sentence(s, *umsgpack.loads(d))
+dumptsentence = lambda s: dumpsjson((s.t, s.align))
+loadtsentence = lambda s, d: Sentence(s, *loadsjson(d))
 SNewline = Sentence.eq('\n')
 
 
@@ -378,28 +381,28 @@ class MosesContext:
 
 
 def handlemsg(data):
-    oper = umsgpack.loads(data)
+    oper = loadsjson(data)
     if oper[0] == 'c2m':
-        return umsgpack.dumps(mc.c2m.translate(*oper[1:]))
+        return dumpsjson(mc.c2m.translate(*oper[1:]))
     elif oper[0] == 'm2c':
-        return umsgpack.dumps(mc.m2c.translate(*oper[1:]))
+        return dumpsjson(mc.m2c.translate(*oper[1:]))
     elif oper[0] == 'c2m.raw':
-        return umsgpack.dumps(mc.c2m.rawtranslate(oper[1]))
+        return dumpsjson(mc.c2m.rawtranslate(oper[1]))
     elif oper[0] == 'm2c.raw':
-        return umsgpack.dumps(mc.m2c.rawtranslate(oper[1]))
+        return dumpsjson(mc.m2c.rawtranslate(oper[1]))
     elif oper[0] == 'cut':
-        return umsgpack.dumps(tuple(jieba.cut(*oper[1], **oper[2])))
+        return dumpsjson(tuple(jieba.cut(*oper[1], **oper[2])))
     elif oper[0] == 'cut_for_search':
-        return umsgpack.dumps(tuple(jieba.cut_for_search(*oper[1], **oper[2])))
+        return dumpsjson(tuple(jieba.cut_for_search(*oper[1], **oper[2])))
     elif oper[0] == 'tokenize':
-        return umsgpack.dumps(tuple(jieba.tokenize(*oper[1], **oper[2])))
+        return dumpsjson(tuple(jieba.tokenize(*oper[1], **oper[2])))
     elif oper[0] == 'jiebazhc.cut':
-        return umsgpack.dumps(tuple(jiebazhc.cut(*oper[1], **oper[2])))
+        return dumpsjson(tuple(jiebazhc.cut(*oper[1], **oper[2])))
     elif oper[0] == 'jiebazhc.cut_for_search':
-        return umsgpack.dumps(
+        return dumpsjson(
             tuple(jiebazhc.cut_for_search(*oper[1], **oper[2])))
     elif oper[0] == 'jiebazhc.tokenize':
-        return umsgpack.dumps(tuple(jiebazhc.tokenize(*oper[1], **oper[2])))
+        return dumpsjson(tuple(jiebazhc.tokenize(*oper[1], **oper[2])))
     elif oper[0] == 'add_word':
         jieba.add_word(*oper[1], **oper[2])
     elif oper[0] == 'load_userdict':
@@ -411,7 +414,7 @@ def handlemsg(data):
     elif oper[0] == 'ping':
         return b'pong'
     else:
-        return umsgpack.dumps('Command not found')
+        return dumpsjson('Command not found')
 
 
 def serve(filename):
@@ -420,7 +423,7 @@ def serve(filename):
         try:
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             sock.connect(filename)
-            sendall(sock, umsgpack.dumps(('ping',)))
+            sendall(sock, dumpsjson(('ping',)))
             assert recvall(sock) == b'pong'
             sock.close()
             print("Server already started.")
