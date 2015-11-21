@@ -8,7 +8,7 @@ NOTLOCAL = (os.environ['OPENSHIFT_CLOUD_DOMAIN'] != 'LOCAL')
 
 OS_DATA = os.environ['OPENSHIFT_DATA_DIR']
 
-SECRETKEY = b'\xc6\x89\xaa:MC\x0b\xa9g\x86+\xe6\x06/\x93\xbfF,ZXY"\xfc\xe3\xd5\xd8\xc7\xc5\xf5ed\xb8'
+SECRETKEY = open(os.path.join(OS_DATA, "seckey.bin"), 'rb').read()
 
 # Jieba small dict
 DICT_SMALL = os.path.join(OS_DATA, "smalldict.txt")
