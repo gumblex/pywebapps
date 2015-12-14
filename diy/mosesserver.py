@@ -125,7 +125,7 @@ def sendall(sock, data):
     sock.sendall(data + b'\n')
 
 
-class ThreadedUStreamRequestHandler(socketserver.BaseRequestHandler):
+class ServiceRequestHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
         try:
@@ -139,9 +139,8 @@ class ThreadedUStreamRequestHandler(socketserver.BaseRequestHandler):
             raise ex
 
 
-class ThreadedUStreamServer(
-        socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
-    pass
+class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    allow_reuse_address = True
 
 
 class Sentence:
@@ -417,38 +416,34 @@ def handlemsg(data):
         return dumpsjson('Command not found')
 
 
-def serve(filename):
+def serve(address):
     global mc
-    if os.path.exists(filename):
-        try:
-            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            sock.connect(filename)
-            sendall(sock, dumpsjson(('ping',)))
-            assert recvall(sock) == b'pong'
-            sock.close()
-            print("Server already started.")
-            return False
-        except Exception as ex:
-            # not removed socket
-            print("Found abandoned socket: " + repr(ex))
-            os.unlink(filename)
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect(address)
+        sendall(sock, dumpsjson(('ping',)))
+        assert recvall(sock) == b'pong'
+        sock.close()
+        print("Server already started.")
+        return False
+    except Exception as ex:
+        # not occupied
+        pass
     try:
         mc = MosesContext()
-        server = ThreadedUStreamServer(filename, ThreadedUStreamRequestHandler)
+        server = ThreadedTCPServer(address, ServiceRequestHandler)
         server.serve_forever()
     finally:
         server.shutdown()
         mc.shutdown()
-        if os.path.exists(filename):
-            os.unlink(filename)
         sys.stderr.flush()
         print("Server stopped.")
 
 
 if __name__ == "__main__":
-    filename = MS_SOCK
+    address = MS_SOCK
     try:
-        serve(filename)
+        serve(address)
     except OSError as ex:
         if 'Address already in use' in str(ex):
             print("Server already started.")

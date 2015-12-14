@@ -38,7 +38,7 @@ MOSES_MAXMEM = 512000
 MAX_CHAR = 2000
 
 # Mosesserver socket
-MS_SOCK = os.path.join(OS_DATA, "mosesserver.sock")
+MS_SOCK = ('172.20.1.3', 13332)
 
 OS_ENV = os.environ
 

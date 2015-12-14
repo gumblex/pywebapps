@@ -11,7 +11,7 @@ _curpath = os.path.normpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
 startserver_path = os.path.join(_curpath, 'startserver')
 
-filename = MS_SOCK
+address = MS_SOCK
 RESTART = True
 
 dumpsjson = lambda x: json.dumps(x).encode('utf-8')
@@ -31,16 +31,16 @@ def sendall(sock, data):
 
 
 def receive(data, autorestart=None):
-    global filename, RESTART
+    global address, RESTART
     autorestart = RESTART if autorestart is None else autorestart
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        sock.connect(filename)
+        sock.connect(address)
         sendall(sock, data)
-    except (FileNotFoundError, ConnectionRefusedError, BrokenPipeError) as ex:
+    except (ConnectionRefusedError, BrokenPipeError) as ex:
         if autorestart:
             Popen(('/bin/bash', startserver_path)).wait()
-            sock.connect(filename)
+            sock.connect(address)
             sendall(sock, data)
         else:
             raise ex
