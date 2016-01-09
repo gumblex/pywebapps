@@ -26,7 +26,6 @@ cut_for_search = dt.cut_for_search
 lcut_for_search = dt.lcut_for_search
 del_word = dt.del_word
 get_DAG = dt.get_DAG
-get_abs_path_dict = dt.get_abs_path_dict
 initialize = dt.initialize
 load_userdict = dt.load_userdict
 set_dictionary = dt.set_dictionary
