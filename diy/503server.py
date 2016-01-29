@@ -24,7 +24,7 @@ class Unbuffered(object):
 #sys.stderr = Unbuffered(sys.stderr)
 
 HTMLFILE = open(os.path.join(
-    os.environ['OPENSHIFT_REPO_DIR'], 'diy/templates/e503.html'), 'rb').read()
+    os.environ['OPENSHIFT_REPO_DIR'], 'diy/static/e503.html'), 'rb').read()
 HTMLLEN = str(len(HTMLFILE))
 
 
