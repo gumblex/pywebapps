@@ -4,3 +4,4 @@ User-agent: Sosospider
 Disallow: /
 User-agent: *
 Disallow: /orzdaily/
+Disallow: /cgi/
