@@ -374,6 +374,13 @@ class MosesContext:
         self.c2m = MosesManagerThread('c2m', self.c2mlock)
         self.m2c = MosesManagerThread('m2c', self.m2clock)
 
+    def name(self):
+        try:
+            return open(os.path.join(MOSES_CWD, 'modelname.txt'),
+                        'r', encoding='utf-8').read().strip()
+        except Exception:
+            return None
+
     def shutdown(self):
         self.c2m.shutdown()
         self.m2c.shutdown()
@@ -389,6 +396,8 @@ def handlemsg(data):
         return dumpsjson(mc.c2m.rawtranslate(oper[1]))
     elif oper[0] == 'm2c.raw':
         return dumpsjson(mc.m2c.rawtranslate(oper[1]))
+    elif oper[0] == 'modelname':
+        return dumpsjson(mc.name())
     elif oper[0] == 'cut':
         return dumpsjson(tuple(jieba.cut(*oper[1], **oper[2])))
     elif oper[0] == 'cut_for_search':

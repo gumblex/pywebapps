@@ -61,6 +61,10 @@ def rawtranslate(text, mode, withcount=False):
     return loadsjson(receive(dumpsjson((mode + '.raw', text))))
 
 
+def modelname():
+    return loadsjson(receive(dumpsjson(('modelname',))))
+
+
 def cut(*args, **kwargs):
     return loadsjson(receive(dumpsjson(('cut', args, kwargs))))
 
