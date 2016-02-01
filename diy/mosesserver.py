@@ -445,6 +445,7 @@ def serve(address):
     finally:
         server.shutdown()
         mc.shutdown()
+        sys.stdout.flush()
         sys.stderr.flush()
         print("Server stopped.")
 
