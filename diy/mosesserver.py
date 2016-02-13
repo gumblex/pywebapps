@@ -340,7 +340,7 @@ class MosesManagerThread:
                 rv = rv.rstrip(b'\n').decode('utf8')
                 ctx.postrecv(rv, k)
             intxt, outtxt = ctx.tokenoutput() if align else ctx.rawoutput()
-            sys.stdout.write('%s,%s,%s,%s,%s,%.6f\n' % (
+            print('%s,%s,%s,%s,%s,%.6f' % (
                 time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()), self.mode,
                 ctx.misscount, ctx.hitcount + ctx.misscount, len(text),
                 time.time() - timestart))

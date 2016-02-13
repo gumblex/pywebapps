@@ -129,5 +129,5 @@ def writejs(value, jsfile):
 
 if __name__ == '__main__':
     REPODIR = os.environ['OPENSHIFT_REPO_DIR']
-    writejs(parselog('2015-02-01 14:09:16'),
+    writejs(parselog('2015-08-27 13:58:56'),
             os.path.join(REPODIR, 'diy/static/wenyan_.js'))
