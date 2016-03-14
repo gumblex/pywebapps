@@ -118,10 +118,9 @@ joinlist = lambda l: ''.join(chr(32 + int(-n * 3.9))
 def writejs(value, jsfile):
     writeto = jswriteto(jsfile)
     js_zhdetect = 'var zhcmodel = "%s";\nvar zhmmodel = "%s";\n%s'
-    zhcmodel = json.load(open(os.path.join(_curpath, 'modelzhc.json'), 'r'))
-    zhmmodel = json.load(open(os.path.join(_curpath, 'modelzhm.json'), 'r'))
+    zhmodel = json.load(open(os.path.join(_curpath, 'modelzh.json'), 'r'))
     f = striplines(js_zhdetect % (
-        joinlist(zhcmodel), joinlist(zhmmodel),
+        joinlist(zhmodel['zhc']), joinlist(zhmodel['zhm']),
         re_js.sub(r'\1 %s\2 %s\3 %s\4 %s' % value, open(jsfile, 'r').read())
     )) + '\n'
     with open(writeto, 'w') as w:
