@@ -58,8 +58,6 @@ RE_WS_IN_FW = re.compile(
 RE_FW = re.compile(
     '([\u2018\u2019\u201c\u201d\u2026\u2e80-\u312f\u3200-\u32ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\ufe30-\ufe57\uff00-\uffef\U00020000-\U0002A6D6]+)')
 
-RE_CTRL = re.compile("[\000-\037\ufeff]")
-
 detokenize = lambda s: RE_WS_IN_FW.sub(r'\1', xml_unescape(s)).strip()
 
 runmoses = lambda mode: (
@@ -190,7 +188,7 @@ class TranslateContext:
     def raw2moses(self, text):
         # Step 1: Filter, Cut sentences, Assign tasks
         for l in text.strip().splitlines():
-            sentences = zhutil.splithard(RE_CTRL.sub("", l.strip()), 80)
+            sentences = zhutil.splithard(zhutil.removectrl(l.strip()), 80)
             for s in sentences:
                 if any(0x4DFF < ord(ch) < 0x9FCD for ch in s):
                     ps = self.prefilter(s)
