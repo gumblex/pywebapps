@@ -35,7 +35,8 @@ MOSES_INI_c2m = os.path.join(OS_DATA, "zhc2zhm", "moses.ini")
 MOSES_INI_m2c = os.path.join(OS_DATA, "zhm2zhc", "moses.ini")
 MOSES_MAXMEM = 512000
 
-MAX_CHAR = 2000
+MAX_CHAR = 4000
+CHAR_RATIO = 0.6643902034970293
 
 # Mosesserver socket
 MS_SOCK = ('172.20.1.3', 13332)

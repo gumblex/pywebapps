@@ -12,6 +12,8 @@ from config import NOTLOCAL
 
 EPSILON = 0.0000001
 LOGDIR = os.environ['OPENSHIFT_LOG_DIR']
+MAX_CHAR = 4000
+CHAR_RATIO = 0.6643902034970293
 
 if not NOTLOCAL:
     LOGDIR = os.path.join(LOGDIR, '../server/logs')
@@ -117,10 +119,12 @@ joinlist = lambda l: ''.join(chr(32 + int(-n * 3.9))
 
 def writejs(value, jsfile):
     writeto = jswriteto(jsfile)
-    js_zhdetect = 'var zhcmodel = "%s";\nvar zhmmodel = "%s";\n%s'
+    js_template = ('var zhcmodel = "%s";\nvar zhmmodel = "%s";\n'
+                   'var zhclen = %s, zhmlen = %s;\n%s')
     zhmodel = json.load(open(os.path.join(_curpath, 'modelzh.json'), 'r'))
-    f = striplines(js_zhdetect % (
+    f = striplines(js_template % (
         joinlist(zhmodel['zhc']), joinlist(zhmodel['zhm']),
+        int(MAX_CHAR * CHAR_RATIO), MAX_CHAR,
         re_js.sub(r'\1 %s\2 %s\3 %s\4 %s' % value, open(jsfile, 'r').read())
     )) + '\n'
     with open(writeto, 'w') as w:

@@ -45,7 +45,9 @@ function TypeHint() {
             document.getElementById("ctrlchange").style.display = "inline-block";
         }
     }
-    document.getElementById("ctrlsubmit").disabled = (document.getElementById("tinput").value.length > 2000);
+    document.getElementById("ctrlsubmit").disabled = (
+        document.getElementById("tinput").value.length >
+        (ilang === 'c2m' ? zhclen : zhmlen));
 }
 function Highlight() {
     if (document.getElementById("tinput").value === originput) {

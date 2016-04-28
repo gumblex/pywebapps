@@ -83,7 +83,7 @@ def wenyan():
         toutput = L('<p class="error">回答错误，请重试。</p>')
     elif lang is None:
         toutput = linebreak(tinput)
-    elif len(tinput) > MAX_CHAR:
+    elif len(tinput) > MAX_CHAR * (CHAR_RATIO if lang == 'c2m' else 1):
         toutput = L('<p class="error">文本过长，请切分后提交。</p>')
     else:
         tinput, tres, count = mosesproxy.translate(
