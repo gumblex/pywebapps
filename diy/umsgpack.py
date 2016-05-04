@@ -1,4 +1,4 @@
-# u-msgpack-python v2.0 - vsergeev at gmail
+# u-msgpack-python v2.1 - vsergeev at gmail
 # https://github.com/vsergeev/u-msgpack-python
 #
 # u-msgpack-python is a lightweight MessagePack serializer and deserializer
@@ -31,7 +31,7 @@
 # THE SOFTWARE.
 #
 """
-u-msgpack-python v2.0 - vsergeev at gmail
+u-msgpack-python v2.1 - vsergeev at gmail
 https://github.com/vsergeev/u-msgpack-python
 
 u-msgpack-python is a lightweight MessagePack serializer and deserializer
@@ -44,7 +44,10 @@ types.
 License: MIT
 """
 
-version = (2,0)
+__version__ = "2.1"
+"Module version string"
+
+version = (2,1)
 "Module version tuple"
 
 import struct
@@ -348,7 +351,7 @@ def _pack2(obj, fp):
             Object type not supported for packing.
 
     Example:
-    >>> f = open('test.bin', 'w')
+    >>> f = open('test.bin', 'wb')
     >>> umsgpack.pack({u"compact": True, u"schema": 0}, f)
     >>>
     """
@@ -397,8 +400,8 @@ def _pack3(obj, fp):
             Object type not supported for packing.
 
     Example:
-    >>> f = open('test.bin', 'w')
-    >>> umsgpack.pack({u"compact": True, u"schema": 0}, fp)
+    >>> f = open('test.bin', 'wb')
+    >>> umsgpack.pack({u"compact": True, u"schema": 0}, f)
     >>>
     """
     global compatibility
@@ -597,7 +600,7 @@ def _unpack_array(code, fp):
     else:
         raise Exception("logic error, not array: 0x%02x" % ord(code))
 
-    return [_unpack(fp) for i in range(length)]
+    return [_unpack(fp) for i in xrange(length)]
 
 def _deep_list_to_tuple(obj):
     if isinstance(obj, list):
@@ -615,7 +618,7 @@ def _unpack_map(code, fp):
         raise Exception("logic error, not map: 0x%02x" % ord(code))
 
     d = {}
-    for i in range(length):
+    for i in xrange(length):
         # Unpack key
         k = _unpack(fp)
 
@@ -666,7 +669,7 @@ def _unpack2(fp):
             Duplicate key encountered during map unpacking.
 
     Example:
-    >>> f = open("test.bin")
+    >>> f = open('test.bin', 'rb')
     >>> umsgpack.unpackb(f)
     {u'compact': True, u'schema': 0}
     >>>
@@ -697,7 +700,7 @@ def _unpack3(fp):
             Duplicate key encountered during map unpacking.
 
     Example:
-    >>> f = open("test.bin")
+    >>> f = open('test.bin', 'rb')
     >>> umsgpack.unpackb(f)
     {'compact': True, 'schema': 0}
     >>>
@@ -790,6 +793,7 @@ def __init():
     global compatibility
     global _float_size
     global _unpack_dispatch_table
+    global xrange
 
     # Compatibility mode for handling strings/bytes with the old specification
     compatibility = False
@@ -810,6 +814,7 @@ def __init():
         unpackb = _unpackb3
         load = _unpack3
         loads = _unpackb3
+        xrange = range
     else:
         pack = _pack2
         packb = _packb2
