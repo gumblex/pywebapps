@@ -179,11 +179,7 @@ def file_glass(filename):
 
 
 def redirect_wenyan_to_subdomain():
-    if flask.request.environ.get('single_domain'):
-        return wenyan_view()
-    else:
-        return flask.redirect('https://wenyan.gumble.tk', 301)
-
+    return wenyan_view()
 
 def linebreak(s):
     return flask.Markup('<p>%s</p>\n') % flask.Markup('</p>\n<p>').join(s.rstrip().split('\n'))
