@@ -39,7 +39,7 @@ MAX_CHAR = 4000
 CHAR_RATIO = 0.6643902034970293
 
 # Mosesserver socket
-MS_SOCK = ('172.20.1.6', 13332)
+MS_SOCK = ('127.0.0.1', 13332)
 
 OS_ENV = os.environ
 

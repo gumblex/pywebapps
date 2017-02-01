@@ -22,7 +22,7 @@ Support MediaWiki's convertion format:
 
 """
 # Only Python3 can pass the doctest here due to unicode problems.
-__version__ = '1.1.1'
+__version__ = '1.2.2'
 
 import os
 import sys
@@ -43,7 +43,6 @@ Locales = {
 }
 
 DICTIONARY = "zhcdict.json"
-CHARDIFF = "chardiff.txt"
 
 zhcdicts = None
 dict_zhcn = None
@@ -52,13 +51,16 @@ dict_zhtw = None
 dict_zhhk = None
 pfsdict = {}
 
-RE_langconv = re.compile(r'(-\{.*?\}-)')
+RE_langconv = re.compile(r'(-\{|\}-)')
 RE_splitflag = re.compile(r'\s*\|\s*')
 RE_splitmap = re.compile(r'\s*;\s*')
 RE_splituni = re.compile(r'\s*=>\s*')
 RE_splitpair = re.compile(r'\s*:\s*')
 
 def loaddict(filename=DICTIONARY):
+    """
+    Load the dictionary from a specific JSON file.
+    """
     global zhcdicts
     if zhcdicts:
         return
@@ -122,24 +124,39 @@ def getpfset(convdict):
             pfset.append(word[:ch+1])
     return frozenset(pfset)
 
-def issimp(s):
+def issimp(s, full=False):
     """
     Detect text is whether Simplified Chinese or Traditional Chinese.
     Returns True for Simplified; False for Traditional; None for unknown.
-    It returns once first simplified- or traditional-only character is
-    encountered, so it's for quick and rough identification.
+    If full=False, it returns once first simplified- or traditional-only
+    character is encountered, so it's for quick and rough identification;
+    else, it compares the count and returns the most likely one.
     Use `is` (True/False/None) to check the result.
 
     `s` must be unicode (Python 2) or str (Python 3), or you'll get None.
     """
     if zhcdicts is None:
         loaddict(DICTIONARY)
-    for ch in s:
-        if ch in zhcdicts['SIMPONLY']:
+    simp, trad = 0, 0
+    if full:
+        for ch in s:
+            if ch in zhcdicts['SIMPONLY']:
+                simp += 1
+            elif ch in zhcdicts['TRADONLY']:
+                trad += 1
+        if simp > trad:
             return True
-        elif ch in zhcdicts['TRADONLY']:
+        elif simp < trad:
             return False
-    return None
+        else:
+            return None
+    else:
+        for ch in s:
+            if ch in zhcdicts['SIMPONLY']:
+                return True
+            elif ch in zhcdicts['TRADONLY']:
+                return False
+        return None
 
 def fallback(locale, mapping):
     for l in Locales[locale]:
@@ -209,11 +226,12 @@ def tokenize(s, locale, update=None):
 def convert(s, locale, update=None):
     """
     Main convert function.
-    `s` must be unicode (Python 2) or str (Python 3).
-    `locale` should be one of ('zh-hans', 'zh-hant', 'zh-cn', 'zh-sg'
-                               'zh-tw', 'zh-hk', 'zh-my', 'zh-mo').
-    `update` is a dict which updates the conversion table,
-             eg. {'from1': 'to1', 'from2': 'to2'}
+
+    :param s: must be `unicode` (Python 2) or `str` (Python 3).
+    :param locale: should be one of ``('zh-hans', 'zh-hant', 'zh-cn', 'zh-sg'
+                               'zh-tw', 'zh-hk', 'zh-my', 'zh-mo')``.
+    :param update: a dict which updates the conversion table, eg.
+        ``{'from1': 'to1', 'from2': 'to2'}``
 
     >>> print(convert('我幹什麼不干你事。', 'zh-cn'))
     我干什么不干你事。
@@ -268,7 +286,7 @@ def convert_for_mw(s, locale, update=None):
     Use locale='zh' for no conversion.
 
     Reference: (all tests passed)
-    https://zh.wikipedia.org/wiki/Help:%E9%AB%98%E7%BA%A7%E5%AD%97%E8%AF%8D%E8%BD%AC%E6%8D%A2%E8%AF%AD%E6%B3%95
+    https://zh.wikipedia.org/wiki/Help:高级字词转换语法
     https://www.mediawiki.org/wiki/Writing_systems/Syntax
 
     >>> print(convert_for_mw('在现代，机械计算-{}-机的应用已经完全被电子计算-{}-机所取代', 'zh-hk'))
@@ -279,17 +297,35 @@ def convert_for_mw(s, locale, update=None):
     張國榮曾在英國里茲大學學習。
     >>> print(convert_for_mw('張國榮曾在英國-{zh:利兹;zh-hans:利兹;zh-hk:列斯;zh-tw:里茲}-大学學習。', 'zh-sg'))
     张国荣曾在英国利兹大学学习。
+    >>> convert_for_mw('-{zh-hant:;\\nzh-cn:}-', 'zh-tw') == ''
+    True
+    >>> print(convert_for_mw('毫米(毫公分)，符號mm，是長度單位和降雨量單位，-{zh-hans:台湾作-{公釐}-或-{公厘}-;zh-hant:港澳和大陸稱為-{毫米}-（台灣亦有使用，但較常使用名稱為毫公分）;zh-mo:台灣作-{公釐}-或-{公厘}-;zh-hk:台灣作-{公釐}-或-{公厘}-;}-。', 'zh-tw'))
+    毫米(毫公分)，符號mm，是長度單位和降雨量單位，港澳和大陸稱為毫米（台灣亦有使用，但較常使用名稱為毫公分）。
+    >>> print(convert_for_mw('毫米(毫公分)，符號mm，是長度單位和降雨量單位，-{zh-hans:台湾作-{公釐}-或-{公厘}-;zh-hant:港澳和大陸稱為-{毫米}-（台灣亦有使用，但較常使用名稱為毫公分）;zh-mo:台灣作-{公釐}-或-{公厘}-;zh-hk:台灣作-{公釐}-或-{公厘}-;}-。', 'zh-cn'))
+    毫米(毫公分)，符号mm，是长度单位和降雨量单位，台湾作公釐或公厘。
+    >>> print(convert_for_mw('毫米(毫公分)，符號mm，是長度單位和降雨量單位，-{zh-hans:台湾作-{公釐}-或-{公厘}-;zh-hant:港澳和大陸稱為-{毫米}-（台灣亦有使用，但較常使用名稱為毫公分）;zh-mo:台灣作-{公釐}-或-{公厘}-;zh-hk:台灣作-{公釐}-或-{公厘', 'zh-hk'))  # unbalanced test
+    毫米(毫公分)，符號mm，是長度單位和降雨量單位，台灣作公釐或公厘
+    >>> print(convert_for_mw('报头的“-{參攷消息}-”四字摘自鲁迅笔迹-{zh-hans:，“-{參}-”是“-{参}-”的繁体字，读音cān，与简体的“-{参}-”字相同；;zh-hant:，;}-“-{攷}-”是“考”的异体字，读音kǎo，与“考”字相同。', 'zh-tw'))
+    報頭的「參攷消息」四字摘自魯迅筆跡，「攷」是「考」的異體字，讀音kǎo，與「考」字相同。
+    >>> print(convert_for_mw('报头的“-{參攷消息}-”四字摘自鲁迅笔迹-{zh-hans:，“-{參}-”是“-{参}-”的繁体字，读音cān，与简体的“-{参}-”字相同；;zh-hant:，;}-“-{攷}-”是“考”的异体字，读音kǎo，与“考”字相同。', 'zh-cn'))
+    报头的“參攷消息”四字摘自鲁迅笔迹，“參”是“参”的繁体字，读音cān，与简体的“参”字相同；“攷”是“考”的异体字，读音kǎo，与“考”字相同。
     """
-    zhdict = getdict(locale)
-    pfset = pfsdict[locale]
-    pos = 0
     ch = []
     rules = []
     ruledict = update.copy() if update else {}
+    nested = 0
+    block = ''
     for frag in RE_langconv.split(s):
-        if RE_langconv.match(frag):
+        if frag == '-{':
+            nested += 1
+            block += frag
+        elif frag == '}-':
+            block += frag
+            nested -= 1
+            if nested:
+                continue
             newrules = []
-            delim = RE_splitflag.split(frag[2:-2].strip(' \t\n\r\f\v;'))
+            delim = RE_splitflag.split(block[2:-2].strip(' \t\n\r\f\v;'))
             if len(delim) == 1:
                 flag = None
                 mapping = RE_splitmap.split(delim[0])
@@ -309,9 +345,9 @@ def convert_for_mw(s, locale, update=None):
                         rule[':uni'] = uni[0]
                     pair = RE_splitpair.split(uni[1])
                 if len(pair) == 1:
-                    rule['zh'] = pair[0]
+                    rule['zh'] = convert_for_mw(pair[0], 'zh', ruledict)
                 else:
-                    rule[pair[0]] = pair[1]
+                    rule[pair[0]] = convert_for_mw(pair[1], pair[0], ruledict)
             newrules.append(rule)
             if not flag:
                 ch.append(fallback(locale, newrules[0]))
@@ -363,11 +399,17 @@ def convert_for_mw(s, locale, update=None):
                         for word in r.values():
                             limitedruledict[word] = v if v else convert(word, locale)
                 ch.append(convert(delim[1], locale, limitedruledict))
+            block = ''
+        elif nested:
+            block += frag
         else:
             ch.append(convert(frag, locale, ruledict))
+    if nested:
+        # unbalanced
+        ch.append(convert_for_mw(block + '}-'*nested, locale, ruledict))
     return ''.join(ch)
 
-def _mwtest(locale, update=None):
+def test_convert_mw(locale, update=None):
     s = ('英國-{zh:利兹;zh-hans:利兹;zh-hk:列斯;zh-tw:里茲}-大学\n'
         '-{zh-hans:计算机; zh-hant:電腦;}-\n'
         '-{H|巨集=>zh-cn:宏;}-\n'
@@ -400,7 +442,8 @@ def main():
         locale = sys.argv[2]
         convertfunc = convert_for_mw
     else:
-        print("usage: %s [-w] {zh-cn|zh-tw|zh-hk|zh-sg|zh-hans|zh-hant|zh} < input > output" % __file__)
+        thisfile = __file__ if __name__ == '__main__' else 'python -mzhconv'
+        print("usage: %s [-w] {zh-cn|zh-tw|zh-hk|zh-sg|zh-hans|zh-hant|zh} < input > output" % thisfile)
         sys.exit(1)
 
     loaddict()
