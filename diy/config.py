@@ -39,7 +39,8 @@ MAX_CHAR = 4000
 CHAR_RATIO = 0.6643902034970293
 
 # Mosesserver socket
-MS_SOCK = ('127.0.0.1', 13332)
+sockvar = os.environ['OPENSHIFT_MS_SOCK'].split(':')
+MS_SOCK = (sockvar[0], int(sockvar[1]))
 
 OS_ENV = os.environ
 
