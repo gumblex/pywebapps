@@ -94,10 +94,13 @@ def parselog(fromtime):
             m = re_log.match(l)
             if not m:
                 continue
-            if time.strptime(m.group(1), '%Y-%m-%d %H:%M:%S') < fromtime:
+            try:
+                if time.strptime(m.group(1), '%Y-%m-%d %H:%M:%S') < fromtime:
+                    continue
+                realchar = int(m.group(5)) * int(m.group(3)) / float(m.group(4))
+                usedtime = float(m.group(6))
+            except ValueError:
                 continue
-            realchar = int(m.group(5)) * int(m.group(3)) / float(m.group(4))
-            usedtime = float(m.group(6))
             if m.group(2) == 'c2m':
                 validlinec.append((realchar, usedtime))
             else:
