@@ -99,7 +99,7 @@ def parselog(fromtime):
                     continue
                 realchar = int(m.group(5)) * int(m.group(3)) / float(m.group(4))
                 usedtime = float(m.group(6))
-            except ValueError:
+            except Exception:
                 continue
             if m.group(2) == 'c2m':
                 validlinec.append((realchar, usedtime))
