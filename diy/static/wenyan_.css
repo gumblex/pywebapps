@@ -60,12 +60,33 @@ input[type="radio"]:invalid {
 }
 */
 
-#pagetitle {
+header {
     padding-bottom: .1em;
     border-bottom: 1px solid #E6DFD6;
     margin-top: .25em;
     margin-bottom: .5em;
+}
+
+#pagetitle {
     font-size: 2em;
+    display: inline;
+}
+
+#aboutlink {
+    float: right;
+    margin-top: 1em;
+}
+
+a {
+    color: #b7966c;
+    text-decoration: none;
+}
+a:hover, a:focus {
+    color: #c39f73;
+    text-decoration: underline;
+}
+a:visited {
+    color: #ac8d66;
 }
 
 #ver {

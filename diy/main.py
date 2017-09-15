@@ -70,7 +70,7 @@ except Exception:
     logging.exception("Import jiebademo failed.")
 
 try:
-    from wenyan import bp_wenyan, wenyan as wenyan_view
+    from wenyan import bp_wenyan, wenyan as wenyan_view, wenyan_about
     #app.register_blueprint(bp_wenyan, url_prefix='/wenyan')
 except Exception:
     logging.exception("Import wenyan failed.")
@@ -494,6 +494,7 @@ app.add_url_rule(
     "/buka/bukadownloader.zip", 'bukadownloader_zip', bukadownloader_zip)
 app.register_blueprint(bp_wenyan, subdomain='wenyan')
 app.add_url_rule("/wenyan/", 'redirect_wenyan_to_subdomain', redirect_wenyan_to_subdomain, methods=('GET', 'POST'))
+app.add_url_rule("/wenyan/about", 'wenyan_about', wenyan_about)
 
 if __name__ == "__main__":
     app.config['SERVER_NAME'] = None

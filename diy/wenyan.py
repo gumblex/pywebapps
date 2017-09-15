@@ -96,6 +96,11 @@ def wenyan():
     return flask.render_template(('translate_zhtw.html' if accepttw else 'translate.html'), tinput=tinput, toutput=toutput, talign=talign, captcha=flask.Markup(captcha))
 
 
+def wenyan_about():
+    accepttw = flask.g.get('accepttw')
+    return flask.render_template('translate_about_zhtw.html' if accepttw else 'translate_about.html')
+
+
 def wy_validate(ip, origcnt, userlog):
     if origcnt > userlog.maxcnt:
         try:
@@ -125,3 +130,5 @@ def wy_gencaptcha():
 bp_wenyan.add_url_rule("/", 'wenyan', wenyan, methods=('GET', 'POST'))
 bp_wenyan.add_url_rule(
         "/wenyan/", "wenyan", wenyan, methods=('GET', 'POST'), alias=True)
+bp_wenyan.add_url_rule(
+        "/wenyan/about", "wenyan_about", wenyan, methods=('GET', 'POST'), alias=True)
