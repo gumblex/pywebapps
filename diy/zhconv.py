@@ -22,12 +22,19 @@ Support MediaWiki's convertion format:
 
 """
 # Only Python3 can pass the doctest here due to unicode problems.
-__version__ = '1.2.2'
+__version__ = '1.3.2'
 
 import os
 import sys
 import re
 import json
+
+try:
+    from pkg_resources import resource_stream
+    get_module_res = lambda *res: resource_stream(__name__, os.path.join(*res))
+except ImportError:
+    get_module_res = lambda *res: open(os.path.normpath(
+        os.path.join(os.getcwd(), os.path.dirname(__file__), *res)), 'rb')
 
 # Locale fallback order lookup dictionary
 Locales = {
@@ -42,7 +49,8 @@ Locales = {
     'zh': ('zh',) # special value for no conversion
 }
 
-DICTIONARY = "zhcdict.json"
+_DEFAULT_DICT = "zhcdict.json"
+DICTIONARY = _DEFAULT_DICT
 
 zhcdicts = None
 dict_zhcn = None
@@ -64,10 +72,11 @@ def loaddict(filename=DICTIONARY):
     global zhcdicts
     if zhcdicts:
         return
-    _curpath = os.path.normpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-    abs_path = os.path.join(_curpath, filename)
-    with open(abs_path, 'rb') as f:
-        zhcdicts = json.loads(f.read().decode('utf-8'))
+    if filename == _DEFAULT_DICT:
+        zhcdicts = json.loads(get_module_res(filename).read().decode('utf-8'))
+    else:
+        with open(filename, 'rb') as f:
+            zhcdicts = json.loads(f.read().decode('utf-8'))
     zhcdicts['SIMPONLY'] = frozenset(zhcdicts['SIMPONLY'])
     zhcdicts['TRADONLY'] = frozenset(zhcdicts['TRADONLY'])
 
@@ -167,7 +176,7 @@ def fallback(locale, mapping):
 def convtable2dict(convtable, locale, update=None):
     """
     Convert a list of conversion dict to a dict for a certain locale.
-    
+
     >>> sorted(convtable2dict([{'zh-hk': '列斯', 'zh-hans': '利兹', 'zh': '利兹', 'zh-tw': '里茲'}, {':uni': '巨集', 'zh-cn': '宏'}], 'zh-cn').items())
     [('列斯', '利兹'), ('利兹', '利兹'), ('巨集', '宏'), ('里茲', '利兹')]
     """
@@ -309,6 +318,8 @@ def convert_for_mw(s, locale, update=None):
     報頭的「參攷消息」四字摘自魯迅筆跡，「攷」是「考」的異體字，讀音kǎo，與「考」字相同。
     >>> print(convert_for_mw('报头的“-{參攷消息}-”四字摘自鲁迅笔迹-{zh-hans:，“-{參}-”是“-{参}-”的繁体字，读音cān，与简体的“-{参}-”字相同；;zh-hant:，;}-“-{攷}-”是“考”的异体字，读音kǎo，与“考”字相同。', 'zh-cn'))
     报头的“參攷消息”四字摘自鲁迅笔迹，“參”是“参”的繁体字，读音cān，与简体的“参”字相同；“攷”是“考”的异体字，读音kǎo，与“考”字相同。
+    >>> print(convert_for_mw('{{Col-break}}--&gt;', 'zh-hant'))
+    {{Col-break}}--&gt;
     """
     ch = []
     rules = []
@@ -320,6 +331,10 @@ def convert_for_mw(s, locale, update=None):
             nested += 1
             block += frag
         elif frag == '}-':
+            if not nested:
+                # bogus }-
+                ch.append(frag)
+                continue
             block += frag
             nested -= 1
             if nested:
