@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="keywords" content="使用者名稱">
+<meta name="description" content="批量生成使用者名稱">
+<title>使用者名稱生成器</title>
+<link rel="stylesheet" href="/static/min.css">
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/username.js"></script>
+<style>
+input, select {
+	border-width: 0px 0px 2px;
+	border-style: solid; 
+	border-color: #CCC;
+}
+input:focus, select:focus {
+    border-color: #19E
+}
+#fc {
+	width: 100%;
+	padding: .4em .3em;
+}
+#btnwrap {
+	width: 100%;
+	text-align: center;
+}
+#btnrefresh {
+	margin: 0 auto;
+}
+#result {
+	margin: 1em 0;
+}
+#usernames, #usernames li {
+	font-family: monospace;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	line-height: 2em;
+	column-fill: balance;
+}
+#usernames {
+	columns: 4;
+}
+@media(max-width:48em) {
+    #usernames {
+        columns: 2;
+    }
+}
+#gh, #gh:visited {color: #444;}
+#gh:hover {color: #777;}
+</style>
+</head>
+<body>
+<div id="container">
+<header>
+<h1 id="pagetitle">使用者名稱生成器</h1>
+</header>
+<section id="appmain">
+<div id="desc"><p>
+取使用者名稱沒靈感？不知道下一個網路身份從何開始？想亂填表？下面為你提供一批自動生成的使用者名稱供參考：
+</p></div>
+<div id="result">
+	<ul id="usernames">
+	{% for item in usernames %}<li>{{ item }}</li>{% endfor %}
+	</ul>
+</div>
+<div id="btnwrap">
+<input type="button" id="btnrefresh" class="btn btn-a smooth" value="換一批">
+</div>
+</section>
+<footer>
+<p><a id="gh" href="https://github.com/gumblex/usernamegen">GitHub repo</a></p>
+</footer>
+</div>
+</body>
+</html>

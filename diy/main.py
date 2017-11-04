@@ -3,6 +3,7 @@ import os
 import re
 import time
 import gzip
+import random
 import logging
 import sqlite3
 import zipfile
@@ -10,6 +11,8 @@ import datetime
 import functools
 
 import flask
+import markov
+import umsgpack
 import mosesproxy
 import chinesename
 from bukadown import getbukaurl
@@ -111,7 +114,7 @@ accept_language_re = re.compile(r'''
         ''', re.VERBOSE)
 
 
-def accept_language_zh_tw(lang_string):
+def accept_language(lang_string):
     """
     Parses the lang_string, which is the body of an HTTP Accept-Language
     header, and returns a list of (lang, q-value), ordered by 'q' values.
@@ -126,7 +129,7 @@ def accept_language_zh_tw(lang_string):
             return None
         priority = priority and float(priority) or 1.0
         result[lang.lower()] = priority
-    return result.get('zh-tw', 0) > result.get('zh-cn', 0)
+    return result
 
 
 def redirect_subdomain():
@@ -149,11 +152,15 @@ def before_req():
         flask.abort(403)
     flask.g.singledomain = not flask.request.headers.get('Host', '').endswith('.gumble.tk')
     displaylang = flask.request.values.get('dl')
-    accepttw = accept_language_zh_tw(
+    acceptlang = accept_language(
         flask.request.headers.get('Accept-Language', ''))
+    if displaylang in ('zht', 'zh-tw', 'zh-hant'):
+        acceptlang['zh-tw'] = 100
+    elif displaylang in ('zhs', 'zh-cn', 'zh-hans'):
+        acceptlang['zh-cn'] = 100
     flask.g.gzipped = gzipped
-    flask.g.accepttw = ((accepttw or displaylang in ('zht', 'zh-tw', 'zh-hant'))
-                        and displaylang not in ('zhs', 'zh-cn', 'zh-hans'))
+    flask.g.acceptlang = acceptlang
+    flask.g.accepttw = (acceptlang.get('zh-tw', 0) > acceptlang.get('zh-cn', 0))
 
 
 def index():
@@ -287,12 +294,52 @@ def name_generator():
             namemodel = flask.g.namemodel = chinesename.NameModel(MODEL_name)
         surnames, names = namemodel.processinput(c, num)
     if fjson:
-        return flask.json.dumps({'s': list(map(L, surnames)), 'n': list(map(L, names))})
+        return flask.jsonify({'s': list(map(L, surnames)), 'n': list(map(L, names))})
     else:
         tmpl = flask.render_template('name.html', c=c, surnames=sp.join(surnames), names=sp.join(names))
         if accepttw:
             tmpl = zhconv(tmpl.replace('zh-cn', 'zh-tw'), 'zh-tw')
         return tmpl
+
+
+def username_generator():
+    mkv_lvl = 310
+    mkv_len = 16
+    acceptlang = flask.g.get('acceptlang')
+    accepttw = flask.g.get('accepttw')
+    try:
+        num = int(flask.request.args.get('num', 100))
+    except Exception:
+        num = 100
+    fjson = flask.request.is_xhr or flask.request.args.get('f') == "json"
+    unamemodel = getattr(flask.g, 'unamemodel', None)
+    if unamemodel is None:
+        unamemodel = flask.g.unamemodel = markov.MarkovModel(
+            os.path.join(OS_DATA, 'stats_user.txt'))
+        cachefn = os.path.join(OS_DATA, 'stats_user_%d-%d.msgp' % (mkv_lvl, mkv_len))
+        if os.path.isfile(cachefn):
+            with open(cachefn, 'rb') as f:
+                nbparts = umsgpack.load(f)
+            idxrange = unamemodel.init(mkv_lvl, mkv_len, nbparts)
+        else:
+            idxrange = unamemodel.init(mkv_lvl, mkv_len)
+            with open(cachefn, 'wb') as f:
+                umsgpack.dump(unamemodel.nbparts, f)
+    else:
+        idxrange = unamemodel[(0, 0, 0)]
+    names = [unamemodel.print_pwd(random.randrange(idxrange))[0] for x in range(num)]
+    if fjson:
+        return flask.jsonify({'usernames': names})
+    uselang = (max(('en', 'zh-cn', 'zh-tw', 'zh'), key=lambda x: acceptlang.get(x, 0)) if acceptlang else 'en')
+    if uselang.startswith('zh'):
+        if uselang == 'zh-tw':
+            tmpl = flask.render_template('username_zhtw.html', usernames=names)
+        else:
+            tmpl = flask.render_template('username_zhcn.html', usernames=names)
+    else:
+        tmpl = flask.render_template('username_en.html', usernames=names)
+    return tmpl
+
 
 @functools.lru_cache(maxsize=128)
 def buka_lookup(sql, replace):
@@ -489,6 +536,7 @@ app.add_url_rule(
 app.add_url_rule("/translate/", 'translate_alias', redirect_to="/wenyan/")
 app.add_url_rule("/clozeword/", 'clozeword', clozeword)
 app.add_url_rule("/name/", 'name_generator', name_generator)
+app.add_url_rule("/uname/", 'uname_generator', username_generator)
 app.add_url_rule("/buka/", 'bukadown', bukadown, methods=('GET', 'POST'))
 app.add_url_rule(
     "/buka/bukadownloader.zip", 'bukadownloader_zip', bukadownloader_zip)
