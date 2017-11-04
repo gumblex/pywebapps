@@ -112,24 +112,26 @@ class MarkovModel:
 
         length = 1;
         while index and (length <= self.max_len):
+            oldc_256 = oldc << 8
             for i in range(256):
                 if length == 1:
-                    level = self.proba1[self.charsorted[256 * 0 + i]]
+                    level = self.proba1[self.charsorted[i]]
                 else:
-                    level = lvl + self.proba2[oldc * 256 + self.charsorted[oldc * 256 + i]]
+                    level = lvl + self.proba2[oldc_256 + self.charsorted[oldc_256 + i]]
                 if level > self.max_lvl:
                     i = 256
                     break
-                if self.nbparts[(level, length, self.charsorted[oldc * 256 + i])] == 0:
+                nbp = self.nbparts[(level, length, self.charsorted[oldc_256 + i])]
+                if not nbp:
                     break
-                if (index <= self.nbparts[(level, length, self.charsorted[oldc * 256 + i])]):
+                if index <= nbp:
                     break
-                index -= self.nbparts[(level, length, self.charsorted[oldc * 256 + i])]
+                index -= nbp
             if i == 256:
                 break
             lvl = level
-            password.append(self.charsorted[oldc * 256 + i])
-            oldc = self.charsorted[oldc * 256 + i]
+            password.append(self.charsorted[oldc_256 + i])
+            oldc = self.charsorted[oldc_256 + i]
             length += 1
 
         return password.decode('utf-8'), index, lvl, length - 1
