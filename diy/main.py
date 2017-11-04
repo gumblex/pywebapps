@@ -158,6 +158,8 @@ def before_req():
         acceptlang['zh-tw'] = 100
     elif displaylang in ('zhs', 'zh-cn', 'zh-hans'):
         acceptlang['zh-cn'] = 100
+    else:
+        acceptlang[displaylang] = 100
     flask.g.gzipped = gzipped
     flask.g.acceptlang = acceptlang
     flask.g.accepttw = (acceptlang.get('zh-tw', 0) > acceptlang.get('zh-cn', 0))
