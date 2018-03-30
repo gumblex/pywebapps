@@ -6,6 +6,7 @@ import sys
 import json
 import struct
 import socket
+import itertools
 import threading
 import socketserver
 
@@ -121,6 +122,12 @@ def recvall(sock, buf=1024):
 
 def sendall(sock, data):
     sock.sendall(data + b'\n')
+
+
+def chunks(iterable, size=100):
+    iterator = iter(iterable)
+    for first in iterator:
+        yield itertools.chain([first], itertools.islice(iterator, size - 1))
 
 
 class ServiceRequestHandler(socketserver.BaseRequestHandler):
@@ -326,17 +333,18 @@ class MosesManagerThread:
             proc = self.checkmoses()
             timestart = time.time()
             ctx = TranslateContext(self.lrucache, self.tokenizer)
-            keys = []
-            for k, sent in ctx.raw2moses(text):
-                keys.append(k)
-                proc.stdin.write(('%s\n' % sent).encode('utf8'))
-            proc.stdin.flush()
-            for k in keys:
-                rv = proc.stdout.readline()
-                if not rv:
-                    return False
-                rv = rv.rstrip(b'\n').decode('utf8')
-                ctx.postrecv(rv, k)
+            for chunk in chunks(ctx.raw2moses(text), 100):
+                keys = []
+                for k, sent in chunk:
+                    keys.append(k)
+                    proc.stdin.write(('%s\n' % sent).encode('utf8'))
+                proc.stdin.flush()
+                for k in keys:
+                    rv = proc.stdout.readline()
+                    if not rv:
+                        return False
+                    rv = rv.rstrip(b'\n').decode('utf8')
+                    ctx.postrecv(rv, k)
             intxt, outtxt = ctx.tokenoutput() if align else ctx.rawoutput()
             print('%s,%s,%s,%s,%s,%.6f' % (
                 time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()), self.mode,
