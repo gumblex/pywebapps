@@ -342,7 +342,7 @@ class MosesManagerThread:
                 for k in keys:
                     rv = proc.stdout.readline()
                     if not rv:
-                        return False
+                        break
                     rv = rv.rstrip(b'\n').decode('utf8')
                     ctx.postrecv(rv, k)
             intxt, outtxt = ctx.tokenoutput() if align else ctx.rawoutput()
