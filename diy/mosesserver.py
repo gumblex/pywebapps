@@ -241,7 +241,7 @@ class TranslateContext:
     def postrecv(self, text, key):
         sent = self.sentences[key]
         ttxtraw, alnraw = text.strip().split('|||')
-        tkns = xml_unescape(ttxtraw.strip()).split(' ')
+        tkns = xml_unescape(ttxtraw.strip(' \r\n')).split(' ')
         for k, tok in enumerate(tkns[:-1]):
             if RE_FW.match(tok[-1]) and RE_FW.match(tkns[k + 1][0]):
                 sent.t.append(tok)
