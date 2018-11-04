@@ -55,12 +55,13 @@ function Highlight() {
         var al = talign[key];
         var anum = al.length;
         var res = '', i = 0, lastch = 0;
+        var originchars = Array.from(originput);
         for (i = 0; i < anum; i++) {
-            res += (escapeHtml(originput.slice(lastch, al[i][0])) + '<span class="hl">' +
-                    escapeHtml(originput.slice(al[i][0], al[i][1])) + '</span>');
+            res += (escapeHtml(originchars.slice(lastch, al[i][0]).join("")) + '<span class="hl">' +
+                    escapeHtml(originchars.slice(al[i][0], al[i][1]).join("")) + '</span>');
             lastch = al[i][1];
         }
-        res += escapeHtml(originput.slice(lastch));
+        res += escapeHtml(originchars.slice(lastch).join(""));
         document.getElementById("hl-input").innerHTML = res;
         document.getElementById("hl-input").style.display = "block";
         this.className = 'hl';

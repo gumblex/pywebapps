@@ -116,7 +116,7 @@ def parselog(fromtime):
 
 # min: -24.219574739049666
 
-joinlist = lambda l: ''.join(chr(32 + int(-n * 3.9))
+joinlist = lambda l: ''.join(chr(min(32 + int(-n * 3.9), 126))
                              for n in l).replace('\\', '\\\\').replace('"', r'\"')
 
 
