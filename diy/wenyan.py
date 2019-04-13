@@ -90,6 +90,7 @@ def wenyan():
             tinput, lang, True, True, True)
         toutput, talign = translateresult(tres, L)
         userlog.add(ip, count)
+    userlog.commit()
     captcha = ''
     if origcnt + count > userlog.maxcnt:
         captcha = L(wy_gencaptcha())

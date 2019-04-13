@@ -221,13 +221,15 @@ class SqliteIntCache:
 class SqliteUserLog:
 
     _create_sql = (
+        'PRAGMA journal_mode=wal;'
         'CREATE TABLE IF NOT EXISTS userlog '
         '('
-        '  rec INTEGER PRIMARY KEY ASC,'
+        '  rec INTEGER PRIMARY KEY,'
         '  ip TEXT,'
         '  cnt INTEGER,'
         '  time INTEGER'
-        ')'
+        ');'
+        'CREATE INDEX idx_userlog_ip ON userlog (ip);'
     )
     _len_sql = 'SELECT COUNT(*) FROM userlog'
     _check_sql = 'SELECT SUM(cnt) FROM userlog WHERE (ip = ? AND time > ?)'
@@ -241,7 +243,7 @@ class SqliteUserLog:
         self.expire = expire
         if not os.path.isfile(self.path):
             self.connection = sqlite3.connect(self.path)
-            self.connection.execute(self._create_sql)
+            self.connection.executescript(self._create_sql)
         else:
             self.connection = sqlite3.connect(self.path)
         self.closed = False
