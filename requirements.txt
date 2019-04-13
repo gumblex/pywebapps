@@ -1,4 +1,4 @@
 Flask
 MarkupSafe
 pyfiglet
-git+https://github.com/fxsjy/jieba.git@master#egg=jieba
+jieba
