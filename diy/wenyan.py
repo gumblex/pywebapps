@@ -4,6 +4,7 @@ import os
 import re
 import flask
 import base64
+import sqlite3
 import hashlib
 import logging
 import functools
@@ -75,6 +76,7 @@ def wenyan():
     if valid == 1:
         origcnt = 0
         userlog.delete(ip)
+        userlog.commit()
     elif valid == 0:
         logging.warning('Captcha failed: %s' % ip)
     if not tinput:
@@ -89,8 +91,11 @@ def wenyan():
         tinput, tres, count = mosesproxy.translate(
             tinput, lang, True, True, True)
         toutput, talign = translateresult(tres, L)
-        userlog.add(ip, count)
-    userlog.commit()
+        try:
+            userlog.add(ip, count)
+        except sqlite3.OperationalError:
+            pass
+        userlog.commit()
     captcha = ''
     if origcnt + count > userlog.maxcnt:
         captcha = L(wy_gencaptcha())
