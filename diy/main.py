@@ -46,7 +46,7 @@ class FrontFix(object):
         if forwarded_host:
             http_host = forwarded_host
         # Fix subdomain matching here
-        if http_host.endswith('gumble.tk'):
+        if http_host.endswith('gumble.pw'):
             environ['HTTP_HOST'] = http_host
         else:
             environ['HTTP_HOST'] = 'app.gumble.pw'
@@ -61,7 +61,7 @@ logging.basicConfig(filename=os.path.join(os.environ[
 app = flask.Flask(__name__)
 
 app.wsgi_app = FrontFix(app.wsgi_app)
-app.config['SERVER_NAME'] = 'gumble.tk'
+app.config['SERVER_NAME'] = 'gumble.pw'
 app.url_map.default_subdomain = 'app'
 
 app.secret_key = SECRETKEY
@@ -150,7 +150,7 @@ def redirect_subdomain():
 def before_req():
     if BANNEDIP.match(flask.request.remote_addr):
         flask.abort(403)
-    flask.g.singledomain = not flask.request.headers.get('Host', '').endswith('.gumble.tk')
+    flask.g.singledomain = not flask.request.headers.get('Host', '').endswith('.gumble.pw')
     displaylang = flask.request.values.get('dl')
     acceptlang = accept_language(
         flask.request.headers.get('Accept-Language', ''))
