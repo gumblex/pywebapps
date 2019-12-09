@@ -543,6 +543,7 @@ app.add_url_rule("/buka/", 'bukadown', bukadown, methods=('GET', 'POST'))
 app.add_url_rule(
     "/buka/bukadownloader.zip", 'bukadownloader_zip', bukadownloader_zip)
 app.register_blueprint(bp_wenyan, subdomain='wenyan')
+app.add_url_rule("/wenyan", 'wenyan_direct', redirect_wenyan_to_subdomain, methods=('GET', 'POST'))
 app.add_url_rule("/wenyan/", 'redirect_wenyan_to_subdomain', redirect_wenyan_to_subdomain, methods=('GET', 'POST'))
 app.add_url_rule("/wenyan/about", 'wenyan_about', wenyan_about)
 
