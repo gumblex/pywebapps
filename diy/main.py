@@ -49,7 +49,7 @@ class FrontFix(object):
         if http_host.endswith('gumble.tk'):
             environ['HTTP_HOST'] = http_host
         else:
-            environ['HTTP_HOST'] = 'app.gumble.tk'
+            environ['HTTP_HOST'] = 'app.gumble.pw'
             environ['single_domain'] = 1
         if forwarded_proto:
             environ['wsgi.url_scheme'] = forwarded_proto
@@ -134,10 +134,10 @@ def accept_language(lang_string):
 
 def redirect_subdomain():
     urlparts = urlsplit(flask.request.url)
-    if urlparts.netloc != 'app.gumble.tk':
+    if urlparts.netloc != 'app.gumble.pw':
         appname = urlparts.netloc.split('.')[0]
         urlparts_list = list(urlparts)
-        urlparts_list[1] = 'app.gumble.tk'
+        urlparts_list[1] = 'app.gumble.pw'
         urlparts_list[2] = '/' + appname + urlparts_list[2]
         newurl = urlunsplit(urlparts_list)
         response = app.response_class('Moved to %s\n' % newurl, 301)
