@@ -1,4 +1,4 @@
 Flask
 MarkupSafe
 pyfiglet
-jieba
+jieba==0.39
