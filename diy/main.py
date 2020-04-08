@@ -16,7 +16,7 @@ import umsgpack
 import mosesproxy
 import chinesename
 from bukadown import getbukaurl
-from werkzeug.contrib.cache import SimpleCache
+from cachelib import SimpleCache
 from urllib.parse import urlsplit, urlunsplit
 from zhconv import convert as zhconv
 from config import *
