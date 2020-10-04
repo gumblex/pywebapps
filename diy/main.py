@@ -287,7 +287,7 @@ def name_generator():
         num = int(flask.request.args.get('num', 100))
     except Exception:
         num = 100
-    fjson = flask.request.is_xhr or flask.request.args.get('f') == "json"
+    fjson = flask.request.headers.get('X-Requested-With') == 'XMLHttpRequest' or flask.request.args.get('f') == "json"
     if c:
         surnames, names = select_name(c, num)
     else:
@@ -313,7 +313,7 @@ def username_generator():
         num = int(flask.request.args.get('num', 100))
     except Exception:
         num = 100
-    fjson = flask.request.is_xhr or flask.request.args.get('f') == "json"
+    fjson = flask.request.headers.get('X-Requested-With') == 'XMLHttpRequest' or flask.request.args.get('f') == "json"
     unamemodel = getattr(flask.g, 'unamemodel', None)
     if unamemodel is None:
         unamemodel = flask.g.unamemodel = markov.MarkovModel(
