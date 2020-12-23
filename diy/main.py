@@ -153,7 +153,7 @@ def before_req():
     flask.g.singledomain = not flask.request.headers.get('Host', '').endswith('.gumble.pw')
     displaylang = flask.request.values.get('dl')
     acceptlang = accept_language(
-        flask.request.headers.get('Accept-Language', ''))
+        flask.request.headers.get('Accept-Language', '')) or {}
     if displaylang in ('zht', 'zh-tw', 'zh-hant'):
         acceptlang['zh-tw'] = 100
     elif displaylang in ('zhs', 'zh-cn', 'zh-hans'):
