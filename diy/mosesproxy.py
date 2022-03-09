@@ -12,7 +12,7 @@ _curpath = os.path.normpath(
 startserver_path = os.path.join(_curpath, 'startserver')
 
 address = MS_SOCK
-RESTART = True
+RESTART = False
 
 dumpsjson = lambda x: json.dumps(x).encode('utf-8')
 loadsjson = lambda x: json.loads(x.decode('utf-8'))
