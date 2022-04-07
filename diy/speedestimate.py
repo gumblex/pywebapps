@@ -87,7 +87,7 @@ def parselog(fromtime):
     fromtime = time.strptime(fromtime, '%Y-%m-%d %H:%M:%S')
     validlinec = []
     validlinem = []
-    with open(logfile, 'r', encoding='utf-8', error='ignore') as f:
+    with open(logfile, 'r', encoding='utf-8', errors='ignore') as f:
         for ln in f:
             l = ln.strip()
             m = re_log.match(l)
