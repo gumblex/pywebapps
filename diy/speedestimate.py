@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
 import re
 import math
 import time
@@ -88,7 +87,7 @@ def parselog(fromtime):
     fromtime = time.strptime(fromtime, '%Y-%m-%d %H:%M:%S')
     validlinec = []
     validlinem = []
-    with open(logfile, 'r') as f:
+    with open(logfile, 'r', encoding='utf-8', error='ignore') as f:
         for ln in f:
             l = ln.strip()
             m = re_log.match(l)
@@ -135,5 +134,5 @@ def writejs(value, jsfile):
 
 if __name__ == '__main__':
     REPODIR = os.environ['OPENSHIFT_REPO_DIR']
-    writejs(parselog('2015-08-27 13:58:56'),
+    writejs(parselog('2020-01-01 00:00:00'),
             os.path.join(REPODIR, 'diy/static/wenyan_.js'))
