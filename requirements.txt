@@ -3,3 +3,4 @@ MarkupSafe
 pyfiglet
 jieba==0.39
 cachelib
+pyzmq

@@ -2,7 +2,7 @@
 # encoding=utf-8
 import os
 import flask
-import mosesproxy as jieba
+import mosesproxy2 as jieba
 import functools
 
 jiebazhc = jieba.jiebazhc

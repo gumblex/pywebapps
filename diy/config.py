@@ -41,6 +41,7 @@ CHAR_RATIO = 0.6643902034970293
 # Mosesserver socket
 sockvar = os.environ['OPENSHIFT_MS_SOCK'].split(':')
 MS_SOCK = (sockvar[0], int(sockvar[1]))
+MS_ZMQ_URL = os.environ.get('OPENSHIFT_MS_ZMQ_URL', 'tcp://127.0.0.1:13333')
 
 OS_ENV = os.environ
 

@@ -4,7 +4,7 @@ import sys
 import time
 import itertools
 import statistics
-import mosesproxy
+import mosesproxy2
 
 data = []
 mode = sys.argv[1]
@@ -15,7 +15,7 @@ while True:
         break
     timerec = time.time()
     try:
-        mosesproxy.translate(next_n_lines, mode)
+        mosesproxy2.translate(next_n_lines, mode)
     except KeyboardInterrupt:
         break
     data.append((time.time() - timerec) / len(next_n_lines))

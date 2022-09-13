@@ -9,7 +9,7 @@ import hashlib
 import logging
 import functools
 import figcaptcha
-import mosesproxy
+import mosesproxy2
 from zhconv import convert as zhconv
 from sqlitecache import SqliteUserLog
 from zhutil import calctxtstat, checktxttype
@@ -88,7 +88,7 @@ def wenyan():
     elif len(tinput) > MAX_CHAR * (CHAR_RATIO if lang == 'c2m' else 1):
         toutput = flask.Markup(L('<p class="error">文本过长，请切分后提交。</p>'))
     else:
-        tinput, tres, count = mosesproxy.translate(
+        tinput, tres, count = mosesproxy2.translate(
             tinput, lang, True, True, True)
         toutput, talign = translateresult(tres, L)
         try:

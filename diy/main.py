@@ -13,7 +13,6 @@ import functools
 import flask
 import markov
 import umsgpack
-import mosesproxy
 import chinesename
 from bukadown import getbukaurl
 from cachelib import SimpleCache
