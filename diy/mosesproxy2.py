@@ -15,12 +15,11 @@ address = MS_ZMQ_URL
 dumpsjson = lambda x: json.dumps(x).encode('utf-8')
 loadsjson = lambda x: json.loads(x.decode('utf-8'))
 
-zmq_context = zmq.Context.instance()
-sock = zmq_context.socket(zmq.REQ)
-sock.connect(address)
-
 
 def rpc_call(fn, *args, **kwargs):
+    zmq_context = zmq.Context.instance()
+    sock = zmq_context.socket(zmq.REQ)
+    sock.connect(address)
     poller = zmq.Poller()
     poller.register(sock, zmq.POLLIN)
     sock.send(dumpsjson({'cmd': fn, 'args': args, 'kwargs': kwargs}))
