@@ -13,9 +13,9 @@ import functools
 import flask
 import markov
 import umsgpack
+import markupsafe
 import chinesename
 from bukadown import getbukaurl
-from cachelib import SimpleCache
 from urllib.parse import urlsplit, urlunsplit
 from zhconv import convert as zhconv
 from config import *
@@ -190,7 +190,7 @@ def redirect_wenyan_to_subdomain():
     return wenyan_view()
 
 def linebreak(s):
-    return flask.Markup('<p>%s</p>\n') % flask.Markup('</p>\n<p>').join(s.rstrip().split('\n'))
+    return markupsafe.Markup('<p>%s</p>\n') % markupsafe.Markup('</p>\n<p>').join(s.rstrip().split('\n'))
 
 
 def option_dict(v):
@@ -264,7 +264,7 @@ def clozeword():
                 res.append('<tr><td>%s</td><td>%s</td></tr>' % row)
         res.append('</tbody></table></p><p><a href="%s">&lt;&lt;返回单词列表...</a></p>' %
                    flask.url_for('clozeword', fl=fl, sp=sp))
-    return flask.render_template('clozeword.html', fl=fl, result=flask.Markup('\n'.join(res)))
+    return flask.render_template('clozeword.html', fl=fl, result=markupsafe.Markup('\n'.join(res)))
 
 
 @functools.lru_cache(maxsize=25)
@@ -281,7 +281,7 @@ def name_generator():
     c = zhconv(flask.request.args.get('c', ''), 'zh-cn')
     sp = rawsp = flask.request.args.get('sp', ', ')
     if sp == 'br':
-        sp = flask.Markup('<br>')
+        sp = markupsafe.Markup('<br>')
     try:
         num = int(flask.request.args.get('num', 100))
     except Exception:
@@ -441,7 +441,7 @@ def bukadown():
     accepttw = flask.g.get('accepttw')
     L = (lambda x: zhconv(x, 'zh-tw')) if accepttw else (lambda x: x)
     template = 'buka_zhtw.html' if accepttw else 'buka.html'
-    errmsg = flask.render_template(template, msg=flask.Markup(
+    errmsg = flask.render_template(template, msg=markupsafe.Markup(
         L('<p class="error">参数错误。<a href="javascript:history.back()">按此返回</a></p>')))
     if not func:
         return flask.render_template(template)
@@ -462,7 +462,7 @@ def bukadown():
             rv = buka_lookup(
                 "SELECT mid,name,author,lastchap,lastup,available FROM comics WHERE name LIKE ?", ('%%%s%%' % zhconv(cname, 'zh-hans'),))
             if not rv:
-                return flask.render_template(template, msg=flask.Markup(L('<p class="error">未找到符合的漫画。</p>')), sname=cname)
+                return flask.render_template(template, msg=markupsafe.Markup(L('<p class="error">未找到符合的漫画。</p>')), sname=cname)
             rv = sorted(rv, key=sortfunc)
             cinfo = rv[0]
             if len(rv) > 1:

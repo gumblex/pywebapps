@@ -2,7 +2,6 @@
 # encoding=utf-8
 import os
 import re
-import flask
 import base64
 import sqlite3
 import hashlib
@@ -10,6 +9,10 @@ import logging
 import functools
 import figcaptcha
 import mosesproxy2
+
+import flask
+import markupsafe
+
 from zhconv import convert as zhconv
 from sqlitecache import SqliteUserLog
 from zhutil import calctxtstat, checktxttype
@@ -29,23 +32,23 @@ def get_wy_db():
 def translateresult(result, convfunc):
     markup = []
     jsond = []
-    nl = flask.Markup('</p>\n<p>')
+    nl = markupsafe.Markup('</p>\n<p>')
     for tok, pos in result:
         if tok == '\n':
             markup.append(nl)
         elif pos:
-            markup.append(flask.Markup('<span>%s</span>') % convfunc(tok))
+            markup.append(markupsafe.Markup('<span>%s</span>') % convfunc(tok))
             jsond.append(pos)
         else:
             markup.append(convfunc(tok))
-    markup = flask.Markup().join(markup)
-                #.replace(flask.Markup('<p></p>'), flask.Markup('<p>&nbsp;</p>'))
-    return (flask.Markup('<p>%s</p>\n') % markup,
-            flask.Markup(flask.json.dumps(jsond, separators=(',', ':'))))
+    markup = markupsafe.Markup().join(markup)
+                #.replace(markupsafe.Markup('<p></p>'), markupsafe.Markup('<p>&nbsp;</p>'))
+    return (markupsafe.Markup('<p>%s</p>\n') % markup,
+            markupsafe.Markup(flask.json.dumps(jsond, separators=(',', ':'))))
 
 
 def linebreak(s):
-	return flask.Markup('<p>%s</p>\n') % flask.Markup('</p>\n<p>').join(s.rstrip().split('\n'))
+	return markupsafe.Markup('<p>%s</p>\n') % markupsafe.Markup('</p>\n<p>').join(s.rstrip().split('\n'))
 
 
 def wenyan():
@@ -72,7 +75,7 @@ def wenyan():
     origcnt = userlog.count(ip)
     count = 0
     valid = wy_validate(ip, origcnt, userlog)
-    talign = flask.Markup('[]')
+    talign = markupsafe.Markup('[]')
     if valid == 1:
         origcnt = 0
         userlog.delete(ip)
@@ -82,11 +85,11 @@ def wenyan():
     if not tinput:
         toutput = ''
     elif valid == 0:
-        toutput = flask.Markup(L('<p class="error">回答错误，请重试。</p>'))
+        toutput = markupsafe.Markup(L('<p class="error">回答错误，请重试。</p>'))
     elif lang is None:
         toutput = linebreak(tinput)
     elif len(tinput) > MAX_CHAR * (CHAR_RATIO if lang == 'c2m' else 1):
-        toutput = flask.Markup(L('<p class="error">文本过长，请切分后提交。</p>'))
+        toutput = markupsafe.Markup(L('<p class="error">文本过长，请切分后提交。</p>'))
     else:
         tinput, tres, count = mosesproxy2.translate(
             tinput, lang, True, True, True)
@@ -99,7 +102,7 @@ def wenyan():
     captcha = ''
     if origcnt + count > userlog.maxcnt:
         captcha = L(wy_gencaptcha())
-    return flask.render_template(('translate_zhtw.html' if accepttw else 'translate.html'), tinput=tinput, toutput=toutput, talign=talign, captcha=flask.Markup(captcha))
+    return flask.render_template(('translate_zhtw.html' if accepttw else 'translate.html'), tinput=tinput, toutput=toutput, talign=talign, captcha=markupsafe.Markup(captcha))
 
 
 def wenyan_about():
